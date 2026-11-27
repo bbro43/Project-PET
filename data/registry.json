@@ -875,6 +875,93 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "chargeman": {
+      "label": "ChargeMan (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "28F18C",
+          "compression": "none",
+          "bytes": 32177,
+          "sha256": "81f50238d3b049b01744e9e6c1d389d850a0450e35f6dde94e4b42734894f4c0",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "28F18C",
+          "compression": "none",
+          "bytes": 32177,
+          "sha256": "81f50238d3b049b01744e9e6c1d389d850a0450e35f6dde94e4b42734894f4c0",
+          "confidence": "rom-verified"
+        }
+      },
+      "note": "AI animation ids 0xF run, 0x10 whistle, 0x11 rush map to sequences 15-17 directly.",
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "run": {
+          "seq": 15,
+          "confidence": "visual-candidate"
+        },
+        "whistle": {
+          "seq": 16,
+          "confidence": "visual-candidate"
+        },
+        "rush": {
+          "seq": 17,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "traincar": {
+      "label": "ChargeMan train cars (object type3 0x87 / 0x88, sprite 0x10/0x54)",
+      "sources": {
+        "bn6f": {
+          "offset": "3930E0",
+          "compression": "none",
+          "bytes": 8018,
+          "sha256": "f409d58b0102885e8fbec4d0611aae2841276014a6ec0a416f0ba84c5651a82f",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "392658",
+          "compression": "none",
+          "bytes": 8018,
+          "sha256": "f409d58b0102885e8fbec4d0611aae2841276014a6ec0a416f0ba84c5651a82f",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "coal": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "skull": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "crate": {
+          "seq": 2,
+          "confidence": "visual-candidate"
+        },
+        "red": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {

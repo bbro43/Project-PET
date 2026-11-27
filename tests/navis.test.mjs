@@ -298,3 +298,62 @@ test('EraseMan beam: eye marker follows MegaMan, locks, and the beam hits the ma
   run(s, 1);
   assert.equal(s.player.hp, 400, 'base beam damage 100');
 });
+
+test('ChargeMan names and HP from the ROM tables (name abbreviated to 8 letters)', () => {
+  const vs = naviVariants('ChargeMan');
+  assert.deepEqual(vs.slice(0, 3).map(v => [v.name, v.hp]), [['ChrgeMan', 1000], ['ChrgeMnEX', 1500], ['ChrgeMnSP', 2000]]);
+  assert.equal(start('ChargeMan').enemies[0].sprite, 'chargeman');
+});
+
+function chargeCycle(seed = 1) {
+  const s = start('ChargeMan', 0, seed), e = s.enemies[0];
+  s.player.invuln = 1e9;
+  const seen = []; let prev = null;
+  for (let i = 0; i < 9000 && seen.length < 9; i++) {
+    step(s, {});
+    const kind = e.state === 'run' ? (e.cars.length === 3 ? 'A' : e.cars.length === 2 ? 'C' : 'B') : null;
+    if (kind && kind !== prev) seen.push(kind);
+    if (e.state === 'idle') prev = null; else if (kind) prev = kind;
+  }
+  return { s, e, seen };
+}
+
+test('ChargeMan attack cycle from the ROM: 5 alternating B/C, then the big charge A; the toggle carries on', () => {
+  const { seen } = chargeCycle();
+  assert.deepEqual(seen.slice(0, 8), ['B', 'C', 'B', 'C', 'B', 'A', 'C', 'B']);
+});
+
+test('ChargeMan dash runs the length of MegaMan\'s row from off-screen and hits for 50', () => {
+  const s = start('ChargeMan'), e = s.enemies[0];
+  s.player.x = 0; s.player.y = 2;
+  let minX = 9;
+  for (let i = 0; i < 400 && s.player.hp === 100; i++) { step(s, {}); if (e.state === 'run') minX = Math.min(minX, e.fx); }
+  assert.equal(e.y, 2);
+  assert.equal(s.player.hp, 50);
+  assert.ok(minX <= 0.5, 'reached MegaMan at the back column');
+});
+
+test('ChargeMan cannot be hit while off the field and returns to his start panel', () => {
+  const s = start('ChargeMan'), e = s.enemies[0];
+  const home = [e.x, e.y]; s.player.invuln = 1e9;
+  let offField = false;
+  for (let i = 0; i < 3000; i++) {
+    step(s, {});
+    if (e.x > 5 || e.x < 0) { offField = true; assert.ok(e.airborne); }
+    if (offField && e.state === 'idle') break;
+  }
+  assert.deepEqual([e.x, e.y], home);
+  assert.ok(!e.airborne);
+});
+
+test('ChargeMan train round: cars in the two other rows hit for 30', () => {
+  const s = start('ChargeMan'), e = s.enemies[0];
+  s.player.invuln = 1e9;
+  for (let i = 0; i < 3000 && !(e.state === 'run' && e.cars.length === 2); i++) step(s, {});
+  const rows = [e.y, ...e.cars.map(c => c.y)].sort();
+  assert.deepEqual(rows, [0, 1, 2]);
+  const car = e.cars[0];
+  s.player.invuln = 0; s.player.y = car.y; s.player.x = 1;
+  for (let i = 0; i < 300 && s.player.hp === 100; i++) step(s, {});
+  assert.equal(s.player.hp, 70);
+});

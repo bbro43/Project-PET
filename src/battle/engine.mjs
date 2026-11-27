@@ -250,6 +250,11 @@ function stepHazards(s) {
       if (!h.locked && s.tick >= h.until) h.locked = true;
       return true;
     }
+    if (h.kind === 'car') { // ChargeMan's train cars; moved by ChargeMan, hit like his body
+      if (!s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
+      if (Math.round(h.fx) === p.x && h.y === p.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      return true;
+    }
     if (h.kind === 'burst') {
       if (p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
       return s.tick < h.until;

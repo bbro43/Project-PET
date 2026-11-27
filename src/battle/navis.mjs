@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -439,6 +439,100 @@ function eraseman(e, api) {
   function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
 }
 
+// ======================= ChargeMan =======================
+// Decision 0x80F64B0: 0xB, 0xC, 0xB, 0xC, 0xB, then 0xA, each followed by a 60-frame pause (0xD).
+// Game columns 0 and 7 are off-screen; here column = game column - 1, so -1 and 6+ are off the field.
+function chargeman(e, api) {
+  const P = NAVI_AI.ChargeMan, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const W = P.warpTicks.value, vi = Math.min(v, 4);
+  const pause = () => { go(e, 'idle', 'idle'); e.think = P.pause.value; };
+  const row = () => Math.max(0, Math.min(2, p.y));
+  switch (e.state) {
+    case 'idle':
+      if (--e.think > 0) return;
+      return decide();
+    case 'vanish':
+      if (e.stateT >= W) { place(...e.dest); go(e, 'appear', 'appear'); }
+      return;
+    case 'appear':
+      if (e.stateT >= W) { const a = e.after; e.after = null; if (a) return a(); pause(); }
+      return;
+    case 'ready': // standing at the start line before a run
+      if (e.stateT >= P.runWait.value) startRun();
+      return;
+    case 'run': {
+      const r = e.run, step = r.speed / 40 * Math.sign(r.to - e.fx);
+      e.fx = Math.abs(r.to - e.fx) <= Math.abs(step) ? r.to : e.fx + step;
+      place(e.fx, e.y, true);
+      for (const c of e.cars) c.fx = e.fx + c.off;
+      if (e.x >= 0 && e.x <= 5) api.hitPlayerCells([[e.x, e.y]], r.damage);
+      if (e.fx === r.to) { e.run = null; return r.then(); }
+      return;
+    }
+    case 'whistle':
+      if (e.stateT >= P.bigWhistle.value) { e.run = { to: P.bigTargets.value.back, speed: P.bigSpeeds.value.back, damage: pv(P.bigDamage, v), then: rush }; go(e, 'run', 'run'); }
+      return;
+  }
+
+  function decide() {
+    if (e.homeSet === undefined) { e.homeSet = [e.homeX, e.homeY]; e.cars = []; }
+    if (m.c4 < 5) {
+      m.c4++; const prev = m.c5; m.c5 ^= 1;
+      if (prev === 0) { e.rounds = P.dashCount.value; return dash(); }
+      e.rounds = P.trainRounds.value; e.pattern = 0; return train();
+    }
+    m.c4 = 0;
+    return big();
+  }
+  // ---- 0xB: five runs along MegaMan's row from the right edge
+  function dash() {
+    warp([6, row()], () => { e.run = { to: -1, speed: pv(P.dashSpeed, v), damage: pv(P.dashDamage, v), then: () => (--e.rounds > 0 ? dash() : home()) }; go(e, 'ready', 'run'); });
+  }
+  // ---- 0xC: five rounds of ChargeMan plus two cars in the other rows
+  function train() {
+    const [[lead, gy], ...cars] = P.trainPatterns.value[e.pattern];
+    warp([9 - lead, gy - 1], () => {
+      clearCars();
+      for (const [cl, cy] of cars) addCar(cy - 1, (9 - cl) - e.fx, 'coal', pv(P.carDamage, v));
+      e.run = { to: e.fx - 9, speed: pv(P.trainSpeed, v), damage: pv(P.trainDamage, v), then: nextRound };
+      go(e, 'ready', 'run');
+    });
+  }
+  function nextRound() {
+    clearCars();
+    if (--e.rounds <= 0) return home();
+    let n = Math.floor(api.rng() * 8); if (n === e.pattern) n = (n + 1) & 7;
+    e.pattern = n; train();
+  }
+  // ---- 0xA: pulls three cars, runs out, whistles, backs up, then rushes
+  function big() {
+    warp([6, row()], () => {
+      clearCars();
+      ['skull', 'crate', 'red'].slice(0, P.bigCars.value).forEach((t, i) => addCar(e.y, i + 1, t, pv(P.bigDamage, v)));
+      e.run = { to: P.bigTargets.value.out, speed: P.bigSpeeds.value.out[vi], damage: pv(P.bigDamage, v), then: () => go(e, 'whistle', 'whistle') };
+      go(e, 'ready', 'run');
+    });
+  }
+  function rush() {
+    e.run = { to: P.bigTargets.value.rush, speed: P.bigSpeeds.value.rush[vi], damage: pv(P.bigDamage, v), then: () => { clearCars(); home(); } };
+    go(e, 'run', 'rush');
+  }
+  function startRun() { go(e, 'run', e.anim === 'rush' ? 'rush' : 'run'); }
+  function home() { clearCars(); warp(e.homeSet, null); }
+  function place(x, y, keepFx) {
+    if (!keepFx) e.fx = x;
+    e.y = y; e.drawX = e.fx; e.drawY = y;
+    e.x = Math.round(e.fx);
+    e.airborne = e.x < 0 || e.x > 5; // off the field: cannot be hit
+  }
+  function addCar(y, off, type, damage) {
+    const c = { kind: 'car', y, off, fx: e.fx + off, type, damage, owner: e.id };
+    e.cars.push(c); s.hazards.push(c);
+  }
+  function clearCars() { s.hazards = s.hazards.filter(h => !e.cars.includes(h)); e.cars = []; }
+  function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
+}
+
 const AREAS = {
   wide: [[-1, -1], [-1, 0], [-1, 1]],
   long: [[-1, 0], [-2, 0]],
@@ -554,7 +648,7 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ProtoMan: protoman };
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;

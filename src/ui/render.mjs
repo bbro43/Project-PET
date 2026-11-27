@@ -109,6 +109,14 @@ export function render(g, s, bank) {
     }
   }
 
+  // ChargeMan's train cars (drawn facing left like ChargeMan)
+  const car = bank?.get('traincar');
+  for (const h of s.hazards) if (h.kind === 'car') {
+    const [ax, ay] = anchor(h.fx, h.y);
+    if (car) { const f = frameAt(car[h.type] || car.coal, s.tick); g.save(); g.translate(Math.round(ax), 0); g.scale(-1, 1); g.drawImage(f.image, -f.originX, Math.round(ay - f.originY)); g.restore(); }
+    else { g.fillStyle = '#556'; g.fillRect(ax - 16, ay - 20, 32, 16); g.fillStyle = '#a22'; g.fillRect(ax - 12, ay - 4, 24, 4); }
+  }
+
   // Hazards under actors.
   const wave = bank?.get('shockwave');
   for (const h of s.hazards) {
