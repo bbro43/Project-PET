@@ -2085,13 +2085,13 @@
      "confidence": "rom-verified"
     }
    },
-   "note": "Only the Gregar ROM carries the full battle sprite (sprite table category 8, index 0x14); the Falzar ROM's entry at that index is a small 31-sequence block, so a Falzar-only install falls back to the Gregar ROM if it is imported, else placeholder art. 86 sequences: five stacked layers of 16 animations (0-15 shadow, 16-31 hind legs, 32-47 head and tail, 48-63 forelegs, 64-79 body and mane) plus effects 80-85. Drawn legs first, then body, then head (order checked visually against the game).",
+   "note": "Only the Gregar ROM carries the full battle sprite (sprite table category 8, index 0x14); the Falzar ROM's entry at that index is a small 31-sequence block, so a Falzar-only install falls back to the Gregar ROM if it is imported, else placeholder art. 86 sequences: five stacked layers of 16 animations, drawn in sequence order: 0-15 shadow, 16-31 hind feet, 32-47 torso and tail, 48-63 legs with shoulder/hip joints, 64-79 head and mane; effects 80-85. Order matches the game's composite (checked against reference art).",
    "layers": [
     0,
     16,
+    32,
     48,
-    64,
-    32
+    64
    ],
    "sequences": {
     "idle": {
