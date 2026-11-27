@@ -717,3 +717,39 @@ test('CircusMan tent does not catch an invincible MegaMan', () => {
   for (let i = 0; i < 60; i++) step(s, {});
   assert.ok(!(s.player.trapped > 0));
 });
+
+test('JudgeMan names and HP from the ROM tables', () => {
+  const vs = naviVariants('JudgeMan');
+  assert.equal(vs[0].name, 'JudgeMan');
+  assert.equal(start('JudgeMan').enemies[0].sprite, 'judgeman');
+});
+
+test('JudgeMan whip: 3 panels ahead lit, then the whip hits for 30', () => {
+  const { s, e } = findState('JudgeMan', 0, 'whip', s => { s.player.invuln = 1e9; });
+  run(s, 1);
+  assert.ok(e.highlight[0].length >= 1);
+  const P = NAVI_AI.JudgeMan, hit = P.whipMark.value[0] + P.whipWind.value[0] - 16;
+  s.player.invuln = 0; s.player.y = e.y; s.player.x = Math.max(0, e.x - 3);
+  run(s, hit - e.stateT - 1);
+  assert.equal(s.player.hp, 100);
+  run(s, 1);
+  assert.equal(s.player.hp, 70);
+});
+
+test('JudgeMan book press hits MegaMan\'s front column', () => {
+  const { s, e } = findState('JudgeMan', 0, 'press', s => { s.player.invuln = 1e9; });
+  s.player.invuln = 0; s.player.x = 2; s.player.y = 0;
+  run(s, NAVI_AI.JudgeMan.pressMark.value[0] + 1);
+  assert.equal(s.player.hp, 70);
+});
+
+test('JudgeMan summons a law book (ROM HP) at the front of MegaMan\'s row; it does not block the win', () => {
+  const { s, e } = findState('JudgeMan', 0, 'book', s => { s.player.invuln = 1e9; });
+  run(s, NAVI_AI.JudgeMan.bookMark.value[0] + 1);
+  const book = s.enemies.find(o => o.family === 'LawBook');
+  assert.ok(book);
+  assert.equal(book.hp, 8);
+  assert.deepEqual([book.x, book.y], [3, s.player.y]);
+  e.hp = 0; step(s, {});
+  assert.equal(s.phase, 'win');
+});

@@ -1770,6 +1770,105 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "judgeman": {
+      "label": "JudgeMan (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "2DABC8",
+          "compression": "lz77",
+          "bytes": 26880,
+          "sha256": "87094a8ea43f8cadb31ae7e40b05958db9fa24e86ed2eedaf090d60ab5cb33a8",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "2DABC8",
+          "compression": "lz77",
+          "bytes": 26880,
+          "sha256": "87094a8ea43f8cadb31ae7e40b05958db9fa24e86ed2eedaf090d60ab5cb33a8",
+          "confidence": "rom-verified"
+        }
+      },
+      "note": "LZ77-compressed, 19 sequences. AI animation ids 5-7 map to sequences directly; whip 8/9, press books 10/11, law book 13-18.",
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "summon": {
+          "seq": 5,
+          "confidence": "visual-candidate"
+        },
+        "windup": {
+          "seq": 6,
+          "confidence": "visual-candidate"
+        },
+        "whip": {
+          "seq": 7,
+          "confidence": "visual-candidate"
+        },
+        "lash": {
+          "seq": 9,
+          "confidence": "visual-candidate"
+        },
+        "press": {
+          "seq": 10,
+          "confidence": "visual-candidate"
+        },
+        "pressshut": {
+          "seq": 11,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "lawbook": {
+      "label": "JudgeMan law book (object type3 0x70; same sprite as JudgeMan)",
+      "sources": {
+        "bn6f": {
+          "offset": "2DABC8",
+          "compression": "lz77",
+          "bytes": 26880,
+          "sha256": "87094a8ea43f8cadb31ae7e40b05958db9fa24e86ed2eedaf090d60ab5cb33a8",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "2DABC8",
+          "compression": "lz77",
+          "bytes": 26880,
+          "sha256": "87094a8ea43f8cadb31ae7e40b05958db9fa24e86ed2eedaf090d60ab5cb33a8",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "appear": {
+          "seq": 13,
+          "confidence": "visual-candidate"
+        },
+        "idle": {
+          "seq": 13,
+          "confidence": "visual-candidate"
+        },
+        "open": {
+          "seq": 14,
+          "confidence": "visual-candidate"
+        },
+        "flip": {
+          "seq": 15,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {

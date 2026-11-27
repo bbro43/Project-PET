@@ -249,6 +249,12 @@ export function render(g, s, bank) {
     }
   }
 
+  // JudgeMan: whip lash and the book press
+  for (const f of s.effects) {
+    if (f.kind === 'lash' && f.t < 12) { const [ax, ay] = anchor(f.x - 2, f.y); sprite(g, bank, 'judgeman', 'lash', f.t, ax, ay - 14, '#ff0', 0, true); }
+    if (f.kind === 'press' && f.t < 14) for (const y of [0, 2]) { const [ax, ay] = anchor(f.x, y); sprite(g, bank, 'judgeman', f.t < 6 ? 'press' : 'pressshut', f.t, ax, ay + (y === 0 ? 1 : -1) * f.t * 2, '#88f', 0, true); }
+  }
+
   // Hazards under actors.
   const wave = bank?.get('shockwave');
   for (const h of s.hazards) {

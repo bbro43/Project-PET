@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'BlastMan', 'DiveMan', 'CircusMan', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', BlastMan: 'blastman', DiveMan: 'diveman', CircusMan: 'circusman', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'BlastMan', 'DiveMan', 'CircusMan', 'JudgeMan', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', BlastMan: 'blastman', DiveMan: 'diveman', CircusMan: 'circusman', JudgeMan: 'judgeman', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -1230,6 +1230,85 @@ function circusman(e, api) {
   }
 }
 
+// ======================= JudgeMan =======================
+// Decision 0x80FF904: 2 moves; whip 0xA / book press 0xB; every 5th attack alternates 0xB and summoning the law book 0xC.
+function judgeman(e, api) {
+  const P = NAVI_AI.JudgeMan, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const [VAN, APP] = P.warpTicks.value;
+  const wait = t => { go(e, 'idle', 'idle'); e.think = Math.max(1, t); };
+  const free = (x, y) => x >= 3 && x <= 5 && y >= 0 && y <= 2 && (!api.at(x, y) || api.at(x, y) === e);
+  const bookUp = () => e.book && e.book.hp > 0;
+  switch (e.state) {
+    case 'idle':
+      if (--e.think > 0) return;
+      return decide();
+    case 'vanish':
+      if (e.stateT >= VAN) { [e.x, e.y] = e.dest; e.drawX = e.x; e.drawY = e.y; go(e, 'appear', 'appear'); }
+      return;
+    case 'appear':
+      if (e.stateT >= APP + 8) { const a = e.after; e.after = null; if (a) return a(); wait(pv(P.moveWait, v)); }
+      return;
+    // ---- 0xA: row ahead lit, wind up, the whip cracks over 3 panels
+    case 'whip': {
+      const mark = pv(P.whipMark, v), hit = mark + pv(P.whipWind, v) - 16;
+      const cells = [1, 2, 3].map(k => [e.x - k, e.y]).filter(([x]) => x >= 0);
+      if (e.stateT === 1) e.highlight = [cells];
+      if (e.stateT === mark) { e.highlight = null; setAnim(e, 'windup'); }
+      if (e.stateT === hit) {
+        setAnim(e, 'whip'); api.hitPlayerCells(cells, pv(P.whipDamage, v));
+        s.effects.push({ kind: 'lash', x: e.x, y: e.y, t: 0 });
+      }
+      if (e.stateT >= hit + 40) wait(pv(P.moveWait, v));
+      return;
+    }
+    // ---- 0xB: MegaMan's front column lit, then books slam shut on it
+    case 'press': {
+      const mark = pv(P.pressMark, v);
+      if (e.stateT === 1) { e.pressCells = [0, 1, 2].map(y => [2, y]); e.highlight = [e.pressCells]; if (bookUp()) e.book.anim = 'open'; }
+      if (e.stateT === mark) {
+        e.highlight = null;
+        api.hitPlayerCells(e.pressCells, pv(P.pressDamage, v));
+        s.effects.push({ kind: 'press', x: 2, t: 0 }, { kind: 'shake', t: 0 });
+        if (bookUp()) e.book.anim = 'idle';
+      }
+      if (e.stateT >= mark + 30) wait(pv(P.pressWait, v));
+      return;
+    }
+    // ---- 0xC: raise his arms and summon the law book in front of himself, in MegaMan's row
+    case 'book':
+      if (e.stateT === pv(P.bookMark, v)) {
+        const x = 3, y = p.y;
+        if (!bookUp() && free(x, y)) {
+          const hp = pv(P.bookHp, v);
+          e.book = api.addEnemy({ kind: 'coil', family: 'LawBook', name: 'LawBook', owner: e.id, sprite: 'lawbook', palette: 0,
+            x, y, drawX: x, drawY: y, hp, maxHp: hp, anim: 'appear', animT: 0, state: 'idle', stateT: 0, flash: 0, discharge: 0 });
+        }
+      }
+      if (e.stateT >= pv(P.bookMark, v) + 30) wait(pv(P.moveWait, v));
+      return;
+  }
+
+  function decide() {
+    if (m.c4 < 2) { m.c4++; return warp(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], null); }
+    m.c4 = 0;
+    const row = () => { const x = [3, 4, 5].find(x => free(x, p.y)); return x !== undefined ? [x, p.y] : [e.x, e.y]; };
+    if (m.c5 < 5) {
+      m.c5++;
+      if (bookUp()) {
+        if (rnd16(api) < 14) return warp(row(), () => go(e, 'whip', 'idle'));
+        return warp(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], null);
+      }
+      if (m.c6 < 2) { if (rnd16(api) < 14) m.c6++; return warp(row(), () => go(e, 'whip', 'idle')); }
+      m.c6 = 0; return go(e, 'press', 'summon');
+    }
+    m.c5 = 0;
+    const was = m.c7; m.c7 ^= 1;
+    if (!was) { m.c6 = 0; return go(e, 'press', 'summon'); }
+    return go(e, 'book', 'summon');
+  }
+  function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
+}
+
 const AREAS = {
   wide: [[-1, -1], [-1, 0], [-1, 1]],
   long: [[-1, 0], [-2, 0]],
@@ -1345,7 +1424,7 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, BlastMan: blastman, DiveMan: diveman, CircusMan: circusman, ProtoMan: protoman };
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, BlastMan: blastman, DiveMan: diveman, CircusMan: circusman, JudgeMan: judgeman, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;
