@@ -1429,6 +1429,97 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "dustman": {
+      "label": "DustMan (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "2BA7BC",
+          "compression": "none",
+          "bytes": 52624,
+          "sha256": "5e7b78a8d36c67e70f196f19690ba2810a1bd26ddb9ad42ed204fbc99874bde8",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "2BA7BC",
+          "compression": "none",
+          "bytes": 52624,
+          "sha256": "5e7b78a8d36c67e70f196f19690ba2810a1bd26ddb9ad42ed204fbc99874bde8",
+          "confidence": "rom-verified"
+        }
+      },
+      "note": "AI animation ids 0xF-0x17 map to sequences directly; the thrown junk (type3 0x83) uses sequence 24 of this sprite.",
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "transform": {
+          "seq": 15,
+          "confidence": "visual-candidate"
+        },
+        "hold": {
+          "seq": 16,
+          "confidence": "visual-candidate"
+        },
+        "mouth": {
+          "seq": 17,
+          "confidence": "visual-candidate"
+        },
+        "suck": {
+          "seq": 18,
+          "confidence": "visual-candidate"
+        },
+        "fist": {
+          "seq": 20,
+          "confidence": "visual-candidate"
+        },
+        "throw": {
+          "seq": 23,
+          "confidence": "visual-candidate"
+        },
+        "junk": {
+          "seq": 24,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "scrapshot": {
+      "label": "DustMan scrap shot (object type3 0x84, sprite 0x0C/0x33)",
+      "sources": {
+        "bn6f": {
+          "offset": "325EF4",
+          "compression": "none",
+          "bytes": 968,
+          "sha256": "12b10df7fd16fc4aa8f2e2476e2ae93c8ed34426112e131d09a4a6e9c239d494",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "32546C",
+          "compression": "none",
+          "bytes": 968,
+          "sha256": "12b10df7fd16fc4aa8f2e2476e2ae93c8ed34426112e131d09a4a6e9c239d494",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "fly": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {

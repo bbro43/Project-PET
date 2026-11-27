@@ -546,3 +546,47 @@ test('GroundMan drill tank drives down the row, then rocks fall with the first o
   run(s, NAVI_AI.GroundMan.rockFall.value);
   assert.equal(s.player.hp, 440, 'base rock damage 60');
 });
+
+test('DustMan names and HP from the ROM tables', () => {
+  const vs = naviVariants('DustMan');
+  assert.equal(vs[0].name, 'DustMan');
+  assert.equal(start('DustMan').enemies[0].sprite, 'dustman');
+});
+
+test('DustMan junk throw: MegaMan\'s panel lights up, junk lands there for 50', () => {
+  const { s, e } = findState('DustMan', 0, 'junk', s => { s.player.invuln = 1e9; });
+  const P = NAVI_AI.DustMan;
+  run(s, P.junkWindup.value - e.stateT);
+  assert.deepEqual(e.highlight[0][0], [s.player.x, s.player.y]);
+  s.player.invuln = 0;
+  run(s, P.junkMark.value[0] + P.junkFlight.value);
+  assert.equal(s.player.hp, 50);
+});
+
+test('DustMan vacuum pulls MegaMan to the front of his row, then hits for 100', () => {
+  const { s, e } = findState('DustMan', 0, 'vacuum', s => { s.player.invuln = 1e9; });
+  s.player.invuln = 0; s.player.hp = s.player.maxHp = 500; s.player.x = 0; s.player.y = e.y;
+  const P = NAVI_AI.DustMan;
+  run(s, P.vacuumOpen.value + P.vacuumPull.value - e.stateT);
+  assert.equal(s.player.x, 2, 'pulled to the front column');
+  run(s, P.vacuumHit.value + 1);
+  assert.equal(s.player.hp, 400);
+});
+
+test('DustMan scrap shots: three shots down his row', () => {
+  const { s, e } = findState('DustMan', 0, 'shots', s => { s.player.invuln = 1e9; });
+  const P = NAVI_AI.DustMan;
+  let shots = 0;
+  for (let i = 0; i < P.shotLead.value + P.shotGap.value * 3; i++) { const n = s.hazards.filter(h => h.kind === 'scrap').length; step(s, {}); if (s.hazards.filter(h => h.kind === 'scrap').length > n) shots++; }
+  assert.equal(shots, 3);
+  assert.ok(s.hazards.filter(h => h.kind === 'scrap').every(h => h.y === e.y));
+});
+
+test('DustMan uses the vacuum after 7 other attacks', () => {
+  const s = start('DustMan'), e = s.enemies[0];
+  s.player.invuln = 1e9;
+  const seen = [];
+  for (let i = 0; i < 30000 && !seen.includes('vacuum'); i++) { const was = e.state; step(s, {}); if (was !== e.state && ['junk', 'shots', 'vacuum'].includes(e.state)) seen.push(e.state); }
+  assert.equal(seen.length, 8);
+  assert.equal(seen[7], 'vacuum');
+});

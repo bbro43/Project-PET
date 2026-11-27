@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -913,6 +913,87 @@ function groundman(e, api) {
   function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
 }
 
+// ======================= DustMan =======================
+// Decision 0x80FADF0: 1 move, then junk throw 0xB / scrap shots 0xC, every 7th (5th below half HP) the vacuum 0xA.
+function dustman(e, api) {
+  const P = NAVI_AI.DustMan, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const [VAN, APP] = P.warpTicks.value;
+  const wait = t => { go(e, 'idle', 'idle'); e.think = Math.max(1, t); };
+  const free = (x, y) => x >= 3 && x <= 5 && y >= 0 && y <= 2 && (!api.at(x, y) || api.at(x, y) === e);
+  switch (e.state) {
+    case 'idle':
+      if (--e.think > 0) return;
+      return decide();
+    case 'vanish':
+      if (e.stateT >= VAN) { [e.x, e.y] = e.dest; e.drawX = e.x; e.drawY = e.y; go(e, 'appear', 'appear'); }
+      return;
+    case 'appear':
+      if (e.stateT >= APP) { const a = e.after; e.after = null; if (a) return a(); wait(pv(P.moveWait, v)); }
+      return;
+    // ---- 0xA: open up and suck MegaMan toward the front of his row, then punch the panel in front
+    case 'vacuum': {
+      const open = P.vacuumOpen.value, pull = P.vacuumPull.value;
+      if (e.stateT === open) setAnim(e, 'mouth');
+      if (e.stateT > open && e.stateT <= open + pull) {
+        if (e.stateT === open + 8) setAnim(e, 'suck');
+        if ((e.stateT - open) % P.vacuumStep.value === 0 && p.y === e.y && p.state !== 'vanish') {
+          const nx = p.x + 1;
+          if (nx <= e.x - 1 && nx <= 2 && !api.at(nx, p.y)) { p.x = nx; }
+        }
+        s.effects.push({ kind: 'suction', x: e.x, y: e.y, t: 0 });
+      }
+      if (e.stateT === open + pull) setAnim(e, 'fist');
+      if (e.stateT === open + pull + P.vacuumHit.value) {
+        api.hitPlayerCells([[e.x - 1, e.y]], pv(P.vacuumDamage, v));
+        s.effects.push({ kind: 'spark', x: e.x - 1, y: e.y, t: 0 }, { kind: 'shake', t: 0 });
+      }
+      if (e.stateT >= open + pull + 22) wait(pv(P.vacuumWait, v));
+      return;
+    }
+    // ---- 0xB: transform, light MegaMan's panel, throw a junk cube onto it
+    case 'junk': {
+      const wind = P.junkWindup.value, mark = pv(P.junkMark, v);
+      if (e.stateT === wind) { setAnim(e, 'mouth'); e.junkAt = [p.x, p.y]; e.highlight = [[e.junkAt]]; }
+      if (e.stateT === wind + mark) {
+        e.highlight = null; setAnim(e, 'throw');
+        s.hazards.push({ kind: 'junk', x0: e.x, y0: e.y, x: e.junkAt[0], y: e.junkAt[1], start: s.tick, land: s.tick + P.junkFlight.value, damage: pv(P.junkDamage, v), owner: e.id });
+      }
+      if (e.stateT >= wind + mark + P.junkFlight.value + 10) wait(pv(P.junkWait, v));
+      return;
+    }
+    // ---- 0xC: scrap shots down his row
+    case 'shots': {
+      const lead = P.shotLead.value, gap = P.shotGap.value, n = P.shotCount.value;
+      if (e.stateT === lead) setAnim(e, 'suck');
+      if (e.stateT >= lead && (e.stateT - lead) % gap === 0 && (e.stateT - lead) / gap < n) {
+        s.hazards.push({ kind: 'scrap', fx: e.x - 0.5, y: e.y, speed: P.shotSpeed.value, start: s.tick, damage: pv(P.shotDamage, v), owner: e.id });
+      }
+      if (e.stateT >= lead + gap * n + 10) wait(pv(P.shotWait, v));
+      return;
+    }
+  }
+
+  function decide() {
+    if (m.c4 < 1) { m.c4++; return warp(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], null); }
+    m.c4 = 0;
+    const limit = e.hp < e.maxHp / 2 ? P.attackCount.value.lowHp : P.attackCount.value.normal;
+    const front = () => { const x = [3, 4, 5].find(x => free(x, p.y)); return x !== undefined ? [x, p.y] : [e.x, e.y]; };
+    if (m.c5 < limit) {
+      m.c5++;
+      if (m.c6 < 1) {
+        if (rnd16(api) < 12) m.c6++;
+        const col = [0, 1, 2].filter(y => free(5, y)).map(y => [5, y]); // 0x80FB7B4: back column
+        return warp(pick(col, api) || [e.x, e.y], () => go(e, 'junk', 'transform'));
+      }
+      m.c6 = 0;
+      return warp(front(), () => go(e, 'shots', 'mouth'));
+    }
+    m.c5 = 0;
+    return warp(front(), () => go(e, 'vacuum', 'hold'));
+  }
+  function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
+}
+
 const AREAS = {
   wide: [[-1, -1], [-1, 0], [-1, 1]],
   long: [[-1, 0], [-2, 0]],
@@ -1028,7 +1109,7 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, ProtoMan: protoman };
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;

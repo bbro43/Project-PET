@@ -196,6 +196,27 @@ export function render(g, s, bank) {
     else { g.fillStyle = '#a98'; for (let i = 0; i < 4; i++) g.fillRect(ax - 10 + i * 6, ay - 10 - f.t, 4, 4); }
   }
 
+  // DustMan: junk cube, scrap shots, suction lines
+  const scrap = bank?.get('scrapshot');
+  for (const h of s.hazards) {
+    if (h.kind === 'junk') {
+      const k = Math.min(1, (s.tick - h.start) / (h.land - h.start));
+      const [x0, y0] = anchor(h.x0, h.y0), [x1, y1] = anchor(h.x, h.y);
+      const x = x0 + (x1 - x0) * k, y = y0 + (y1 - y0) * k - Math.sin(Math.PI * k) * 50;
+      sprite(g, bank, 'dustman', 'junk', 0, x, y, '#a85', 0, true); // frame 0 is the cube; the next frame is blank
+    }
+    if (h.kind === 'scrap') {
+      const [ax, ay] = anchor(h.fx, h.y);
+      if (scrap) { const f = frameAt(scrap.fly, s.tick - h.start); g.save(); g.translate(Math.round(ax), 0); g.scale(-1, 1); g.drawImage(f.image, -f.originX, Math.round(ay - 16 - f.originY)); g.restore(); }
+      else { g.fillStyle = '#c66'; g.fillRect(ax - 6, ay - 18, 12, 5); }
+    }
+  }
+  for (const f of s.effects) if (f.kind === 'suction' && f.t < 2) {
+    const [ax, ay] = anchor(f.x, f.y);
+    g.strokeStyle = 'rgba(220,220,200,.5)'; g.lineWidth = 1;
+    for (let i = 0; i < 3; i++) { const off = ((s.tick * 3 + i * 25) % 70); g.beginPath(); g.moveTo(ax - 90 + off, ay - 24 + i * 8); g.lineTo(ax - 70 + off, ay - 24 + i * 8); g.stroke(); }
+  }
+
   // Hazards under actors.
   const wave = bank?.get('shockwave');
   for (const h of s.hazards) {
