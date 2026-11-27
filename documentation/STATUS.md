@@ -1,4 +1,4 @@
-# Project PET — status (updated 27 Nov 2026, app 0.26.0 / assets 30)
+# Project PET — status (updated 27 Nov 2026, app 0.27.0 / assets 31)
 
 Legend: **Done** = implemented and tested · **Partial** = works but incomplete or using unverified values · **Pending** = not started · **Unverified** = claim without fresh evidence.
 
@@ -18,7 +18,7 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 | Battle engine core | Partial | 60 Hz deterministic; 6×3 field, areas, move, buster, charge, flinch + invincibility, custom gauge, chip select rules, queue. Several timings unverified (data/rules.mjs) |
 | BattleChips | Partial | 10 chips (Cannon family, AirShot, Sword family, MiniBomb, Recovery). No chip art/icons yet |
 | Folder editor | Pending | Test folder only (not the canonical BN6 default) |
-| Virus battles | Partial | Mettaur, Champy, Gunner families, all 6 variants, 1–3 count. Stats and AI decoded from the ROM (documentation/audit/2026-11-27-bn6-virus-ai.md); 26 families have stats and sprites located but no AI yet |
+| Virus battles | Partial | 8 families decoded from the ROM, all 6 versions each: Mettaur, Piranha, Heady, Swordy, KillerEye, Quaker, Champy, Gunner (documentation/audit/2026-11-27-bn6-virus-ai.md); 21 families have stats and sprites located but no AI yet |
 | Endless survival | Partial | Random Mettaur/Champy/Gunner waves up to Ω; composition non-canonical |
 | Navi roster / NetBattle vs CPU Navis | Partial | CPU: HeatMan and SlashMan (all three attacks each decoded), EraseMan (move, scythe, eye-marker beam, battle-start dark portals decoded), ChargeMan (dash, train patterns and big charge decoded; inner loop of the big charge estimated), SpoutMan (bomb, hose, sprinkler decoded), TomahawkMan (throw, swing, chop, battle-start totem and eagle decoded), TenguMan (nose, tornado patterns, dash and its ROM paths decoded), GroundMan (pop-up, missiles, tank + rocks decoded), DustMan (junk, scrap shots, vacuum decoded), BlastMan (punch, fireball, fire storm patterns decoded), DiveMan (swim, torpedoes, big wave, battle-start mines decoded), CircusMan (clap, lion hoop, tent trap decoded), JudgeMan (whip, book press, law book decoded), ElementMan (decision, element cycle and palettes, basic tornado, timings and damage decoded; element attack shapes estimated). All 16 BN6 Navis in the AI table are playable as CPU opponents. Bosses: Colonel, Bass, Cybeast Gregar and Cybeast Falzar (decision logic, damage and timings decoded; attack shapes estimated; each Cybeast fills the enemy area, and its sprite comes from its own version's ROM), ElecMan (all four attacks + coils decoded) and ProtoMan (both phases, guard, targets decoded) with ROM stats, damage and timings (documentation/audit/2026-11-27-bn6-navi-ai.md). Data: Sprite blocks located for 19 BN6 Navis + Beast/Cross forms (sprite table) and 35 BN4/BN5 Navis (matched to the owner's reference sprites): data/navi-sprites.json. No sequence roles or AI yet |
 | Transformations (Cross/Beast/Soul) | Pending | |
@@ -39,6 +39,6 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 
 ## Next checkpoint
 1. BN5/BN4 Navis (sprites located; AI not decoded yet). Smaller leftovers: panel types (grass, lava, cracked) for ElementMan's fire/wood objects, TomahawkMan's eagle-to-axe during his chop.
-2. BN6 viruses: the remaining 26 families in batches (virus AI table 0x8109050).
+2. BN6 viruses: the remaining 21 families in batches (virus AI table 0x8109050); next Catack, WindBox, Trumpy, OldStove, HauntedCandle.
 3. Trace timings in an emulator (glide speeds, hit frames, custom gauge, charge, invincibility).
 4. Chip table and icons from the ROM; folder editor; Navi Customizer.
