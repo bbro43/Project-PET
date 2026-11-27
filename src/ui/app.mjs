@@ -76,7 +76,19 @@ $('#rom-input').addEventListener('change', async event => {
   event.target.value = '';
   refreshRoms();
 });
-refreshRoms();
+// TEMP dev splash: hold at least 1.5 s, close once ROM sprites are ready (tap to skip).
+const splashShown = performance.now();
+function closeSplash() {
+  const el = $('#splash');
+  if (!el || el.classList.contains('done')) return;
+  el.classList.add('done');
+  setTimeout(() => el.remove(), 400);
+}
+$('#splash').addEventListener('click', closeSplash);
+refreshRoms().catch(console.error).finally(() => {
+  $('#splash-note').textContent = 'Ready';
+  setTimeout(closeSplash, Math.max(0, 1500 - (performance.now() - splashShown)));
+});
 
 // ---------- battle loop ----------
 let state = null, last = 0, acc = 0, raf = 0;

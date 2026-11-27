@@ -24,6 +24,14 @@ small, .muted { color: #a8bbd8; }
 .file { display: inline-flex; align-items: center; cursor: pointer; }
 #roms li { margin: .2rem 0; }
 .warn { color: #ffd27a; }
+/* TEMP dev splash — remove before 1.0 */
+#splash { position: fixed; inset: 0; z-index: 20; background: #0b1830; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6rem; transition: opacity .3s; }
+#splash.done { opacity: 0; pointer-events: none; }
+#splash h1 { font-size: 1.8rem; letter-spacing: .12em; margin: 0; }
+#splash .ver { font: 1rem monospace; color: #9fd0ff; text-align: center; }
+#splash .bar { width: 160px; height: 6px; background: #17345e; border-radius: 3px; overflow: hidden; }
+#splash .bar i { display: block; height: 100%; width: 40%; background: #5aa0ff; animation: load 1s infinite ease-in-out; }
+@keyframes load { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
 #banner { position: fixed; left: .5rem; right: .5rem; bottom: .5rem; z-index: 9; background: #1c5a2e; border: 1px solid #5fd08a; border-radius: 10px; padding: .6rem; display: flex; gap: .6rem; align-items: center; justify-content: space-between; }
 /* Battle */
 #battle { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: env(safe-area-inset-top); touch-action: none; user-select: none; -webkit-user-select: none; }
@@ -46,6 +54,19 @@ button.held { background: #3b5f99; }
 #hand b { font-size: .95rem; }
 #queue { min-height: 1.4em; font-size: .85rem; }
 </style>
+<div id="splash" role="status" aria-live="polite">
+  <h1>PROJECT PET</h1>
+  <div class="ver" id="splash-ver"></div>
+  <div class="bar"><i></i></div>
+  <small id="splash-note">Loading…</small>
+  <small class="muted">Development build</small>
+</div>
+<script src="./release.js"></script>
+<script>
+  // TEMP dev splash: show versions immediately, before modules load.
+  document.getElementById('splash-ver').innerHTML =
+    'App v' + self.PROJECT_PET_RELEASE.app + '<br>Asset pack ' + self.PROJECT_PET_RELEASE.assets;
+</script>
 <main id="menu">
   <h1>PROJECT PET</h1>
   <div class="card" id="navi-card">
@@ -106,6 +127,5 @@ button.held { background: #3b5f99; }
 </section>
 
 <div id="banner" hidden><span>Update ready.</span><button id="reload" type="button">Restart app</button></div>
-<script src="./release.js"></script>
 <script type="module" src="./src/ui/app.mjs"></script>
 </html>
