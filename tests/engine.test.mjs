@@ -138,7 +138,7 @@ test('virus stats come from the ROM tables', () => {
   assert.deepEqual(BN6.families.Champy.variants.slice(0, 3).map(v => v.name), ['Champy', 'Chumpy', 'Chimpy']);
   const s = start({ seed: 1, enemies: [['Mettaur', 2], ['Champy', 3], ['Gunner', 0]] });
   assert.deepEqual(s.enemies.map(e => [e.name, e.hp, e.damage, e.palette]),
-    [['Mettaur3', 120, 40, 2], ['ChampyΩ', 220, 200, 3], ['Gunner', 60, 10, 0]]);
+    [['Mettaur3', 120, 40, 2], ['ChampySP', 220, 200, 3], ['Gunner', 60, 10, 0]]);
   assert.equal(s.enemies[1].element, 'fire');
 });
 

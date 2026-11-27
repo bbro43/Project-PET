@@ -1,4 +1,4 @@
-import { createBattle, step, pick, unpick, confirmCustom, canPick, formation, PLAYABLE_FAMILIES, virusName } from '../battle/engine.mjs';
+import { createBattle, step, pick, unpick, confirmCustom, canPick, formation, PLAYABLE_FAMILIES, virusName, PLAYABLE_NAVIS, naviVariants, naviBattle } from '../battle/engine.mjs';
 import BN6 from '../../data/bn6-viruses.mjs';
 import { CHIPS } from '../../data/rules.mjs';
 import { identify, extractRoms, sha1Hex } from '../rom/gba.mjs';
@@ -19,14 +19,26 @@ function fillVariants() {
   $('#variant').replaceChildren(...BN6.families[f].variants.map((v, i) => new Option(`${virusName(f, i)} · HP ${v.hp}`, i)));
   $('#variant').value = keep && keep < 6 ? keep : 0;
 }
+for (const n of PLAYABLE_NAVIS) $('#cpu-navi').add(new Option(n, n));
+function fillNaviVariants() {
+  const keep = $('#cpu-variant').value;
+  $('#cpu-variant').replaceChildren(...naviVariants($('#cpu-navi').value).map(v => new Option(`${v.name} · HP ${v.hp}`, v.index)));
+  if ([...$('#cpu-variant').options].some(o => o.value === keep)) $('#cpu-variant').value = keep;
+}
+if (prefs['cpu-navi']) $('#cpu-navi').value = prefs['cpu-navi'];
+fillNaviVariants();
+$('#cpu-navi').addEventListener('change', fillNaviVariants);
 if (prefs.family) $('#family').value = prefs.family;
 fillVariants();
 $('#family').addEventListener('change', fillVariants);
-for (const id of ['navi', 'mode', 'family', 'variant', 'count']) {
+for (const id of ['navi', 'mode', 'family', 'variant', 'count', 'cpu-navi', 'cpu-variant']) {
   if (prefs[id]) $('#' + id).value = prefs[id];
   $('#' + id).addEventListener('change', () => { prefs[id] = $('#' + id).value; savePrefs(); syncMenu(); });
 }
-function syncMenu() { $('#formation-wrap').hidden = $('#mode').value === 'survival'; }
+function syncMenu() {
+  $('#formation-wrap').hidden = $('#mode').value !== 'virus';
+  $('#navi-wrap').hidden = $('#mode').value !== 'navi';
+}
 syncMenu();
 
 // ---------- ROMs and sprites ----------
@@ -106,8 +118,9 @@ const screen = $('#screen').getContext('2d');
 
 function start() {
   const mode = $('#mode').value;
-  const enemies = formation($('#family').value, +$('#variant').value, +$('#count').value);
-  state = createBattle({ mode, enemies, seed: (Date.now() & 0x7fffffff) });
+  const enemies = mode === 'navi' ? naviBattle($('#cpu-navi').value, +$('#cpu-variant').value)
+    : formation($('#family').value, +$('#variant').value, +$('#count').value);
+  state = createBattle({ mode: mode === 'navi' ? 'virus' : mode, enemies, seed: (Date.now() & 0x7fffffff) });
   $('#menu').hidden = true; $('#battle').hidden = false;
   showCustom();
   last = performance.now(); acc = 0;

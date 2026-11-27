@@ -87,3 +87,37 @@ export const AI = {
     behaviour: v('crosshair tracks MegaMan, locks on, Gunner fires a burst at that panel', 'recalled'),
   },
 };
+
+// Navi AI parameters (BN6). Arrays indexed by variant: 0 base, 1 EX, 2 SP, 3 RV, 4 BX
+// (the ROM tables have 4 entries; RV and BX share the last).
+// Source: dism-exe/bn6f disassembly of the Navi AI routines, values read from the Falzar ROM.
+export const NAVI_AI = {
+  ElecMan: {
+    waitTicks: v([40, 30, 25, 20, 20], 'rom-verified', 'table 0x80F3BAC used as wait before ThunderBolt/beam (role inferred)'),
+    choice: v({ thunderbolt: [0, 4], beam: [4, 6], heavy: [6, 8], move: [8, 16] }, 'rom-verified', 'RNG & 15 thresholds in decision routine 0x80F3A24'),
+    specialEvery: v(4, 'rom-verified', 'counter reaches 3 → attack 0xA (shape not decoded; treated as a move)'),
+    thunderboltDamage: v([40, 80, 110, 110, 110], 'rom-verified', 'damage table 0x80F3C68'),
+    thunderboltDelay: v(30, 'rom-verified', 'marker → strike wait 0x1E in attack 0xB'),
+    beamDamage: v([40, 80, 110, 110, 110], 'rom-verified', 'damage table 0x80F3C70'),
+    beamChargeTicks: v(32, 'rom-verified', 'attack uses anim 0x12 with timers 12 + 20'),
+    heavyDamage: v([80, 160, 220, 220, 220], 'rom-verified', 'damage table 0x80F3C78; attack 0xD shape not decoded (treated as a move)'),
+    moveTicks: v(4, 'unverified', 'vanish/appear frames'),
+    shapes: v('ThunderBolt = marker then vertical bolt on MegaMan\'s panel; beam = horizontal bolt along ElecMan\'s row', 'unverified', 'inferred from animations and the bolt sprite'),
+  },
+  ProtoMan: {
+    waitTicks: v([20, 16, 14, 12, 12], 'rom-verified', 'table 0x80FBD00 (wait between actions, role inferred)'),
+    readyTicks: v([16, 14, 12, 10, 10], 'rom-verified', 'table 0x80FBD28 (ready pose before swing, role inferred)'),
+    warpTicks: v(3, 'rom-verified', 'vanish 3 / appear 3 in attack routines'),
+    preReadyTicks: v(8, 'rom-verified', 'wait after appearing'),
+    recoverTicks: v(30, 'rom-verified', 'hold after swing (0x1E)'),
+    hitTick: v(10, 'unverified', 'frame of swing when the hit lands'),
+    wideDamage: v([100, 150, 150, 220, 220], 'rom-verified', 'attack 0xA, table 0x80FBFFC'),
+    guardDamage: v([70, 100, 100, 150, 150], 'rom-verified', 'attack 0xB counter, table 0x80FC004'),
+    longDamage: v([90, 130, 130, 200, 200], 'rom-verified', 'attack 0xC, table 0x80FC00C'),
+    bothDamage: v([150, 220, 220, 330, 330], 'rom-verified', 'attack 0xD, table 0x80FC014'),
+    deltaDamage: v([80, 120, 120, 180, 180], 'rom-verified', 'attack 0xE, table 0x80FC01C'),
+    pattern: v('base: move 2–4 times (counter += 1–2 until ≥4), then WideSword (75% to repeat once) else LongSword; every 3rd cycle both swords. ≤50% HP: adds multi-warp slash. EX+ also guards.', 'rom-verified', 'decision routines 0x80FBA24/0x80FBA9A/0x80FBB34; phase-2 details simplified'),
+    shapes: v('WideSword = column in front (3 rows); LongSword = 2 panels ahead; 0xD = both; 0xE = repeated step-in slashes', 'unverified', 'inferred from sword effects 0x25/0x27 and hit-shape arguments'),
+    guardTicks: v(60, 'unverified'),
+  },
+};

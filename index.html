@@ -82,12 +82,17 @@ button.held { background: #3b5f99; }
     <div class="row">
       <label>Mode <select id="mode">
         <option value="virus">Virus Battle</option>
+        <option value="navi">Navi Battle (CPU)</option>
         <option value="survival">Endless Survival</option>
       </select></label>
       <span id="formation-wrap" class="row">
         <label>Virus <select id="family"></select></label>
         <label>Type <select id="variant"></select></label>
         <label>Count <select id="count"><option>1</option><option>2</option><option selected>3</option></select></label>
+      </span>
+      <span id="navi-wrap" class="row">
+        <label>Opponent <select id="cpu-navi"></select></label>
+        <label>Version <select id="cpu-variant"></select></label>
       </span>
       <button id="start" type="button">Start</button>
     </div>

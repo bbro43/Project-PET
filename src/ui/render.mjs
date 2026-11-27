@@ -31,6 +31,10 @@ const placeholderNavi = (g, x, y) => {
   g.fillStyle = '#8fd0ff'; g.fillRect(x - 5, y - 30, 10, 8);
   g.fillStyle = '#123'; g.fillRect(x - 10, y - 4, 20, 4);
 };
+const placeholderEnemyNavi = (g, x, y) => {
+  g.fillStyle = '#c04040'; g.fillRect(x - 8, y - 36, 16, 32);
+  g.fillStyle = '#ffd0d0'; g.fillRect(x - 5, y - 32, 10, 8);
+};
 const placeholderVirus = (g, x, y) => {
   g.fillStyle = '#e0c020'; g.beginPath(); g.arc(x, y - 6, 10, Math.PI, 0); g.fill();
   g.fillStyle = '#333'; g.fillRect(x - 10, y - 6, 20, 6);
@@ -75,15 +79,51 @@ export function render(g, s, bank) {
     if (e.hp <= 0) continue;
     const [ax, ay] = anchor(e.x, e.y);
     draw.push({ y: e.y, fn: () => {
-      sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, placeholderVirus, e.palette);
+      sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, e.kind === 'navi' ? placeholderEnemyNavi : placeholderVirus, e.palette);
+      if (e.guard) { g.fillStyle = 'rgba(200,230,255,.7)'; g.fillRect(ax - 18, ay - 34, 3, 28); }
       if (e.flash) { g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(ax - 14, ay - 26, 28, 26); g.globalCompositeOperation = 'source-over'; }
       text(g, String(e.hp), ax, ay + 6, '#fff', 'center');
     } });
   }
   draw.sort((a, b) => a.y - b.y).forEach(d => d.fn());
 
+  // ElecMan ThunderBolt marker (drawn as a flashing panel outline; the game's marker sprite isn't mapped yet)
+  for (const e of s.enemies) if (e.hp > 0 && e.target?.kind === 'marker') {
+    const px = e.target.x * PANEL_W, py = FIELD_Y + e.target.y * PANEL_H;
+    g.strokeStyle = (e.target.t >> 2) & 1 ? '#ffe040' : '#fff'; g.lineWidth = 2;
+    g.strokeRect(px + 2, py + 2, PANEL_W - 4, PANEL_H - 6);
+  }
+  const bolt = bank?.get('elecbolt');
+  for (const f of s.effects) {
+    if ((f.kind === 'bolt-v' || f.kind === 'bolt-h') && f.t < 12) {
+      const [ax, ay] = anchor(f.x, f.y);
+      if (bolt) {
+        const img = frameAt(bolt[f.kind === 'bolt-v' ? 'vertical' : 'horizontal'], f.t).image;
+        if (f.kind === 'bolt-v') g.drawImage(img, Math.round(ax - img.width / 2), Math.round(ay - img.height));
+        else g.drawImage(img, Math.round(ax + 20 - img.width), Math.round(ay - 16 - img.height / 2));
+      } else {
+        g.strokeStyle = '#ffe860'; g.lineWidth = 3; g.beginPath();
+        if (f.kind === 'bolt-v') { g.moveTo(ax, 0); g.lineTo(ax - 5, ay - 30); g.lineTo(ax + 4, ay - 18); g.lineTo(ax, ay); }
+        else { g.moveTo(ax + 20, ay - 14); for (let x = ax; x > -20; x -= 12) g.lineTo(x, ay - 14 + ((x / 12) & 1 ? -5 : 5)); }
+        g.stroke();
+      }
+    }
+    if (f.kind === 'slash' && f.t < 10) {
+      const cells = { wide: [[-1, -1], [-1, 0], [-1, 1]], long: [[-1, 0], [-2, 0]], both: [[-1, -1], [-1, 0], [-1, 1], [-2, 0]], sword: [[-1, 0]] }[f.area];
+      g.strokeStyle = 'rgba(255,140,230,.9)'; g.lineWidth = 3;
+      for (const [dx, dy] of cells) {
+        const [ax, ay] = anchor(f.x + dx, f.y + dy);
+        if (f.y + dy < 0 || f.y + dy > 2) continue;
+        g.beginPath(); g.arc(ax + 10, ay - 12, 14, Math.PI * 0.6, Math.PI * 1.4); g.stroke();
+      }
+    }
+    if (f.kind === 'guard' && f.t < 10) {
+      const [ax, ay] = anchor(f.x, f.y);
+      g.fillStyle = 'rgba(200,230,255,.8)'; g.fillRect(ax - 16, ay - 34, 4, 28);
+    }
+  }
   const target = bank?.get('target');
-  for (const e of s.enemies) if (e.hp > 0 && e.target) {
+  for (const e of s.enemies) if (e.hp > 0 && e.target && e.target.kind !== 'marker') {
     const [ax, ay] = anchor(e.target.x, e.target.y);
     if (target) {
       const f = frameAt(target[e.target.locked ? 'lock' : 'search'], e.target.locked ? e.stateT : e.target.t);

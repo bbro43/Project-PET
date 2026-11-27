@@ -249,6 +249,144 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "elecman": {
+      "label": "ElecMan (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "26FAF0",
+          "compression": "none",
+          "bytes": 37832,
+          "sha256": "6d84a8a7e95ebb54f57e791fbea9c4523e7eef8650e4cc910f9f1b78dca2288e",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "26FAF0",
+          "compression": "none",
+          "bytes": 37832,
+          "sha256": "6d84a8a7e95ebb54f57e791fbea9c4523e7eef8650e4cc910f9f1b78dca2288e",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "charge": {
+          "seq": 18,
+          "confidence": "visual-candidate"
+        },
+        "charged": {
+          "seq": 19,
+          "confidence": "visual-candidate"
+        },
+        "summon": {
+          "seq": 20,
+          "confidence": "visual-candidate"
+        },
+        "point": {
+          "seq": 21,
+          "confidence": "visual-candidate"
+        }
+      },
+      "note": "AI sets CurAnim 0x12, 0x14, 0x15 (18, 20, 21) in its attacks, read from the ElecMan AI code."
+    },
+    "protoman": {
+      "label": "ProtoMan (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "2C7550",
+          "compression": "none",
+          "bytes": 30754,
+          "sha256": "00d7bcc4700c0acba63adfa7238663fd995221af436e4670b3df175f38e689f1",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "2C7550",
+          "compression": "none",
+          "bytes": 30754,
+          "sha256": "00d7bcc4700c0acba63adfa7238663fd995221af436e4670b3df175f38e689f1",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "guard": {
+          "seq": 2,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "swing": {
+          "seq": 5,
+          "confidence": "visual-candidate"
+        },
+        "slash": {
+          "seq": 6,
+          "confidence": "visual-candidate"
+        },
+        "ready": {
+          "seq": 15,
+          "confidence": "visual-candidate"
+        }
+      },
+      "note": "AI sets these animation numbers directly (CurAnim 3,4,5,15 read from the ProtoMan AI code); guard pose is a candidate."
+    },
+    "elecbolt": {
+      "label": "ElecMan lightning (sprite table 0x10/0x12)",
+      "note": "Loaded by ElecMan attack object type3 0x1E via sprite_load(0x80, 0x10, 0x12).",
+      "sources": {
+        "bn6f": {
+          "offset": "35CA2C",
+          "compression": "none",
+          "bytes": 6197,
+          "sha256": "e9a3aa55278470870b08e74137d9015c186cee3020aad5b4c5f6858116646b24",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "35BFA4",
+          "compression": "none",
+          "bytes": 6197,
+          "sha256": "e9a3aa55278470870b08e74137d9015c186cee3020aad5b4c5f6858116646b24",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "horizontal": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "vertical": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {

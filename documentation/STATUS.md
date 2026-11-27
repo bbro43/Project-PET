@@ -1,4 +1,4 @@
-# Project PET — status (updated 27 Nov 2026, app 0.3.0 / assets 3)
+# Project PET — status (updated 27 Nov 2026, app 0.4.0 / assets 4)
 
 Legend: **Done** = implemented and tested · **Partial** = works but incomplete or using unverified values · **Pending** = not started · **Unverified** = claim without fresh evidence.
 
@@ -20,7 +20,7 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 | Folder editor | Pending | Test folder only (not the canonical BN6 default) |
 | Virus battles | Partial | Mettaur, Champy, Gunner families, all 6 variants, 1–3 count. Stats ROM-verified; Champy/Gunner AI from recall (26 families have stats but no AI yet) |
 | Endless survival | Partial | Random Mettaur/Champy/Gunner waves up to Ω; composition non-canonical |
-| Navi roster / NetBattle vs CPU Navis | Partial (data) | Sprite blocks located for 19 BN6 Navis + Beast/Cross forms (sprite table) and 35 BN4/BN5 Navis (matched to the owner's reference sprites): data/navi-sprites.json. No sequence roles or AI yet |
+| Navi roster / NetBattle vs CPU Navis | Partial | CPU: ElecMan and ProtoMan (BN6) playable as opponents with ROM stats/damage and partly decoded AI (documentation/audit/2026-11-27-bn6-navi-ai.md). Data: Sprite blocks located for 19 BN6 Navis + Beast/Cross forms (sprite table) and 35 BN4/BN5 Navis (matched to the owner's reference sprites): data/navi-sprites.json. No sequence roles or AI yet |
 | Transformations (Cross/Beast/Soul) | Pending | |
 | Navi Customizer | Pending | |
 | Audio | Pending | |
@@ -34,10 +34,11 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 | Mettaur (BN6) | ✓ (on device) | ✓ ROM tables | candidate roles | – | ✓ AI (partly ROM) | engine tests |
 | Champy, Gunner (BN6) | ✓ (on device) | ✓ ROM tables | candidate roles | – | ✓ AI (recalled) | engine tests |
 | 26 other BN6 virus families | offsets ✓ | ✓ ROM names/stats | – | – | – | ROM hash test |
+| ElecMan, ProtoMan (BN6) CPU | ✓ | ✓ ROM tables | AI-set animations | – | ✓ partial AI | 8 tests |
 | 19 BN6 Navis, 35 BN4/BN5 Navis | offsets ✓ | ✓ (BN6 labels / BN4-5 visual) | – | – | – | ROM hash test |
 
 ## Next checkpoint
-1. First CPU Navi (BN6): map sprite, decode its AI routine in the disassembly, implement attack pattern.
-2. More virus families, prioritising ones whose AI is easiest to read from the disassembly.
-3. Trace timings (custom gauge, charge, invincibility, ShockWave speed) in an emulator.
-4. Chip icons/effects from ROM; folder editor; Navi Customizer.
+1. Finish ElecMan attacks 0xA/0xD and ProtoMan phase 2 from the disassembly; map marker and sword effect sprites.
+2. More BN6 CPU Navis using the same method.
+3. Decode Champy/Gunner AI routines to replace recalled behaviour.
+4. Trace timings in an emulator; chip table and icons; folder editor; Navi Customizer.

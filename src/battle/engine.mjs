@@ -3,7 +3,11 @@
 // Input: { dir: 'up'|'down'|'left'|'right'|null, a: held bool, b: pressed bool, l: pressed bool }
 import { val, CHIPS, TEST_FOLDER, WEAKNESS } from '../../data/rules.mjs';
 import { createVirus, stepVirus, virusName, PLAYABLE_FAMILIES } from './viruses.mjs';
-export { PLAYABLE_FAMILIES, virusName };
+import { createNavi, stepNavi, naviVariants, PLAYABLE_NAVIS } from './navis.mjs';
+export { PLAYABLE_FAMILIES, virusName, PLAYABLE_NAVIS, naviVariants };
+
+// Single CPU Navi battle (Navi starts on the middle panel of the enemy area).
+export const naviBattle = (navi, variant) => [['navi:' + navi, variant]];
 
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const SLOTS = [[4, 1], [5, 0], [5, 2], [3, 1], [4, 0], [4, 2]];
@@ -59,6 +63,7 @@ function pickSurvival(s) { return PLAYABLE_FAMILIES[Math.floor(rng(s) * PLAYABLE
 function spawn(s, list) {
   s.enemies = list.map(([family, variant], i) => {
     const [x, y] = SLOTS[i];
+    if (family.startsWith('navi:')) return createNavi(family.slice(5), variant, x, y, s.nextId++);
     const e = createVirus(family, variant, x, y, s.nextId++);
     e.think = 30 + i * 20;
     return e;
@@ -102,6 +107,7 @@ export function elementMultiplier(attack, defend) {
 
 function hitEnemy(s, e, damage, extra = {}) {
   if (!e || e.hp <= 0) return;
+  if (e.guard) { e.guardHit = true; s.events.push({ type: 'guard', target: e.id }); s.effects.push({ kind: 'guard', x: e.x, y: e.y, t: 0 }); return; }
   damage *= elementMultiplier(extra.element, e.element);
   e.hp = Math.max(0, e.hp - damage);
   e.flash = 4;
@@ -197,6 +203,8 @@ function virusApi(s) {
     s,
     at: (x, y) => at(s, x, y),
     hitPlayerAt(x, y, damage) { if (p.x === x && p.y === y && p.state !== 'vanish') hitPlayer(s, damage); },
+    hitPlayerCells(cells, damage) { if (p.state !== 'vanish' && cells.some(([x, y]) => p.x === x && p.y === y)) hitPlayer(s, damage); },
+    rng: () => rng(s),
     spawnWave(e, x, y, stepTicks) { s.hazards.push({ kind: 'wave', owner: e.id, family: e.family, x, y, dir: -1, step: stepTicks, next: s.tick + stepTicks, damage: e.damage, start: s.tick }); },
     turnFree(e) { const t = s.turns[e.family]; return t === undefined || t === e.id || !s.enemies.some(o => o.id === t && o.hp > 0); },
     takeTurn(e) { s.turns[e.family] = e.id; },
@@ -239,7 +247,7 @@ export function step(s, input = {}) {
   if (input.l && s.gauge >= val('customGaugeTicks') && s.player.state === 'idle') { openCustom(s); return s; }
   stepPlayer(s, input);
   const api = virusApi(s);
-  for (const e of s.enemies) if (e.hp > 0) stepVirus(e, api);
+  for (const e of s.enemies) if (e.hp > 0) (e.kind === 'navi' ? stepNavi : stepVirus)(e, api);
   stepHazards(s);
   s.effects = s.effects.filter(f => ++f.t < 24);
   if (s.player.hp <= 0) { s.phase = 'lose'; s.events.push({ type: 'lose' }); }

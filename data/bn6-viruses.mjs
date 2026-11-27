@@ -2,6 +2,488 @@
 // Identical output from BN6 Falzar (BR6E) and Gregar (BR5E) US ROMs.
 export default {
  "source": "BR6E+BR5E",
+ "navis": {
+  "HeatMan": {
+   "ai": 1,
+   "variants": [
+    {
+     "name": "HeatMan",
+     "hp": 700,
+     "element": "fire"
+    },
+    {
+     "name": "HeatManEX",
+     "hp": 1500,
+     "element": "fire"
+    },
+    {
+     "name": "HeatManSP",
+     "hp": 1900,
+     "element": "fire"
+    },
+    {
+     "name": "HeatManRV",
+     "hp": 1900,
+     "element": "fire"
+    },
+    {
+     "name": "HeatManBX",
+     "hp": 1900,
+     "element": "fire"
+    }
+   ]
+  },
+  "ElecMan": {
+   "ai": 2,
+   "variants": [
+    {
+     "name": "ElecMan",
+     "hp": 900,
+     "element": "elec"
+    },
+    {
+     "name": "ElecManEX",
+     "hp": 1400,
+     "element": "elec"
+    },
+    {
+     "name": "ElecManSP",
+     "hp": 1800,
+     "element": "elec"
+    },
+    {
+     "name": "ElecManRV",
+     "hp": 1800,
+     "element": "elec"
+    },
+    {
+     "name": "ElecManBX",
+     "hp": 1800,
+     "element": "elec"
+    }
+   ]
+  },
+  "SlashMan": {
+   "ai": 3,
+   "variants": [
+    {
+     "name": "SlashMan",
+     "hp": 800,
+     "element": "none"
+    },
+    {
+     "name": "SlashMnEX",
+     "hp": 1200,
+     "element": "none"
+    },
+    {
+     "name": "SlashMnSP",
+     "hp": 1500,
+     "element": "none"
+    },
+    {
+     "name": "SlashMnRV",
+     "hp": 1500,
+     "element": "none"
+    },
+    {
+     "name": "SlashMnBX",
+     "hp": 1500,
+     "element": "none"
+    }
+   ]
+  },
+  "EraseMan": {
+   "ai": 4,
+   "variants": [
+    {
+     "name": "EraseMan",
+     "hp": 800,
+     "element": "none"
+    },
+    {
+     "name": "EraseMnEX",
+     "hp": 1200,
+     "element": "none"
+    },
+    {
+     "name": "EraseMnSP",
+     "hp": 1600,
+     "element": "none"
+    },
+    {
+     "name": "EraseMnRV",
+     "hp": 1600,
+     "element": "none"
+    },
+    {
+     "name": "EraseMnBX",
+     "hp": 1600,
+     "element": "none"
+    }
+   ]
+  },
+  "ChargeMan": {
+   "ai": 5,
+   "variants": [
+    {
+     "name": "ChrgeMan",
+     "hp": 1000,
+     "element": "fire"
+    },
+    {
+     "name": "ChrgeMnEX",
+     "hp": 1500,
+     "element": "fire"
+    },
+    {
+     "name": "ChrgeMnSP",
+     "hp": 2000,
+     "element": "fire"
+    },
+    {
+     "name": "ChrgeMnRV",
+     "hp": 2000,
+     "element": "fire"
+    },
+    {
+     "name": "ChrgeMnBX",
+     "hp": 2000,
+     "element": "fire"
+    }
+   ]
+  },
+  "SpoutMan": {
+   "ai": 6,
+   "variants": [
+    {
+     "name": "SpoutMan",
+     "hp": 600,
+     "element": "aqua"
+    },
+    {
+     "name": "SpoutMnEX",
+     "hp": 1300,
+     "element": "aqua"
+    },
+    {
+     "name": "SpoutMnSP",
+     "hp": 1700,
+     "element": "aqua"
+    },
+    {
+     "name": "SpoutMnRV",
+     "hp": 1700,
+     "element": "aqua"
+    },
+    {
+     "name": "SpoutMnBX",
+     "hp": 1700,
+     "element": "aqua"
+    }
+   ]
+  },
+  "TomahawkMan": {
+   "ai": 7,
+   "variants": [
+    {
+     "name": "TmhkMan",
+     "hp": 1000,
+     "element": "wood"
+    },
+    {
+     "name": "TmhkManEX",
+     "hp": 1500,
+     "element": "wood"
+    },
+    {
+     "name": "TmhkManSP",
+     "hp": 2000,
+     "element": "wood"
+    },
+    {
+     "name": "TmhkManRV",
+     "hp": 2000,
+     "element": "wood"
+    },
+    {
+     "name": "TmhkManBX",
+     "hp": 2000,
+     "element": "wood"
+    }
+   ]
+  },
+  "TenguMan": {
+   "ai": 8,
+   "variants": [
+    {
+     "name": "TenguMan",
+     "hp": 800,
+     "element": "none"
+    },
+    {
+     "name": "TenguMnEX",
+     "hp": 1200,
+     "element": "none"
+    },
+    {
+     "name": "TenguMnSP",
+     "hp": 1500,
+     "element": "none"
+    },
+    {
+     "name": "TenguMnRV",
+     "hp": 1500,
+     "element": "none"
+    },
+    {
+     "name": "TenguMnBX",
+     "hp": 1500,
+     "element": "none"
+    }
+   ]
+  },
+  "GroundMan": {
+   "ai": 9,
+   "variants": [
+    {
+     "name": "GrndMan",
+     "hp": 1000,
+     "element": "none"
+    },
+    {
+     "name": "GrndManEX",
+     "hp": 1500,
+     "element": "none"
+    },
+    {
+     "name": "GrndManSP",
+     "hp": 2000,
+     "element": "none"
+    },
+    {
+     "name": "GrndManRV",
+     "hp": 2000,
+     "element": "none"
+    },
+    {
+     "name": "GrndManBX",
+     "hp": 2000,
+     "element": "none"
+    }
+   ]
+  },
+  "DustMan": {
+   "ai": 10,
+   "variants": [
+    {
+     "name": "DustMan",
+     "hp": 900,
+     "element": "none"
+    },
+    {
+     "name": "DustManEX",
+     "hp": 1300,
+     "element": "none"
+    },
+    {
+     "name": "DustManSP",
+     "hp": 1800,
+     "element": "none"
+    },
+    {
+     "name": "DustManRV",
+     "hp": 1800,
+     "element": "none"
+    },
+    {
+     "name": "DustManBX",
+     "hp": 1800,
+     "element": "none"
+    }
+   ]
+  },
+  "ProtoMan": {
+   "ai": 11,
+   "variants": [
+    {
+     "name": "ProtoMan",
+     "hp": 1800,
+     "element": "none"
+    },
+    {
+     "name": "ProtoMnEX",
+     "hp": 2000,
+     "element": "none"
+    },
+    {
+     "name": "ProtoMnSP",
+     "hp": 2000,
+     "element": "none"
+    },
+    {
+     "name": "ProtoMn?",
+     "hp": 2800,
+     "element": "none"
+    },
+    {
+     "name": "ProtoMnBX",
+     "hp": 2800,
+     "element": "none"
+    }
+   ]
+  },
+  "BlastMan": {
+   "ai": 12,
+   "variants": [
+    {
+     "name": "BlastMan",
+     "hp": 400,
+     "element": "fire"
+    },
+    {
+     "name": "BlastMnEX",
+     "hp": 800,
+     "element": "fire"
+    },
+    {
+     "name": "BlastMnSP",
+     "hp": 1400,
+     "element": "fire"
+    },
+    {
+     "name": "BlastMnRV",
+     "hp": 2000,
+     "element": "fire"
+    },
+    {
+     "name": "BlastMnBX",
+     "hp": 2000,
+     "element": "fire"
+    }
+   ]
+  },
+  "DiveMan": {
+   "ai": 13,
+   "variants": [
+    {
+     "name": "DiveMan",
+     "hp": 500,
+     "element": "aqua"
+    },
+    {
+     "name": "DiveManEX",
+     "hp": 1000,
+     "element": "aqua"
+    },
+    {
+     "name": "DiveManSP",
+     "hp": 1500,
+     "element": "aqua"
+    },
+    {
+     "name": "DiveManRV",
+     "hp": 1900,
+     "element": "aqua"
+    },
+    {
+     "name": "DiveManBX",
+     "hp": 1900,
+     "element": "aqua"
+    }
+   ]
+  },
+  "CircusMan": {
+   "ai": 14,
+   "variants": [
+    {
+     "name": "CrcusMan",
+     "hp": 700,
+     "element": "none"
+    },
+    {
+     "name": "CrcusMnEX",
+     "hp": 1200,
+     "element": "none"
+    },
+    {
+     "name": "CrcusMnSP",
+     "hp": 1600,
+     "element": "none"
+    },
+    {
+     "name": "CrcusMnRV",
+     "hp": 2100,
+     "element": "none"
+    },
+    {
+     "name": "CrcusMnBX",
+     "hp": 2100,
+     "element": "none"
+    }
+   ]
+  },
+  "JudgeMan": {
+   "ai": 15,
+   "variants": [
+    {
+     "name": "JudgeMan",
+     "hp": 800,
+     "element": "none"
+    },
+    {
+     "name": "JudgeMnEX",
+     "hp": 1100,
+     "element": "none"
+    },
+    {
+     "name": "JudgeMnSP",
+     "hp": 1600,
+     "element": "none"
+    },
+    {
+     "name": "JudgeMnRV",
+     "hp": 1900,
+     "element": "none"
+    },
+    {
+     "name": "JudgeMnBX",
+     "hp": 1900,
+     "element": "none"
+    }
+   ]
+  },
+  "ElementMan": {
+   "ai": 16,
+   "variants": [
+    {
+     "name": "ElmntMan",
+     "hp": 900,
+     "element": "none"
+    },
+    {
+     "name": "ElmntMnEX",
+     "hp": 1300,
+     "element": "none"
+    },
+    {
+     "name": "ElmntMnSP",
+     "hp": 1700,
+     "element": "none"
+    },
+    {
+     "name": "ElmntMnRV",
+     "hp": 2000,
+     "element": "none"
+    },
+    {
+     "name": "ElmntMnBX",
+     "hp": 2000,
+     "element": "none"
+    }
+   ]
+  }
+ },
  "confidence": "rom-verified (stats); names from ROM text; AI not decoded",
  "families": {
   "Mettaur": {
@@ -34,7 +516,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "MettaurΩ",
+     "name": "MettaurSP",
      "hp": 160,
      "element": "none",
      "damage": 60,
@@ -86,7 +568,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "PiranhaΩ",
+     "name": "PiranhaSP",
      "hp": 180,
      "element": "aqua",
      "damage": 80,
@@ -190,7 +672,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "SwordyΩ",
+     "name": "SwordySP",
      "hp": 200,
      "element": "none",
      "damage": 120,
@@ -242,7 +724,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "KllrEyeΩ",
+     "name": "KllrEyeSP",
      "hp": 230,
      "element": "elec",
      "damage": 120,
@@ -294,7 +776,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "QuakerΩ",
+     "name": "QuakerSP",
      "hp": 230,
      "element": "none",
      "damage": 80,
@@ -346,7 +828,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "CatackΩ",
+     "name": "CatackSP",
      "hp": 260,
      "element": "none",
      "damage": 200,
@@ -398,7 +880,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "ChampyΩ",
+     "name": "ChampySP",
      "hp": 220,
      "element": "fire",
      "damage": 200,
@@ -516,7 +998,7 @@ export default {
      "palette": 4
     },
     {
-     "name": "TrumpyΩ",
+     "name": "TrumpySP",
      "hp": 210,
      "element": "none",
      "damage": 260,
@@ -554,7 +1036,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "OldStovΩ",
+     "name": "OldStovSP",
      "hp": 230,
      "element": "fire",
      "damage": 60,
@@ -606,7 +1088,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "HntdCdlΩ",
+     "name": "HntdCdlSP",
      "hp": 280,
      "element": "fire",
      "damage": 120,
@@ -665,14 +1147,14 @@ export default {
      "palette": 3
     },
     {
-     "name": "KettleΩ",
+     "name": "KettleSP",
      "hp": 100,
      "element": "none",
      "damage": 160,
      "palette": 4
     },
     {
-     "name": "KettleΩ",
+     "name": "KettleSP",
      "hp": 100,
      "element": "none",
      "damage": 200,
@@ -710,7 +1192,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "PuffyΩ",
+     "name": "PuffySP",
      "hp": 240,
      "element": "aqua",
      "damage": 260,
@@ -762,7 +1244,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "StarFshΩ",
+     "name": "StarFshSP",
      "hp": 240,
      "element": "aqua",
      "damage": 60,
@@ -866,7 +1348,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "ScrCrowΩ",
+     "name": "ScrCrowSP",
      "hp": 220,
      "element": "elec",
      "damage": 220,
@@ -918,7 +1400,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "PlsBulbΩ",
+     "name": "PlsBulbSP",
      "hp": 240,
      "element": "elec",
      "damage": 150,
@@ -970,7 +1452,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "BigHatΩ",
+     "name": "BigHatSP",
      "hp": 250,
      "element": "none",
      "damage": 40,
@@ -1022,7 +1504,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "BomCornΩ",
+     "name": "BomCornSP",
      "hp": 270,
      "element": "wood",
      "damage": 80,
@@ -1074,7 +1556,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "ShrubbyΩ",
+     "name": "ShrubbySP",
      "hp": 240,
      "element": "wood",
      "damage": 100,
@@ -1126,7 +1608,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "HnyBmbrΩ",
+     "name": "HnyBmbrSP",
      "hp": 250,
      "element": "wood",
      "damage": 11,
@@ -1178,7 +1660,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "GunnerΩ",
+     "name": "GunnerSP",
      "hp": 250,
      "element": "none",
      "damage": 80,
@@ -1230,7 +1712,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "FgtrPlnΩ",
+     "name": "FgtrPlnSP",
      "hp": 280,
      "element": "none",
      "damage": 80,
@@ -1282,7 +1764,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "DrkMechΩ",
+     "name": "DrkMechSP",
      "hp": 300,
      "element": "none",
      "damage": 200,
@@ -1334,7 +1816,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "SnakeArΩ",
+     "name": "SnakeArSP",
      "hp": 280,
      "element": "none",
      "damage": 170,
@@ -1386,7 +1868,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "ArmadilΩ",
+     "name": "ArmadilSP",
      "hp": 190,
      "element": "none",
      "damage": 150,
@@ -1438,7 +1920,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "CraggerΩ",
+     "name": "CraggerSP",
      "hp": 240,
      "element": "none",
      "damage": 120,
@@ -1490,7 +1972,7 @@ export default {
      "palette": 2
     },
     {
-     "name": "NghtmreΩ",
+     "name": "NghtmreSP",
      "hp": 220,
      "element": "none",
      "damage": 100,
