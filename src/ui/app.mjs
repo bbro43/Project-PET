@@ -141,6 +141,9 @@ function inputForTick() {
   return input;
 }
 
+// Development hook: open the app with #debug to inspect or adjust the running battle from the console.
+if (location.hash === '#debug') self.__pet = { state: () => state };
+
 function frame(now) {
   acc = Math.min(acc + now - last, 250); last = now;
   while (acc >= 1000 / 60) {

@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['ElecMan', 'ProtoMan'];
-const SPRITE = { ElecMan: 'elecman', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -166,6 +166,109 @@ function elecman(e, api) {
   }
 }
 
+// ======================= HeatMan =======================
+// Decision 0x80F2B6C / 0x80F2BEE → 9 move, 0xA fire column, 0xB lighter stomp, 0xC wall nozzle.
+function heatman(e, api) {
+  const P = NAVI_AI.HeatMan, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const [VAN, APP] = P.warpTicks.value;
+  const lowHp = e.hp < e.maxHp / 2;
+  const done = wait => { go(e, 'idle', 'idle'); e.think = wait; };
+  const pillar = (x, y, burn, damage) => {
+    if (x < 0 || x > 5 || y < 0 || y > 2) return;
+    s.hazards.push({ kind: 'pillar', x, y, start: s.tick, rise: P.pillarRise.value, burn, fall: P.pillarFall.value, damage });
+  };
+  switch (e.state) {
+    case 'idle':
+      if (--e.think > 0) return;
+      return decide();
+    case 'vanish':
+      if (e.stateT >= VAN) { [e.x, e.y] = e.dest; e.drawX = e.x; e.drawY = e.y; go(e, 'appear', 'appear'); }
+      return;
+    case 'appear':
+      if (e.stateT >= APP) {
+        if (e.after) { const a = e.after; e.after = null; return go(e, a, 'aim'); }
+        done(pv(P.moveWait, v));
+      }
+      return;
+    // ---- 0xA: aim, fire, three pillars in the column in front
+    case 'column':
+      if (e.stateT === P.aimTicks.value) setAnim(e, 'fire');
+      if (e.stateT === P.aimTicks.value + P.fireTicks.value) {
+        setAnim(e, 'arm');
+        for (const dy of [-1, 0, 1]) pillar(e.x - 1, e.y + dy, P.columnBurn.value, pv(P.columnDamage, v));
+      }
+      if (e.stateT >= P.aimTicks.value + P.fireTicks.value + 20) returnHome('column');
+      return;
+    // ---- 0xB: lighter stomp, repeated
+    case 'stomp': {
+      const ph = P.stompPhases.value, t = e.stateT;
+      const tRise = ph.close, tHang = tRise + ph.rise, tFall = tHang + ph.hang, tLand = tFall + ph.fall;
+      if (t === 1 && e.anim !== 'box') setAnim(e, 'close');
+      if (t > tRise && t <= tHang) { e.z = (t - tRise) * 16; e.airborne = true; }
+      if (t === tHang) { e.x = p.x; e.y = p.y; e.drawX = e.x; e.drawY = e.y; setAnim(e, 'box'); }
+      if (t > tFall && t <= tLand) e.z = (tLand - t) * 16;
+      if (t === tLand) {
+        e.z = 0; e.airborne = false; s.effects.push({ kind: 'shake', t: 0 });
+        const burn = pv(P.stompBurn, v), dmg = pv(P.stompDamage, v);
+        api.hitPlayerCells([[e.x, e.y]], dmg);
+        for (const [dx, dy] of P.stompPillars.value) pillar(e.x + dx, e.y + dy, burn, dmg);
+      }
+      if (t >= tLand + pv(P.stompBurn, v)) {
+        if (--e.stomps > 0) { e.stateT = ph.close; return; } // jump again from the box
+        setAnim(e, 'open');
+        returnHome('stomp');
+      }
+      return;
+    }
+    // ---- 0xC: wall nozzle at the back edge of MegaMan's row, repeated
+    case 'nozzle':
+      if (e.stateT === P.aimTicks.value) setAnim(e, 'fire');
+      if (e.stateT === P.aimTicks.value + P.fireTicks.value) {
+        setAnim(e, 'arm');
+        const cells = []; for (let x = 0; x < P.nozzleReach.value; x++) cells.push([x, e.y]);
+        s.hazards.push({ kind: 'nozzle', y: e.y, cells, start: s.tick, until: s.tick + P.nozzleBurn.value, damage: pv(P.nozzleDamage, v) });
+      }
+      if (e.stateT >= P.aimTicks.value + P.fireTicks.value + P.nozzleBurn.value) {
+        if (--e.nozzles > 0) return warp(rowPanel(), 'nozzle');
+        returnHome('nozzle');
+      }
+      return;
+    case 'home':
+      if (e.stateT >= APP) done(e.homeWait);
+  }
+
+  function decide() {
+    if (e.mem.followUp) { // second step 0x80F2BEE
+      e.mem.followUp = false; m.c4 = 0;
+      if (rnd16(api) < 6) { e.stomps = (lowHp ? P.stompCount.value.lowHp : P.stompCount.value.normal)[Math.min(v, 4)]; e.homeX = e.x; e.homeY = e.y; return go(e, 'stomp', 'close'); }
+      e.nozzles = (lowHp ? P.nozzleCount.value.lowHp : P.nozzleCount.value.normal)[Math.min(v, 4)];
+      e.homeX = e.x; e.homeY = e.y;
+      return warp(rowPanel(), 'nozzle');
+    }
+    if (m.c4 >= 3) {
+      e.homeX = e.x; e.homeY = e.y;
+      if (v > 0) { m.c5 ^= 1; if (m.c5 === 0) m.c4 = 0; else e.mem.followUp = true; } else e.mem.followUp = true;
+      const t = [p.x + 1, p.y];
+      return warp(api.at(...t) && api.at(...t) !== e ? rowPanel() : t, 'column');
+    }
+    if (rnd16(api) < 12) m.c4++;
+    const free = freeEnemyPanels(e, api);
+    return warp(pick(free, api) || [e.x, e.y], null);
+  }
+  function rowPanel() {
+    for (const x of [3, 4, 5]) if (!api.at(x, p.y) || api.at(x, p.y) === e) return [x, p.y];
+    return [e.x, e.y];
+  }
+  function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
+  function returnHome(kind) {
+    const blocked = api.at(e.homeX, e.homeY) && api.at(e.homeX, e.homeY) !== e;
+    const home = blocked || e.homeX < 3 ? (pick(freeEnemyPanels(e, api), api) || [e.homeX, e.homeY]) : [e.homeX, e.homeY];
+    [e.x, e.y] = home; e.drawX = e.x; e.drawY = e.y; e.z = 0;
+    e.homeWait = kind === 'column' ? P.columnWait.value : pv(P.attackWait, v);
+    go(e, 'home', 'appear');
+  }
+}
+
 // ======================= ProtoMan =======================
 const AREAS = {
   wide: [[-1, -1], [-1, 0], [-1, 1]],
@@ -282,7 +385,7 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { ElecMan: elecman, ProtoMan: protoman };
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;

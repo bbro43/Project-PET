@@ -99,14 +99,14 @@ function openCustom(s) {
 }
 
 // ---------- combat helpers ----------
-const at = (s, x, y) => s.enemies.find(e => e.hp > 0 && e.x === x && e.y === y);
+const at = (s, x, y) => s.enemies.find(e => e.hp > 0 && !e.airborne && e.x === x && e.y === y);
 
 export function elementMultiplier(attack, defend) {
   return attack && WEAKNESS[attack] === defend ? 2 : 1;
 }
 
 function hitEnemy(s, e, damage, extra = {}) {
-  if (!e || e.hp <= 0) return;
+  if (!e || e.hp <= 0 || e.airborne) return;
   if (e.guard) { e.guardHit = true; s.events.push({ type: 'guard', target: e.id }); s.effects.push({ kind: 'guard', x: e.x, y: e.y, t: 0 }); return; }
   damage *= elementMultiplier(extra.element, e.element);
   e.hp = Math.max(0, e.hp - damage);
@@ -224,6 +224,15 @@ function stepHazards(s) {
       const alive = h.x >= 0;
       if (!alive && s.turns[h.family] === h.owner) delete s.turns[h.family];
       return alive;
+    }
+    if (h.kind === 'pillar') {
+      const t = s.tick - h.start, active = t >= h.rise && t < h.rise + h.burn;
+      if (active && p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      return t < h.rise + h.burn + h.fall;
+    }
+    if (h.kind === 'nozzle') {
+      if (h.cells.some(([x, y]) => p.x === x && p.y === y) && p.state !== 'vanish') hitPlayer(s, h.damage);
+      return s.tick < h.until;
     }
     if (h.kind === 'rowbolt' || h.kind === 'colbolt') {
       const hit = h.kind === 'rowbolt' ? p.y === h.y && p.x < h.x : p.x === h.x;

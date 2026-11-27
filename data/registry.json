@@ -497,6 +497,140 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "heatman": {
+      "label": "HeatMan (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "264FA0",
+          "compression": "none",
+          "bytes": 43855,
+          "sha256": "78b32868cfe37e95f56aa53ef5ec7e4d4caf253198f089fb253c5a1f6255af91",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "264FA0",
+          "compression": "none",
+          "bytes": 43855,
+          "sha256": "78b32868cfe37e95f56aa53ef5ec7e4d4caf253198f089fb253c5a1f6255af91",
+          "confidence": "rom-verified"
+        }
+      },
+      "note": "AI sets CurAnim 3/4 (appear/vanish), 0xF aim, 0x10 arm, 0x11 close into lighter, 0x13 box, 0x15 fire; read from HeatMan AI code.",
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "aim": {
+          "seq": 15,
+          "confidence": "visual-candidate"
+        },
+        "arm": {
+          "seq": 16,
+          "confidence": "visual-candidate"
+        },
+        "close": {
+          "seq": 17,
+          "confidence": "visual-candidate"
+        },
+        "box": {
+          "seq": 19,
+          "confidence": "visual-candidate"
+        },
+        "open": {
+          "seq": 20,
+          "confidence": "visual-candidate"
+        },
+        "fire": {
+          "seq": 21,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "firepillar": {
+      "label": "Floor flame (FLOOR_FLAME_B0, object type3 0x26)",
+      "note": "sprite_load(0x80, 0x10, 0x02).",
+      "sources": {
+        "bn6f": {
+          "offset": "352360",
+          "compression": "none",
+          "bytes": 4955,
+          "sha256": "5dd039a1bfc0e20f382b0e6099e27f42e0983abc215d2cbceae10f4ebecd71ba",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "3518D8",
+          "compression": "none",
+          "bytes": 4955,
+          "sha256": "5dd039a1bfc0e20f382b0e6099e27f42e0983abc215d2cbceae10f4ebecd71ba",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "rise": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "burn": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "fall": {
+          "seq": 2,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "nozzle": {
+      "label": "Flame nozzle (object type3 0x27)",
+      "note": "sprite_load(0x80, 0x10, 0x1B). Wall-mounted nozzle; drawn for a right-facing flame.",
+      "sources": {
+        "bn6f": {
+          "offset": "368F54",
+          "compression": "none",
+          "bytes": 10065,
+          "sha256": "aeced457abf002bd64583153bda9f451ad92f2685e6239c4ac0928adbec44e58",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "3684CC",
+          "compression": "none",
+          "bytes": 10065,
+          "sha256": "aeced457abf002bd64583153bda9f451ad92f2685e6239c4ac0928adbec44e58",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "extend": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "ready": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "burn": {
+          "seq": 2,
+          "confidence": "visual-candidate"
+        },
+        "end": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {

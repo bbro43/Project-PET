@@ -162,3 +162,50 @@ test('attacks stop drawing when the battle ends', () => {
   assert.equal(s.phase, 'lose');
   assert.equal(s.hazards.length, 0);
 });
+
+// ---------------- HeatMan ----------------
+test('HeatMan stats from ROM: 700 / 1500 / 1900 HP, fire', () => {
+  assert.deepEqual(naviVariants('HeatMan').map(v => v.hp).slice(0, 3), [700, 1500, 1900]);
+  assert.equal(start('HeatMan').enemies[0].element, 'fire');
+});
+
+test('HeatMan fire column: warps in front of MegaMan and burns the column in front of him', () => {
+  const { s, e } = findState('HeatMan', 0, 'column', s => { s.player.invuln = 1e9; });
+  assert.deepEqual([e.x, e.y], [s.player.x + 1, s.player.y]);
+  s.player.invuln = 0;
+  run(s, 80);
+  assert.equal(s.player.hp, 80, 'column damage 20');
+});
+
+test('HeatMan stomp lands on MegaMan\'s panel and leaves fire pillars in a cross', () => {
+  const { s, e } = findState('HeatMan', 0, 'stomp', s => { s.player.invuln = 1e9; });
+  const ph = NAVI_AI.HeatMan.stompPhases.value;
+  const target = [s.player.x, s.player.y];
+  run(s, ph.close + ph.rise + 2);
+  assert.ok(e.airborne);
+  const hp = e.hp; step(s, { a: true }); step(s, {});
+  assert.equal(e.hp, hp, 'cannot be hit in the air');
+  s.player.invuln = 0;
+  run(s, ph.hang + ph.fall);
+  assert.deepEqual([e.x, e.y], target);
+  assert.equal(s.player.hp, 80);
+  const pillars = s.hazards.filter(h => h.kind === 'pillar').map(h => [h.x - target[0], h.y - target[1]]);
+  for (const off of pillars) assert.ok(NAVI_AI.HeatMan.stompPillars.value.some(([dx, dy]) => dx === off[0] && dy === off[1]));
+});
+
+test('HeatMan wall nozzle burns from the back edge of MegaMan\'s row', () => {
+  const { s, e } = findState('HeatMan', 0, 'nozzle', s => { s.player.invuln = 1e9; });
+  s.player.invuln = 0; s.player.x = 0; s.player.y = e.y;
+  run(s, 60);
+  assert.equal(s.player.hp, 60, 'nozzle damage 40');
+});
+
+test('HeatMan returns to his own area after attacking', () => {
+  const s = start('HeatMan', 1, 7);
+  s.player.invuln = 1e9;
+  const e = s.enemies[0];
+  for (let i = 0; i < 5000; i++) {
+    step(s, {});
+    if (e.state === 'idle') assert.ok(e.x >= 3, `idle at x=${e.x}`);
+  }
+});

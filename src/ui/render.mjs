@@ -56,6 +56,8 @@ function text(g, s, x, y, color = '#fff', align = 'left') {
 
 export function render(g, s, bank) {
   g.imageSmoothingEnabled = false;
+  const shake = s.effects.find(f => f.kind === 'shake' && f.t < 20);
+  g.setTransform(1, 0, 0, 1, 0, shake ? ((shake.t >> 1) & 1 ? 2 : -2) : 0);
   const bg = g.createLinearGradient(0, 0, 0, FIELD_Y);
   bg.addColorStop(0, '#062048'); bg.addColorStop(1, '#0f4a7a');
   g.fillStyle = bg; g.fillRect(0, 0, 240, 160);
@@ -70,6 +72,26 @@ export function render(g, s, bank) {
         g.fillRect(x * PANEL_W + 3, FIELD_Y + y * PANEL_H + 3, PANEL_W - 6, PANEL_H - 9);
       }
     });
+  }
+
+  // HeatMan fire: floor pillars and the wall nozzle
+  const pil = bank?.get('firepillar'), noz = bank?.get('nozzle');
+  for (const h of s.hazards) {
+    if (h.kind === 'pillar') {
+      const t = s.tick - h.start, [ax, ay] = anchor(h.x, h.y);
+      const phase = t < h.rise ? 'rise' : t < h.rise + h.burn ? 'burn' : 'fall';
+      const pt = phase === 'rise' ? t : phase === 'burn' ? t - h.rise : t - h.rise - h.burn;
+      if (pil) { const f = frameAt(pil[phase], pt); g.drawImage(f.image, Math.round(ax - f.originX), Math.round(ay - f.originY)); }
+      else { g.fillStyle = phase === 'burn' ? '#ff8020' : '#ffc040'; g.beginPath(); g.ellipse(ax, ay - 10, 8, phase === 'burn' ? 14 : 6, 0, 0, 7); g.fill(); }
+    }
+    if (h.kind === 'nozzle') {
+      const [ax, ay] = anchor(0, h.y), t = s.tick - h.start;
+      if (noz) { // sprite fires to the left; mirror so the plate sits on the left edge and flame runs right
+        const f = frameAt(noz.burn, t);
+        g.save(); g.translate(4, 0); g.scale(-1, 1);
+        g.drawImage(f.image, -f.originX, Math.round(ay - 12 - f.originY)); g.restore();
+      } else { g.fillStyle = '#ff9030'; g.fillRect(0, ay - 20, PANEL_W * h.cells.length, 12); }
+    }
   }
 
   // Hazards under actors.
@@ -96,8 +118,10 @@ export function render(g, s, bank) {
   }
   for (const e of s.enemies) {
     if (e.hp <= 0) continue;
-    const [ax, ay] = anchor(e.drawX ?? e.x, e.drawY ?? e.y);
+    const [ax, ay0] = anchor(e.drawX ?? e.x, e.drawY ?? e.y);
+    const ay = ay0 - (e.z || 0);
     const fallback = e.kind === 'navi' ? placeholderEnemyNavi : e.kind === 'coil' ? placeholderCoil : placeholderVirus;
+    if (e.z > 0) { g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(ax, ay0 - 2, 10, 4, 0, 0, 7); g.fill(); }
     draw.push({ y: e.drawY ?? e.y, fn: () => {
       sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, fallback, e.palette, e.kind === 'navi');
       if (e.kind === 'coil' && e.discharge > 0 && !bank?.has('eleccoil')) { g.strokeStyle = '#80f0ff'; g.lineWidth = 2; g.beginPath(); g.moveTo(ax, FIELD_Y); g.lineTo(ax, FIELD_Y + 3 * PANEL_H); g.stroke(); }
