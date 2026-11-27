@@ -35,15 +35,15 @@ small, .muted { color: #a8bbd8; }
 #banner { position: fixed; left: .5rem; right: .5rem; bottom: .5rem; z-index: 9; background: #1c5a2e; border: 1px solid #5fd08a; border-radius: 10px; padding: .6rem; display: flex; gap: .6rem; align-items: center; justify-content: space-between; }
 /* Battle */
 #battle { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: env(safe-area-inset-top); touch-action: none; user-select: none; -webkit-user-select: none; }
-#screen { width: min(100vw, calc((100dvh - 210px) * 1.5)); aspect-ratio: 3 / 2; image-rendering: pixelated; background: #000; }
-#pad { width: 100%; max-width: 560px; flex: 1; display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding: .4rem .8rem max(.6rem, env(safe-area-inset-bottom)); }
+#screen { margin-top: .3rem; width: min(100vw, calc((100dvh - 230px) * 1.5)); aspect-ratio: 3 / 2; image-rendering: pixelated; background: #000; }
+#pad { width: 100%; max-width: 560px; flex: 1; display: grid; grid-template-columns: 1fr 1fr; align-items: start; padding: .9rem .8rem max(.6rem, env(safe-area-inset-bottom)); }
 .dpad { display: grid; grid-template-columns: repeat(3, 58px); grid-template-rows: repeat(3, 58px); gap: 4px; }
 .dpad button, .ab button, .shoulders button { padding: 0; font-weight: 700; background: #1e2b44; border-color: #51698f; touch-action: none; }
 .dpad [data-k=up] { grid-area: 1/2 } .dpad [data-k=left] { grid-area: 2/1 } .dpad [data-k=right] { grid-area: 2/3 } .dpad [data-k=down] { grid-area: 3/2 }
 .ab { justify-self: end; display: grid; grid-template-columns: 70px 70px; gap: 10px; transform: rotate(-14deg); }
 .ab button { width: 70px; height: 70px; border-radius: 50%; font-size: 1.2rem; }
-.ab [data-k=a] { margin-top: -30px; }
-.shoulders { width: 100%; max-width: 560px; display: flex; justify-content: space-between; padding: .3rem .8rem 0; }
+.ab [data-k=b] { margin-top: 30px; }
+.shoulders { width: 100%; max-width: 560px; display: flex; justify-content: space-between; padding: .5rem .8rem 0; }
 .shoulders button { min-width: 84px; }
 button.held { background: #3b5f99; }
 #custom { position: absolute; left: 0; right: 0; top: env(safe-area-inset-top); display: flex; justify-content: center; }
@@ -119,7 +119,6 @@ button.held { background: #3b5f99; }
 </main>
 
 <section id="battle" hidden>
-  <div class="shoulders"><button data-k="l">L</button><button id="quit" type="button">Menu</button><button data-k="r">R</button></div>
   <canvas id="screen" width="240" height="160"></canvas>
   <div id="custom" hidden>
     <div class="panel">
@@ -129,6 +128,7 @@ button.held { background: #3b5f99; }
       <div class="row" style="justify-content:flex-end"><button id="undo" type="button">Undo</button><button id="ok" type="button">OK</button></div>
     </div>
   </div>
+  <div class="shoulders"><button data-k="l">L</button><button id="quit" type="button">Menu</button><button data-k="r">R</button></div>
   <div id="pad">
     <div class="dpad"><button data-k="up">▲</button><button data-k="left">◀</button><button data-k="right">▶</button><button data-k="down">▼</button></div>
     <div class="ab"><button data-k="b">B</button><button data-k="a">A</button></div>
