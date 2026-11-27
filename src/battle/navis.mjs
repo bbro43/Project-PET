@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -269,6 +269,98 @@ function heatman(e, api) {
   }
 }
 
+// ======================= SlashMan =======================
+// Decision 0x80F48E8 → 9 dart, 0xA claw combo, 0xB rolling slash, 0xC kunai volleys.
+function slashman(e, api) {
+  const P = NAVI_AI.SlashMan, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const W = P.warpTicks.value;
+  const done = wait => { go(e, 'idle', 'idle'); e.think = wait; };
+  switch (e.state) {
+    case 'idle':
+      if (--e.think > 0) return;
+      return decide();
+    case 'vanish':
+      if (e.stateT >= W) { [e.x, e.y] = e.dest; e.drawX = e.x; e.drawY = e.y; go(e, 'appear', 'appear'); }
+      return;
+    case 'appear':
+      if (e.stateT >= W) {
+        const a = e.after; e.after = null;
+        if (a === 'combo') return go(e, 'combo', 'ready');
+        if (a === 'roll') return go(e, 'roll', 'crouch');
+        if (a === 'kunai') return go(e, 'kunai', 'up');
+        if (a === 'home') return done(e.homeWait);
+        done(m.moves >= 2 ? pv({ value: P.moveWait.value.chained }, v) : pv({ value: P.moveWait.value.first }, v));
+      }
+      return;
+    // ---- 0xA: down swipe (column in front), short gap, side swipe (two ahead)
+    case 'combo': {
+      const ready = pv(P.comboReady, v), sw = P.comboSwipe.value, gap = P.comboGap.value, t = e.stateT, dmg = pv(P.comboDamage, v);
+      const swipe = (shape, anim) => {
+        setAnim(e, anim);
+        api.hitPlayerCells(P.comboShapes.value[shape].map(([dx, dy]) => [e.x + dx, e.y + dy]), dmg);
+        s.effects.push({ kind: 'claw', shape, x: e.x - 1, y: e.y, t: 0 });
+      };
+      if (t === ready) swipe('down', 'down');
+      if (t === ready + sw + gap) swipe('side', 'side');
+      if (t >= ready + 2 * sw + gap) goHome(pv(P.comboWait, v));
+      return;
+    }
+    // ---- 0xB: crouch, spin, roll along the row
+    case 'roll':
+      if (e.stateT === pv(P.rollCrouch, v)) { setAnim(e, 'spin'); e.rollFrom = e.x; e.rollT = 0; e.state = 'rolling'; e.stateT = 0; }
+      return;
+    case 'rolling': {
+      e.drawX = e.rollFrom - (e.stateT * pv(P.rollSpeed, v)) / 40;
+      const px = Math.round(e.drawX);
+      if (px >= 0 && px <= 5) { e.x = px; api.hitPlayerCells([[px, e.y]], pv(P.rollDamage, v)); }
+      if (e.drawX < -1) { setAnim(e, 'recover'); goHome(pv(P.rollWait, v)); }
+      return;
+    }
+    // ---- 0xC: three rounds — warp, claws up, two kunai fly across their rows
+    case 'kunai': {
+      const raise = pv(P.kunaiRaise, v);
+      if (e.stateT === raise) {
+        setAnim(e, 'throw');
+        const rowSet = P.kunaiPatterns.value[p.y];
+        const pair = rowSet[Math.floor(api.rng() * 3)];
+        for (const [kx, ky] of pair) s.hazards.push({ kind: 'kunai', x: kx, y: ky, fx: kx, start: s.tick, spin: P.kunaiSpin.value, speed: P.kunaiSpeed.value, damage: pv(P.kunaiDamage, v) });
+      }
+      if (e.stateT >= raise + 12) {
+        if (++e.kunaiRound < P.kunaiRounds.value) return warpTo(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], 'kunai');
+        goHome(pv(P.kunaiWait, v));
+      }
+      return;
+    }
+  }
+
+  function decide() {
+    if (m.c4 < 5) { m.c4++; m.moves = (m.moves || 0) + 1; return warpTo(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], null); }
+    m.c4 = 0; m.moves = 0; e.homeX = e.x; e.homeY = e.y;
+    if (m.c5 < 4) {
+      m.c5++;
+      if (m.c6 < 2) { m.c6 += api.rng() < 0.5 ? 2 : 1; return warpTo(front(), 'combo'); }
+      m.c6 = 0; return warpTo(backOfRow(), 'roll');
+    }
+    m.c5 = 0; e.kunaiRound = 0;
+    return warpTo(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], 'kunai');
+  }
+  function front() {
+    const t = [p.x + 1, p.y];
+    return t[0] <= 5 && (!api.at(...t) || api.at(...t) === e) ? t : backOfRow();
+  }
+  function backOfRow() {
+    for (const x of [5, 4, 3]) if (!api.at(x, p.y) || api.at(x, p.y) === e) return [x, p.y];
+    return [e.x, e.y];
+  }
+  function warpTo(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
+  function goHome(wait) {
+    const free = freeEnemyPanels(e, api);
+    const home = (!api.at(e.homeX, e.homeY) || api.at(e.homeX, e.homeY) === e) && e.homeX >= 3 ? [e.homeX, e.homeY] : pick(free, api) || [5, 1];
+    e.homeWait = wait; e.drawX = e.x;
+    warpTo(home, 'home');
+  }
+}
+
 // ======================= ProtoMan =======================
 const AREAS = {
   wide: [[-1, -1], [-1, 0], [-1, 1]],
@@ -385,7 +477,7 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, ProtoMan: protoman };
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;

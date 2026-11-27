@@ -230,6 +230,13 @@ function stepHazards(s) {
       if (active && p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
       return t < h.rise + h.burn + h.fall;
     }
+    if (h.kind === 'kunai') {
+      const t = s.tick - h.start;
+      if (t > h.spin) { h.fx = h.x - ((t - h.spin) * h.speed) / 40; }
+      const px = Math.round(h.fx);
+      if (t > h.spin && p.x === px && p.y === h.y && p.state !== 'vanish') { hitPlayer(s, h.damage); return false; }
+      return h.fx > -1;
+    }
     if (h.kind === 'nozzle') {
       if (h.cells.some(([x, y]) => p.x === x && p.y === y) && p.state !== 'vanish') hitPlayer(s, h.damage);
       return s.tick < h.until;

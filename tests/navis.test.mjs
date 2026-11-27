@@ -209,3 +209,47 @@ test('HeatMan returns to his own area after attacking', () => {
     if (e.state === 'idle') assert.ok(e.x >= 3, `idle at x=${e.x}`);
   }
 });
+
+// ---------------- SlashMan ----------------
+test('SlashMan names and HP from the ROM tables', () => {
+  assert.deepEqual(naviVariants('SlashMan').slice(0, 3).map(v => [v.name, v.hp]), [["SlashMan", 800], ["SlashMnEX", 1200], ["SlashMnSP", 1500]]);
+});
+
+test('SlashMan darts five times, then the claw combo hits twice from in front of MegaMan', () => {
+  const { s, e } = findState('SlashMan', 0, 'combo', s => { s.player.invuln = 1e9; });
+  assert.deepEqual([e.x, e.y], [s.player.x + 1, s.player.y]);
+  s.player.invuln = 0;
+  const P = NAVI_AI.SlashMan;
+  run(s, P.comboReady.value[0]);
+  assert.equal(s.player.hp, 70, 'down swipe 30');
+});
+
+test('SlashMan rolling slash travels the whole row and hits MegaMan in it', () => {
+  const { s, e } = findState('SlashMan', 0, 'roll', s => { s.player.invuln = 1e9; });
+  assert.equal(e.y, s.player.y);
+  s.player.invuln = 0;
+  for (let i = 0; i < 300 && s.player.hp === 100; i++) step(s, {});
+  assert.equal(s.player.hp, 40, 'roll 60');
+});
+
+test('SlashMan kunai: three rounds, always one kunai in MegaMan\'s row', () => {
+  const { s, e } = findState('SlashMan', 0, 'kunai', s => { s.player.invuln = 1e9; });
+  let volleys = 0;
+  for (let i = 0; i < 600 && volleys < 3; i++) {
+    const row = s.player.y;
+    const before = s.hazards.filter(h => h.kind === 'kunai').length;
+    step(s, {});
+    const k = s.hazards.filter(h => h.kind === 'kunai' && h.start === s.tick);
+    if (k.length) { volleys++; assert.equal(k.length, 2); assert.ok(k.some(h => h.y === row)); }
+  }
+  assert.equal(volleys, 3);
+});
+
+test('SlashMan chained darts use the short wait from the ROM table', () => {
+  const s = start('SlashMan', 0, 3); s.player.invuln = 1e9;
+  const e = s.enemies[0];
+  const waits = [];
+  for (let i = 0; i < 2000 && waits.length < 4; i++) { step(s, {}); if (e.state === 'idle' && e.stateT === 0) waits.push(e.think); }
+  assert.equal(waits[0], 36);
+  assert.ok(waits.slice(1).some(w => w === 6), JSON.stringify(waits));
+});

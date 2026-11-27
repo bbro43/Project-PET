@@ -148,6 +148,19 @@ export function render(g, s, bank) {
     if (img) { g.save(); g.translate(Math.round(ax - 12), 0); g.scale(-1, 1); g.drawImage(img, 0, Math.round(ay - 22 - img.height / 2)); g.restore(); }
     else { g.strokeStyle = '#ffd040'; g.lineWidth = 3; g.beginPath(); g.moveTo(ax - 12, ay - 22); for (let x = ax - 24; x > -10; x -= 10) g.lineTo(x, ay - 22 + (((x / 10) | 0) & 1 ? -5 : 5)); g.stroke(); }
   }
+  // SlashMan claw swipes and kunai (sprites drawn for a right-facing user; mirrored for the enemy side)
+  const claw = bank?.get('clawfx'), kun = bank?.get('kunai');
+  const mirrored = (img, x, y, ox, oy) => { g.save(); g.translate(Math.round(x), 0); g.scale(-1, 1); g.drawImage(img, -ox, Math.round(y - oy)); g.restore(); };
+  for (const f of s.effects) if (f.kind === 'claw' && f.t < 14) {
+    const [ax, ay] = anchor(f.x, f.y);
+    if (claw) { const fr = frameAt(claw[f.shape], f.t); mirrored(fr.image, ax, ay - 14, fr.originX, fr.originY); }
+    else { g.strokeStyle = '#80ffe0'; g.lineWidth = 2; for (let i = -1; i <= 1; i++) { g.beginPath(); g.moveTo(ax + 8 + i * 5, ay - 36); g.lineTo(ax - 4 + i * 5, ay); g.stroke(); } }
+  }
+  for (const h of s.hazards) if (h.kind === 'kunai') {
+    const t = s.tick - h.start, [ax, ay] = anchor(h.fx ?? h.x, h.y);
+    if (kun) { const fr = frameAt(kun[t > h.spin ? 'fly' : 'spin'], t); mirrored(fr.image, ax, ay - 14, fr.originX, fr.originY); }
+    else { g.fillStyle = '#ccd'; g.beginPath(); g.moveTo(ax - 8, ay - 14); g.lineTo(ax + 6, ay - 18); g.lineTo(ax + 6, ay - 10); g.fill(); }
+  }
   for (const f of s.effects) if (f.kind === 'spark' && f.t < 8) {
     const [ax, ay] = anchor(f.x, f.y);
     g.fillStyle = f.t & 2 ? '#ffffff' : '#fff070'; g.beginPath(); g.arc(ax, ay - 16, 10 - f.t, 0, 7); g.fill();

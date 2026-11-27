@@ -631,6 +631,134 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "slashman": {
+      "label": "SlashMan (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "278EBC",
+          "compression": "none",
+          "bytes": 41870,
+          "sha256": "a11fa8b6373208279bb580263389f10badeba7c34feaefc3f3d4c38a98bf1995",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "278EBC",
+          "compression": "none",
+          "bytes": 41870,
+          "sha256": "a11fa8b6373208279bb580263389f10badeba7c34feaefc3f3d4c38a98bf1995",
+          "confidence": "rom-verified"
+        }
+      },
+      "note": "AI sets CurAnim 3/4, 0xF ready, 0x10 down swipe, 0x11 side swipe, 0x12 crouch, 0x13 spin, 0x14 claws up, 0xC throw; read from SlashMan AI code.",
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "throw": {
+          "seq": 12,
+          "confidence": "visual-candidate"
+        },
+        "ready": {
+          "seq": 15,
+          "confidence": "visual-candidate"
+        },
+        "down": {
+          "seq": 16,
+          "confidence": "visual-candidate"
+        },
+        "side": {
+          "seq": 17,
+          "confidence": "visual-candidate"
+        },
+        "crouch": {
+          "seq": 18,
+          "confidence": "visual-candidate"
+        },
+        "spin": {
+          "seq": 19,
+          "confidence": "visual-candidate"
+        },
+        "up": {
+          "seq": 20,
+          "confidence": "visual-candidate"
+        },
+        "recover": {
+          "seq": 7,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "clawfx": {
+      "label": "SlashMan claw slash (effects 0x39/0x3A → sprite 0x10/0x38)",
+      "sources": {
+        "bn6f": {
+          "offset": "381340",
+          "compression": "none",
+          "bytes": 4014,
+          "sha256": "c4ea8acbd4bf4c94eb801477a5c34ce3d26462f8517cb1847265b1121bdc4b4a",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "3808B8",
+          "compression": "none",
+          "bytes": 4014,
+          "sha256": "c4ea8acbd4bf4c94eb801477a5c34ce3d26462f8517cb1847265b1121bdc4b4a",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "down": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "side": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "kunai": {
+      "label": "SlashMan kunai (object type3 0x43, sprite 0x10/0x39)",
+      "sources": {
+        "bn6f": {
+          "offset": "3822F0",
+          "compression": "none",
+          "bytes": 1591,
+          "sha256": "44bd18a9ebcc2358ac55ea6911f9e96d114a5beeed137b730cad57c69bfadd68",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "381868",
+          "compression": "none",
+          "bytes": 1591,
+          "sha256": "44bd18a9ebcc2358ac55ea6911f9e96d114a5beeed137b730cad57c69bfadd68",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "spin": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "fly": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {
