@@ -223,7 +223,7 @@ export function render(g, s, bank) {
     if (h.kind === 'fireball' && h.x !== undefined) {
       const t = Math.min(1, ((s.tick - h.start) % h.step) / h.step);
       const [ax, ay] = anchor(h.x + h.dx * t, h.cy + h.dy * t);
-      sprite(g, bank, 'blastman', h.seq, s.tick - h.start, ax, ay, '#f60', 0, h.dx < 0);
+      sprite(g, bank, h.sprite || 'blastman', h.seq, s.tick - h.start, ax, ay, '#f60', 0, h.dx < 0);
     }
   }
 
@@ -261,7 +261,7 @@ export function render(g, s, bank) {
     if (s.tick < h.hit) { g.fillStyle = 'rgba(255,240,120,.45)'; g.fillRect(ax - PANEL_W / 2 + 2, ay - 14, PANEL_W - 4, 16); continue; }
     const t = s.tick - h.hit;
     if (h.elem === 'none') { sprite(g, bank, 'elementman', 'tower', t, ax, ay, '#a7d', 0, false); continue; }
-    const col = { fire: '#ff7030', aqua: '#80d8ff', elec: '#fff060', wood: '#70e060' }[h.elem];
+    const col = { fire: '#ff7030', aqua: '#80d8ff', elec: '#fff060', wood: '#70e060', dark: '#b060ff' }[h.elem];
     g.fillStyle = col; g.globalAlpha = 1 - t / 12;
     if (h.elem === 'elec') g.fillRect(ax - PANEL_W / 2, ay - 18, PANEL_W, 6);
     else { g.beginPath(); g.moveTo(ax - 10, ay); g.lineTo(ax, ay - 26 - t); g.lineTo(ax + 10, ay); g.fill(); }

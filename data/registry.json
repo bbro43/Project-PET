@@ -1993,6 +1993,76 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "bass": {
+      "label": "Bass (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "2E4050",
+          "compression": "lz77",
+          "bytes": 43124,
+          "sha256": "c343e7e7356f6b158baea23e387a3d105f030f0f529bb7310cd3610b08956598",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "2E4050",
+          "compression": "lz77",
+          "bytes": 43124,
+          "sha256": "c343e7e7356f6b158baea23e387a3d105f030f0f529bb7310cd3610b08956598",
+          "confidence": "rom-verified"
+        }
+      },
+      "note": "LZ77-compressed, 47 sequences: body 0-19, cape layers 20-39 (not composited yet, so he shows without his cape), projectiles 40-46.",
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "fist": {
+          "seq": 5,
+          "confidence": "visual-candidate"
+        },
+        "point": {
+          "seq": 9,
+          "confidence": "visual-candidate"
+        },
+        "rapid": {
+          "seq": 11,
+          "confidence": "visual-candidate"
+        },
+        "rapid2": {
+          "seq": 12,
+          "confidence": "visual-candidate"
+        },
+        "charge": {
+          "seq": 13,
+          "confidence": "visual-candidate"
+        },
+        "slash": {
+          "seq": 14,
+          "confidence": "visual-candidate"
+        },
+        "wheel": {
+          "seq": 45,
+          "confidence": "visual-candidate"
+        },
+        "shot": {
+          "seq": 40,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {

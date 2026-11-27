@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'BlastMan', 'DiveMan', 'CircusMan', 'JudgeMan', 'ElementMan', 'Colonel', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', BlastMan: 'blastman', DiveMan: 'diveman', CircusMan: 'circusman', JudgeMan: 'judgeman', ElementMan: 'elementman', Colonel: 'colonel', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'BlastMan', 'DiveMan', 'CircusMan', 'JudgeMan', 'ElementMan', 'Colonel', 'Bass', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', BlastMan: 'blastman', DiveMan: 'diveman', CircusMan: 'circusman', JudgeMan: 'judgeman', ElementMan: 'elementman', Colonel: 'colonel', Bass: 'bass', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -1477,6 +1477,76 @@ function colonel(e, api) {
   function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
 }
 
+// ======================= Bass =======================
+// Decision 0x8101AA0: moves, then a basic attack (Hell's Rolling / Shooting Buster) and a positional one (Earth Breaker / Dark Arm Blade) in turn.
+function bass(e, api) {
+  const P = NAVI_AI.Bass, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const [VAN, APP] = P.warpTicks.value;
+  const wait = t => { go(e, 'idle', 'idle'); e.think = Math.max(1, t); };
+  const free = (x, y) => x >= 3 && x <= 5 && y >= 0 && y <= 2 && (!api.at(x, y) || api.at(x, y) === e);
+  const low = () => e.hp < e.maxHp / 2;
+  const strike = (cells, delay, damage) => { for (const [x, y] of cells) if (x >= 0 && x <= 2 && y >= 0 && y <= 2) s.hazards.push({ kind: 'estrike', x, y, start: s.tick, hit: s.tick + delay, elem: 'dark', damage, owner: e.id }); };
+  switch (e.state) {
+    case 'idle':
+      if (--e.think > 0) return;
+      return decide();
+    case 'vanish':
+      if (e.stateT >= VAN) { [e.x, e.y] = e.dest; e.drawX = e.x; e.drawY = e.y; go(e, 'appear', 'appear'); }
+      return;
+    case 'appear':
+      if (e.stateT >= APP + 8) { const a = e.after; e.after = null; if (a) return a(); wait(pv(P.moveWait, v)); }
+      return;
+    case 'roll': { // 0xA Hell's Rolling: two dark wheels roll down MegaMan's row
+      const lead = pv(P.rollLead, v);
+      if (e.stateT === lead || e.stateT === lead + 12) {
+        setAnim(e, 'point');
+        s.hazards.push({ kind: 'fireball', fx: e.x - 1, y: p.y, dx: -1, dy: 0, left: e.x + 1, step: P.rollStep.value, start: s.tick, damage: pv(P.rollDamage, v), owner: e.id, seq: 'wheel', sprite: 'bass' });
+      }
+      if (e.stateT >= lead + 12 + P.rollStep.value * 6) wait(pv(P.moveWait, v));
+      return;
+    }
+    case 'rapid': { // 0xB Shooting Buster: rapid shots on random panels of MegaMan's area
+      const gap = P.rapidGap.value, n = pv(P.rapidCount, v), mark = pv(P.rapidMark, v);
+      if (e.stateT % gap === 1 && Math.floor(e.stateT / gap) < n) {
+        setAnim(e, e.stateT % (2 * gap) === 1 ? 'rapid' : 'rapid2');
+        const cell = Math.floor(e.stateT / gap) === 0 ? [p.x, p.y] : [Math.floor(api.rng() * 3), Math.floor(api.rng() * 3)];
+        strike([cell], mark, pv(P.rapidDamage, v));
+      }
+      if (e.stateT >= n * gap + mark + 10) wait(pv(P.moveWait, v));
+      return;
+    }
+    case 'breaker': { // Earth Breaker: fist into MegaMan's panel and the panels around it
+      const mark = pv(P.attackMark, v) + (e.charged ? P.breakerCharge.value : 0);
+      if (e.stateT === 1) {
+        const [x, y] = [p.x, p.y];
+        e.cells = [[x, y], [x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]];
+        strike(e.cells, mark, e.charged ? pv(P.breakerChargedDamage, v) : pv(P.breakerDamage, v));
+      }
+      if (e.stateT === mark - 6) { setAnim(e, 'fist'); s.effects.push({ kind: 'shake', t: 0 }); }
+      if (e.stateT >= mark + 20) wait(pv(P.moveWait, v));
+      return;
+    }
+    case 'blade': { // Dark Arm Blade: 2 x 3 slash in front of him
+      const mark = pv(P.attackMark, v);
+      if (e.stateT === 1) strike(P.bladeShape.value.map(([dx, dy]) => [e.x + dx, e.y + dy]), mark, low() ? pv(P.bladeLowDamage, v) : pv(P.bladeDamage, v));
+      if (e.stateT === mark - 4) setAnim(e, 'slash');
+      if (e.stateT >= mark + 16) wait(pv(P.moveWait, v));
+      return;
+    }
+  }
+
+  function decide() {
+    const moves = v === 1 ? 1 : 3;
+    if (m.c4 < moves) { m.c4 += (v !== 1 && api.rng() < 0.5) ? 2 : 1; return warp(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], null); }
+    m.c4 = 0; m.c6 ^= 1;
+    if (m.c6) { m.c5 ^= 1; return m.c5 ? go(e, 'roll', 'charge') : go(e, 'rapid', 'rapid'); }
+    if (p.x === 0) { e.charged = low(); return go(e, 'breaker', 'idle'); }
+    const x = [3, 4, 5].find(x => free(x, p.y));
+    return warp(x !== undefined ? [x, p.y] : [e.x, e.y], () => go(e, 'blade', 'idle'));
+  }
+  function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
+}
+
 const AREAS = {
   wide: [[-1, -1], [-1, 0], [-1, 1]],
   long: [[-1, 0], [-2, 0]],
@@ -1592,7 +1662,7 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, BlastMan: blastman, DiveMan: diveman, CircusMan: circusman, JudgeMan: judgeman, ElementMan: elementman, Colonel: colonel, ProtoMan: protoman };
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, BlastMan: blastman, DiveMan: diveman, CircusMan: circusman, JudgeMan: judgeman, ElementMan: elementman, Colonel: colonel, Bass: bass, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;

@@ -824,3 +824,32 @@ test('Colonel finisher unlocks when MegaMan\'s HP is at or below its damage', ()
   for (let i = 0; i < 4000 && e.state !== 'finisher'; i++) step(s, {});
   assert.equal(e.state, 'finisher');
 });
+
+test('Bass names and HP from the ROM tables', () => {
+  const vs = naviVariants('Bass');
+  assert.deepEqual([vs[0].name, vs[0].hp], ['Bass', 1800]);
+  assert.equal(start('Bass').enemies[0].sprite, 'bass');
+});
+
+test('Bass alternates basic attacks with one chosen by where MegaMan stands', () => {
+  const s = start('Bass'), e = s.enemies[0];
+  s.player.invuln = 1e9; s.player.x = 0;
+  const seen = [];
+  for (let i = 0; i < 8000 && seen.length < 4; i++) { const was = e.state; step(s, {}); if (was !== e.state && ['roll', 'rapid', 'breaker', 'blade'].includes(e.state)) seen.push(e.state); }
+  assert.deepEqual(seen, ['roll', 'breaker', 'rapid', 'breaker']);
+});
+
+test('Bass Dark Arm Blade when MegaMan is near the front', () => {
+  const s = start('Bass'), e = s.enemies[0];
+  s.player.invuln = 1e9; s.player.x = 2;
+  for (let i = 0; i < 8000 && e.state !== 'blade'; i++) step(s, {});
+  assert.equal(e.state, 'blade');
+  assert.equal(e.x, 3);
+});
+
+test('Bass Shooting Buster: the first shot targets MegaMan\'s panel, 8 shots at base', () => {
+  const { s, e } = findState('Bass', 0, 'rapid', s => { s.player.invuln = 1e9; });
+  const shots = new Set();
+  for (let i = 0; i < 120 && e.state === 'rapid'; i++) { step(s, {}); for (const h of s.hazards) if (h.kind === 'estrike') shots.add(h); }
+  assert.equal(shots.size, 8);
+});
