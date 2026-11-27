@@ -8,12 +8,36 @@ import { val } from '../../data/rules.mjs';
 export const PANEL_W = 40, PANEL_H = 24, FIELD_Y = 72;
 const anchor = (x, y) => [x * PANEL_W + PANEL_W / 2, FIELD_Y + y * PANEL_H + 18];
 
-function panels(g) {
+// Panel surfaces are drawn (no ROM field tiles yet); each BN6 panel type gets its own look.
+const SURFACE = { poison: '#9a48b8', holy: '#f2e2a0', grass: '#5cb24a', ice: '#cdefff', lava: '#e2542a' };
+function panels(g, s) {
   for (let y = 0; y < 3; y++) for (let x = 0; x < 6; x++) {
-    const red = x < 3, px = x * PANEL_W, py = FIELD_Y + y * PANEL_H;
+    const red = x < 3, px = x * PANEL_W, py = FIELD_Y + y * PANEL_H, c = s.panels?.[y]?.[x], type = c?.type || 'normal';
     g.fillStyle = red ? '#c8486a' : '#4870c8'; g.fillRect(px, py, PANEL_W, PANEL_H);
-    g.fillStyle = red ? '#f0a8b8' : '#a8c4f0'; g.fillRect(px + 3, py + 3, PANEL_W - 6, PANEL_H - 9);
     g.fillStyle = red ? '#7a1f3a' : '#1f3a7a'; g.fillRect(px, py + PANEL_H - 4, PANEL_W, 4);
+    const ix = px + 3, iy = py + 3, iw = PANEL_W - 6, ih = PANEL_H - 9;
+    if (type === 'broken') { // a hole; it blinks back in during its last second (0x800C3F2)
+      const left = 600 - c.t, back = left <= 60 && (left >> 2) & 1;
+      g.fillStyle = back ? (red ? '#f0a8b8' : '#a8c4f0') : '#0c0c18'; g.fillRect(ix, iy, iw, ih);
+      if (!back) { g.fillStyle = '#26263a'; g.fillRect(ix, iy, iw, 3); }
+      continue;
+    }
+    g.fillStyle = SURFACE[type] || (red ? '#f0a8b8' : '#a8c4f0'); g.fillRect(ix, iy, iw, ih);
+    if (type === 'cracked') {
+      g.strokeStyle = 'rgba(40,20,30,.8)'; g.lineWidth = 1; g.beginPath();
+      g.moveTo(ix + 4, iy + 2); g.lineTo(ix + 12, iy + 7); g.lineTo(ix + 9, iy + 10); g.lineTo(ix + 20, iy + 12);
+      g.moveTo(ix + 12, iy + 7); g.lineTo(ix + 22, iy + 3); g.lineTo(ix + 30, iy + 8); g.stroke();
+    } else if (type === 'grass') {
+      g.fillStyle = '#2f7a2a'; for (let k = 0; k < 6; k++) g.fillRect(ix + 3 + k * 5, iy + 3 + (k & 1) * 4, 1, 4);
+    } else if (type === 'ice') {
+      g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(ix + 4, iy + 2, 10, 2); g.fillRect(ix + 20, iy + 8, 8, 2);
+    } else if (type === 'poison') {
+      g.fillStyle = '#5e2072'; const t = (s.tick >> 3) & 3; g.fillRect(ix + 6 + t, iy + 3, 4, 3); g.fillRect(ix + 22 - t, iy + 7, 4, 3);
+    } else if (type === 'holy') {
+      g.fillStyle = '#fffbe0'; g.fillRect(ix + iw / 2 - 1, iy + 2, 2, 8); g.fillRect(ix + iw / 2 - 4, iy + 5, 8, 2);
+    } else if (type === 'lava') {
+      g.fillStyle = (s.tick >> 3) & 1 ? '#ffb030' : '#ff8a20'; g.fillRect(ix + 5, iy + 3, 6, 3); g.fillRect(ix + 19, iy + 7, 8, 3);
+    }
   }
 }
 
@@ -65,7 +89,7 @@ export function render(g, s, bank) {
   const bg = g.createLinearGradient(0, 0, 0, FIELD_Y);
   bg.addColorStop(0, '#062048'); bg.addColorStop(1, '#0f4a7a');
   g.fillStyle = bg; g.fillRect(0, 0, 240, 160);
-  panels(g);
+  panels(g, s);
 
   // Virus overlays: Piranha's sonar mark, KillerEye's scan line and beam.
   for (const e of s.enemies) if (e.hp > 0) {
@@ -338,10 +362,11 @@ export function render(g, s, bank) {
   const draw = [];
   const p = s.player;
   if (p.hp > 0 && !(p.invuln > 0 && p.state !== 'flinch' && (s.tick >> 1) & 1)) {
-    const [ax, ay] = anchor(p.x, p.y);
+    const [ax, ay] = anchor(p.drawX ?? p.x, p.drawY ?? p.y);
     draw.push({ y: p.y, fn: () => {
       sprite(g, bank, 'megaman', p.anim, p.animT, ax, ay, placeholderNavi);
-      if (p.paralyzed > 0 && (s.tick >> 1) & 1) { // paralysis: flicker bright
+      if (p.frozen && p.paralyzed > 0) { g.fillStyle = 'rgba(180,230,255,.55)'; g.fillRect(ax - 12, ay - 34, 24, 34); } // frozen on ice
+      else if (p.paralyzed > 0 && (s.tick >> 1) & 1) { // paralysis: flicker bright
         g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.6;
         sprite(g, bank, 'megaman', p.anim, p.animT, ax, ay, () => {}); g.restore();
       }
@@ -467,6 +492,14 @@ export function render(g, s, bank) {
     const [sx, sy] = anchor(h.x, h.y), [tx, ty] = anchor(h.tx, h.y);
     const x = sx + (tx - sx) * k, y = sy + (ty - sy) * k - 40 * Math.sin(Math.PI * k) - 16;
     g.fillStyle = '#222'; g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill();
+  }
+  // Lava eruption (object type3 0x07, sprite 0x10/0x24): bubbles, then a flame column
+  for (const h of s.hazards) if (h.kind === 'lava') {
+    const [lx, ly] = anchor(h.x, h.y), burning = s.tick >= h.hit;
+    sprite(g, bank, 'lavaflame', burning ? (s.tick - h.hit < 2 ? 'rise' : 'flame') : 'bubble', s.tick - (burning ? h.hit : h.start), lx, ly - 4, (g, x, y) => {
+      g.fillStyle = burning ? ((s.tick >> 1) & 1 ? '#ffd040' : '#ff7a20') : '#ffb060';
+      if (burning) g.fillRect(x - 8, y - 40, 16, 40); else { g.beginPath(); g.ellipse(x, y - 4, 8, 3, 0, 0, 7); g.fill(); }
+    });
   }
   // DarkMech elec ball (sprite 0x10/0x16); FighterPlane bombs flash their panel, then burst (sprite 0x10/0x26)
   for (const h of s.hazards) {

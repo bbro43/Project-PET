@@ -244,7 +244,7 @@ const BEHAVIOUR = {
         if (e.stateT === P.release.value + P.slam.value) {
           api.hitPlayerCells(e.cells, pv(P.damage, v));
           s.effects.push({ kind: 'shake', t: 0 });
-          for (const [x, y] of e.cells) s.effects.push({ kind: 'spark', x, y, t: 0 });
+          for (const [x, y] of e.cells) { s.effects.push({ kind: 'spark', x, y, t: 0 }); api.crackPanel(x, y); } // 0x80B8748: the three panels crack
         }
         if (e.stateT >= P.release.value + P.slam.value + P.stay.value) { e.highlight = null; go(e, 'catch', 'catch'); }
         else if (e.stateT >= P.release.value + P.slam.value + 3) e.highlight = null;

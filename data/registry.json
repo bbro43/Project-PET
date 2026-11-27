@@ -3548,6 +3548,39 @@
      "confidence": "ai-set"
     }
    }
+  },
+  "lavaflame": {
+   "label": "Lava eruption (object type3 0x07, sprite 0x10/0x24)",
+   "sources": {
+    "bn6f": {
+     "offset": "371274",
+     "compression": "none",
+     "bytes": 2523,
+     "sha256": "619458edea0a51b9a24071f3c7eee180dcca5bd96d4486949279dd505000b374",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3707EC",
+     "compression": "none",
+     "bytes": 2523,
+     "sha256": "619458edea0a51b9a24071f3c7eee180dcca5bd96d4486949279dd505000b374",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "bubble": {
+     "seq": 0,
+     "confidence": "ai-set"
+    },
+    "rise": {
+     "seq": 1,
+     "confidence": "ai-set"
+    },
+    "flame": {
+     "seq": 2,
+     "confidence": "ai-set"
+    }
+   }
   }
  },
  "tables": {

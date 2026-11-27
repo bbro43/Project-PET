@@ -792,7 +792,7 @@ test('ElementMan basic tornado: forward 5 panels, across 2 rows, back 6; hits Me
   assert.ok(ys.has(h.y0 + 2 * h.dy) || h.y0 === 1, 'second leg crosses two rows');
 });
 
-test('ElementMan element change cycles none → wood → fire → elec → aqua with matching palettes', () => {
+test('ElementMan element change cycles none → aqua → wood → elec → fire with matching palettes', () => {
   const s = start('ElementMan'), e = s.enemies[0]; s.player.invuln = 1e9;
   const seen = [];
   for (let i = 0; i < 4; i++) {
@@ -802,14 +802,25 @@ test('ElementMan element change cycles none → wood → fire → elec → aqua 
     for (let k = 0; k < 80 && e.state === 'change'; k++) step(s, {});
     seen.push([e.element, e.palette]);
   }
-  assert.deepEqual(seen, [['wood', 6], ['fire', 2], ['elec', 8], ['aqua', 4]]);
+  assert.deepEqual(seen, [['aqua', 6], ['wood', 2], ['elec', 8], ['fire', 4]]);
 });
 
-test('ElementMan fire: five bursts on MegaMan\'s panel', () => {
-  const { s, e } = findState('ElementMan', 0, 'fire', s => { s.player.invuln = 1e9; });
-  const strikes = new Set();
-  for (let i = 0; i < 200 && e.state === 'fire'; i++) { step(s, {}); for (const h of s.hazards) if (h.kind === 'estrike') strikes.add(h); }
+test('ElementMan wood: five towers on MegaMan\'s panel leave it grass', () => {
+  const { s, e } = findState('ElementMan', 0, 'wood', s => { s.player.invuln = 1e9; });
+  const strikes = new Set(), px = s.player.x, py = s.player.y;
+  for (let i = 0; i < 200 && e.state === 'wood'; i++) { step(s, {}); for (const h of s.hazards) if (h.kind === 'estrike') strikes.add(h); }
+  for (let i = 0; i < 20; i++) step(s, {});
   assert.equal(strikes.size, 5);
+  assert.equal(s.panels[py][px].type, 'grass');
+});
+
+test('ElementMan aqua: sparkles three panels ahead turn them to ice', () => {
+  const { s, e } = findState('ElementMan', 0, 'aqua', s => { s.player.invuln = 1e9; });
+  const cells = [];
+  for (let i = 0; i < 200 && e.state === 'aqua'; i++) { step(s, {}); for (const h of s.hazards) if (h.kind === 'estrike' && !cells.some(c => c[0] === h.x && c[1] === h.y)) cells.push([h.x, h.y]); }
+  for (let i = 0; i < 20; i++) step(s, {});
+  assert.ok(cells.length >= 1);
+  for (const [x, y] of cells) assert.equal(s.panels[y][x].type, 'ice');
 });
 
 test('Colonel names and HP from the ROM tables', () => {

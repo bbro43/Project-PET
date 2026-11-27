@@ -1338,8 +1338,9 @@ function elementman(e, api) {
   const [VAN, APP] = P.warpTicks.value;
   const wait = t => { go(e, 'idle', 'idle'); e.think = Math.max(1, t); };
   const free = (x, y) => x >= 3 && x <= 5 && y >= 0 && y <= 2 && (!api.at(x, y) || api.at(x, y) === e);
-  const LOOK = { aqua: 'meteor', fire: 'tower', wood: 'sparkle' }; // object sprites: 0xC/0x31 drop, his own tower 18/19, 0x10/0x0F sparkle
-  const strike = (x, y, delay, damage, kind) => s.hazards.push({ kind: 'estrike', x, y, start: s.tick, hit: s.tick + delay, elem: kind, look: LOOK[kind], damage, owner: e.id });
+  const LOOK = { fire: 'meteor', aqua: 'sparkle', wood: 'tower' }; // object sprites: 0xC/0x31 meteor, 0x10/0x0F sparkle, his own tower 18/19
+  const PANEL = { aqua: 'ice', wood: 'grass' }; // 0x8E sets ice, 0x8F sets grass where it lands
+  const strike = (x, y, delay, damage, kind) => s.hazards.push({ kind: 'estrike', x, y, start: s.tick, hit: s.tick + delay, elem: kind, look: LOOK[kind], panel: PANEL[kind], damage, owner: e.id });
   switch (e.state) {
     case 'idle':
       if (--e.think > 0) return;
@@ -1371,22 +1372,22 @@ function elementman(e, api) {
       }
       if (e.stateT >= P.towerMark.value + 10) wait(P.towerWait.value[0]);
       return;
-    case 'aqua': { // 0xB: icicles on MegaMan's panel, one after another
-      const n = e.hp < e.maxHp / 2 ? pv(P.aquaCount.value.lowHp, v) : pv(P.aquaCount.value.normal, v), gap = P.aquaMark.value;
-      if (e.stateT % gap === 1 && Math.floor(e.stateT / gap) < n) strike(p.x, p.y, gap, pv(P.aquaDamage, v), 'aqua');
-      if (e.stateT >= n * gap + 12) wait(pv(P.aquaWait, v));
+    case 'fire': { // 0xB: meteors onto MegaMan's panel, one after another
+      const n = e.hp < e.maxHp / 2 ? pv(P.fireCount.value.lowHp, v) : pv(P.fireCount.value.normal, v), gap = P.fireMark.value;
+      if (e.stateT % gap === 1 && Math.floor(e.stateT / gap) < n) strike(p.x, p.y, gap, pv(P.fireDamage, v), 'fire');
+      if (e.stateT >= n * gap + 12) wait(pv(P.fireWait, v));
       return;
     }
-    case 'wood': { // 0xC: three panels ahead lit, wood spikes burst up
-      const mark = pv(P.woodMark, v);
-      if (e.stateT === 1) for (let k = 1; k <= P.woodReach.value; k++) if (e.x - k >= 0) strike(e.x - k, e.y, mark, pv(P.woodDamage, v), 'wood');
+    case 'aqua': { // 0xC: three panels ahead lit, ice sparkles burst and freeze the panels
+      const mark = pv(P.aquaMark, v);
+      if (e.stateT === 1) for (let k = 1; k <= P.aquaReach.value; k++) if (e.x - k >= 0) strike(e.x - k, e.y, mark, pv(P.aquaDamage, v), 'aqua');
       if (e.stateT >= mark + 20) wait(pv(P.elementWait, v));
       return;
     }
-    case 'fire': { // 0xD: five fire bursts on MegaMan's panel
-      const lead = P.fireLead.value, gap = pv(P.fireGap, v), t = e.stateT - lead;
-      if (t >= 0 && t % gap === 0 && t / gap < P.fireCount.value) strike(p.x, p.y, 8, pv(P.fireDamage, v), 'fire');
-      if (t >= gap * P.fireCount.value + 10) wait(pv(P.elementWait, v));
+    case 'wood': { // 0xD: five wood towers on MegaMan's panel, leaving grass
+      const lead = P.woodLead.value, gap = pv(P.woodGap, v), t = e.stateT - lead;
+      if (t >= 0 && t % gap === 0 && t / gap < P.woodCount.value) strike(p.x, p.y, 8, pv(P.woodDamage, v), 'wood');
+      if (t >= gap * P.woodCount.value + 10) wait(pv(P.elementWait, v));
       return;
     }
     case 'elec': // 0xE: lightning runs down his row
@@ -1404,7 +1405,7 @@ function elementman(e, api) {
       if (prev) {
         const k = ELEMENTS.includes(e.element) ? e.element : null;
         if (!k) return go(e, 'tower', 'cast');
-        if (k === 'elec' || k === 'wood') { const x = [3, 4, 5].find(x => free(x, p.y)); return warp(x !== undefined ? [x, p.y] : [e.x, e.y], () => go(e, k, 'push')); }
+        if (k === 'elec' || k === 'aqua') { const x = [3, 4, 5].find(x => free(x, p.y)); return warp(x !== undefined ? [x, p.y] : [e.x, e.y], () => go(e, k, 'push')); }
         return go(e, k, 'castloop');
       }
       const prev7 = m.c7; m.c7 ^= 1;

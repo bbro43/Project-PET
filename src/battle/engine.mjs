@@ -1,9 +1,11 @@
 // Deterministic fixed-tick Battle Network battle simulation (BN6 ruleset).
 // No rendering, DOM or timing here: the client feeds one input object per tick.
 // Input: { dir: 'up'|'down'|'left'|'right'|null, a: held bool, b: pressed bool, l: pressed bool }
-import { val, CHIPS, TEST_FOLDER, WEAKNESS } from '../../data/rules.mjs';
+import { val, CHIPS, TEST_FOLDER, WEAKNESS, PANELS } from '../../data/rules.mjs';
 import { createVirus, stepVirus, virusName, PLAYABLE_FAMILIES } from './viruses.mjs';
 import { createNavi, stepNavi, stepCoil, naviVariants, PLAYABLE_NAVIS } from './navis.mjs';
+import { createPanels, stepPanels, panelHit, standable, crackPanel, breakPanel, setPanel, panelType, FIELDS } from './panels.mjs';
+export { FIELDS };
 export { PLAYABLE_FAMILIES, virusName, PLAYABLE_NAVIS, naviVariants };
 
 // Single CPU Navi battle (Navi starts on the middle panel of the enemy area).
@@ -31,7 +33,7 @@ export function survivalWave(n, pickFamily = i => PLAYABLE_FAMILIES[i % PLAYABLE
   return Array.from({ length: count }, (_, i) => [pickFamily(n + i), variant]);
 }
 
-export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0, 1), seed = 1, folder = TEST_FOLDER } = {}) {
+export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0, 1), seed = 1, folder = TEST_FOLDER, field = 'normal' } = {}) {
   const s = {
     tick: 0, seed: seed >>> 0, mode, wave: 1, deleted: 0,
     phase: 'custom', phaseT: 0, gauge: 0, events: [],
@@ -44,6 +46,7 @@ export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0,
     folder: folder.map(([name, code], i) => ({ id: i, name, code })),
     draw: [], hand: [], picked: [], queue: [],
   };
+  s.panels = createPanels(field, () => rng(s));
   s.draw = shuffle(s, s.folder.slice());
   spawn(s, mode === 'survival' ? survivalWave(1, k => pickSurvival(s, k)) : enemies);
   refillHand(s);
@@ -111,6 +114,7 @@ function hitEnemy(s, e, damage, extra = {}) {
   if (!e || e.hp <= 0 || e.airborne || e.invuln > 0) return; // invuln: e.g. Trumpy's song
   if (e.guard) { e.guardHit = true; s.events.push({ type: 'guard', target: e.id }); s.effects.push({ kind: 'guard', x: e.x, y: e.y, t: 0 }); return; }
   damage *= elementMultiplier(extra.element, e.element);
+  if (!e.cells) damage = panelHit(s, e.x, e.y, damage, extra.element).damage;
   e.hp = Math.max(e.sturdy ? 1 : 0, e.hp - damage);
   e.flash = 4;
   s.effects.push({ kind: 'hit', x: e.x, y: e.y, t: 0, damage });
@@ -130,13 +134,17 @@ function hitEnemy(s, e, damage, extra = {}) {
 function hitPlayer(s, damage, opts = {}) {
   const p = s.player;
   if (p.invuln > 0 || p.hp <= 0) return;
+  const element = opts.element ?? s.attacker?.element;
+  const ph = panelHit(s, p.x, p.y, damage, element);
+  damage = ph.damage;
+  if (ph.freeze && !opts.paralyze) opts = { ...opts, paralyze: ph.freeze, frozen: true }; // aqua on ice: frozen solid (0x3007460)
   p.hp = Math.max(0, p.hp - damage);
   if (opts.paralyze) { // paralysis: no flinch and no flashing; MegaMan just freezes (DarkMech waits for this)
-    p.paralyzed = opts.paralyze; p.state = 'paralyzed'; p.stateT = 0; setAnim(p, 'idle'); p.holdT = 0; p.charge = 0; p.dest = null;
+    p.paralyzed = opts.paralyze; p.frozen = !!opts.frozen; p.state = 'paralyzed'; p.stateT = 0; setAnim(p, 'idle'); p.holdT = 0; p.charge = 0; p.dest = null;
     s.events.push({ type: 'playerHit', damage, paralyze: true });
     return;
   }
-  p.paralyzed = 0;
+  p.paralyzed = 0; p.frozen = false;
   p.state = 'flinch'; p.stateT = 0; setAnim(p, 'flinch');
   p.invuln = val('invincibleTicks'); p.holdT = 0; p.charge = 0; p.dest = null;
   s.events.push({ type: 'playerHit', damage });
@@ -183,8 +191,22 @@ function stepPlayer(s, input) {
     return;
   }
   if (p.state === 'vanish') {
-    if (p.stateT >= val('moveVanishTicks')) { [p.x, p.y] = p.dest; p.dest = null; p.state = 'appear'; p.stateT = 0; setAnim(p, 'appear'); }
+    if (p.stateT >= val('moveVanishTicks')) {
+      [p.x, p.y] = p.dest; p.dest = null; p.state = 'appear'; p.stateT = 0; setAnim(p, 'appear');
+      if (panelType(s, p.x, p.y) === 'ice' && p.moveDir) p.slide = p.moveDir; // stepping onto ice: keep going
+    }
     return;
+  }
+  if (p.state === 'slide') { // ice: glide one panel at a time until off the ice or blocked
+    const T = PANELS.iceSlideTicks.value, [dx, dy] = p.slide;
+    p.drawX = p.x + dx * Math.min(1, p.stateT / T); p.drawY = p.y + dy * Math.min(1, p.stateT / T);
+    if (p.stateT >= T) { p.x += dx; p.y += dy; p.drawX = p.drawY = null; p.state = 'idle'; p.stateT = 0; setAnim(p, 'idle'); if (panelType(s, p.x, p.y) !== 'ice') p.slide = null; }
+    else return;
+  }
+  if (p.slide && (p.state === 'idle' || p.state === 'appear')) {
+    const [dx, dy] = p.slide, x = p.x + dx, y = p.y + dy;
+    if (x >= 0 && x < 3 && y >= 0 && y < 3 && !at(s, x, y) && standable(s, x, y)) { p.state = 'slide'; p.stateT = 0; setAnim(p, 'idle'); return; }
+    p.slide = null;
   }
   // Charge accumulates while A is held in any non-flinch state.
   if (input.a) { p.holdT++; if (p.holdT > val('chargeDelay')) p.charge = Math.min(val('chargeTime'), p.charge + 1); }
@@ -213,18 +235,23 @@ function stepPlayer(s, input) {
   const d = DIRS[input.dir];
   if (d) {
     const x = p.x + d[0], y = p.y + d[1];
-    if (x >= 0 && x < 3 && y >= 0 && y < 3 && !at(s, x, y)) {
-      p.dest = [x, y]; p.state = 'vanish'; p.stateT = 0; setAnim(p, 'vanish');
+    if (x >= 0 && x < 3 && y >= 0 && y < 3 && !at(s, x, y) && standable(s, x, y)) {
+      p.dest = [x, y]; p.moveDir = d; p.state = 'vanish'; p.stateT = 0; setAnim(p, 'vanish');
     }
   }
 }
 
 // ---------- viruses ----------
+const HOLE = { hole: true, hp: 0 };
 function virusApi(s) {
   const p = s.player;
   return {
     s,
-    at: (x, y) => at(s, x, y),
+    at: (x, y) => at(s, x, y) || (standable(s, x, y) ? undefined : HOLE), // a broken panel can't be moved onto
+    crackPanel: (x, y) => crackPanel(s, x, y),
+    breakPanel: (x, y) => breakPanel(s, x, y),
+    setPanel: (x, y, type) => setPanel(s, x, y, type),
+    panelType: (x, y) => panelType(s, x, y),
     hitPlayerAt(x, y, damage, opts) { if (p.x === x && p.y === y && p.state !== 'vanish') hitPlayer(s, damage, opts); },
     hitPlayerCells(cells, damage, opts) { if (p.state !== 'vanish' && cells.some(([x, y]) => p.x === x && p.y === y)) hitPlayer(s, damage, opts); },
     rng: () => rng(s),
@@ -241,6 +268,14 @@ function virusApi(s) {
 function stepHazards(s) {
   const p = s.player;
   s.hazards = s.hazards.filter(h => {
+    s.attacker = h.owner !== undefined ? s.enemies.find(e => e.id === h.owner) : null;
+    if (h.kind === 'lava') { // lava eruption (object type3 0x07): bubbles, then a flame column hits whoever stands there
+      if (s.tick >= h.hit && s.tick < h.until && panelType(s, h.x, h.y) === 'lava') {
+        if (p.x === h.x && p.y === h.y && p.state !== 'vanish' && !h.done.includes('p')) { h.done.push('p'); hitPlayer(s, h.damage, { element: 'none' }); }
+        const e = at(s, h.x, h.y); if (e && !h.done.includes(e.id)) { h.done.push(e.id); hitEnemy(s, e, h.damage); }
+      }
+      return s.tick < h.until && (s.tick < h.hit || panelType(s, h.x, h.y) === 'lava');
+    }
     if (h.kind === 'wave') {
       if (p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
       if (s.tick >= h.next) { h.x += h.dir; h.next = s.tick + h.step; }
@@ -280,7 +315,8 @@ function stepHazards(s) {
       return false;
     }
     if (h.kind === 'estrike') { // ElementMan: a lit panel, then an elemental strike on it
-      if (s.tick === h.hit && p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      if (s.tick === h.hit && p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage, { element: h.elem });
+      if (s.tick === h.hit && h.panel) setPanel(s, h.x, h.y, h.panel);
       return s.tick < h.hit + 12;
     }
     if (h.kind === 'portal') { // EraseMan's dark portal: opens, then a ghost lunges out for a few frames
@@ -468,9 +504,15 @@ export function step(s, input = {}) {
   if (input.l && s.gauge >= val('customGaugeTicks') && s.player.state === 'idle') { openCustom(s); return s; }
   stepPlayer(s, input);
   const api = virusApi(s);
-  for (const e of [...s.enemies]) if (e.hp > 0) (e.kind === 'navi' ? stepNavi : e.kind === 'coil' ? stepCoil : stepVirus)(e, api);
+  for (const e of [...s.enemies]) if (e.hp > 0) { s.attacker = e; (e.kind === 'navi' ? stepNavi : e.kind === 'coil' ? stepCoil : stepVirus)(e, api); }
+  s.attacker = null;
   s.enemies = s.enemies.filter(e => e.hp > 0 || e.kind !== 'coil');
   stepHazards(s);
+  s.attacker = null;
+  stepPanels(s, {
+    hurtPlayer: d => { const p = s.player; if (p.hp > 0) p.hp = Math.max(0, p.hp - d); },
+    hurtEnemy: (e, d) => { e.hp = Math.max(0, e.hp - d); if (e.hp === 0) { if (e.kind !== 'coil') s.deleted++; s.events.push({ type: 'delete', target: e.id }); s.effects.push({ kind: 'delete', x: e.x, y: e.y, t: 0 }); if (s.turns[e.family] === e.id) delete s.turns[e.family]; } },
+  });
   s.effects = s.effects.filter(f => ++f.t < 24);
   if (s.player.hp <= 0) { s.phase = 'lose'; s.events.push({ type: 'lose' }); endBattleEffects(s); }
   else if (s.enemies.every(e => e.hp <= 0 || e.kind === 'coil')) {

@@ -54,6 +54,25 @@ export const TEST_FOLDER = [
 ];
 
 // Element weakness (attacker element → element it deals double damage to).
+// Panel types (PanelData.Type, 0x800C380 per-panel update; flags table 0x3007924).
+// 0 none, 1 broken, 2 normal, 3 cracked, 4 poison, 5 holy, 6 grass, 7 ice, 8 lava, 9-12 road.
+export const PANELS = {
+  types: v(['none', 'broken', 'normal', 'cracked', 'poison', 'holy', 'grass', 'ice', 'lava', 'road-up', 'road-down', 'road-left', 'road-right'], 'rom-verified', 'type byte → behaviour: grass heals wood (0x801A186), ice slide (0x801A3DA), lava eruption (0x800C438), holy halves damage (0x800E3BE)'),
+  brokenRepair: v(600, 'rom-verified', '0x800C488: 0x258 frames (0x1E0 in mode 1), blinking for the last 60 (0x800C3F2)'),
+  crack: v('a standable panel cracks; a cracked panel with nobody on it breaks; a cracked panel breaks when whoever stood on it steps off', 'rom-verified', 'object_crackPanel 0x800C944, 0x800C402'),
+  poisonTicks: v(7, 'rom-verified', '0x801A186: 1 HP every 7 frames (timer 6 → −1); FloatShoe / poison immunity skip it'),
+  holy: v('damage halved, rounded up', 'rom-verified', 'object_calculateFinalDamage1 0x800E3E2: (d + 1) >> 1'),
+  grassHeal: v({ ticks: 20, lowHpTicks: 180, lowHp: 9 }, 'rom-verified', '0x801A186: wood-element objects +1 HP when battle counter 0x0E (mod 20) is 0, counter 0x16 (mod 180) when HP ≤ 9'),
+  grassFire: v('fire attacks do double damage to whoever stands on grass and burn it back to normal', 'rom-verified', 'applyHeatOnGrassDamage 0x300766C, 0x3007708'),
+  iceSlide: v('stepping onto ice keeps you sliding the same way (not aqua, not FloatShoe / AirShoe)', 'rom-verified', '0x801A3DA'),
+  iceSlideTicks: v(6, 'unverified', 'frames per panel while sliding'),
+  iceFreeze: v(80, 'rom-verified', '0x3007460: an aqua hit on someone standing on ice freezes them (0x50) and the panel turns normal'),
+  lavaCycle: v(140, 'rom-verified', '0x800C438: battle counter 0x8C; columns 1–3 erupt at 140, columns 4–6 at 70'),
+  lavaEruption: v({ warn: 40, burn: 40, damage: 50 }, 'rom-verified', 'object type3 0x07 (0x80C5A58): bubbles 40 frames, flame column 40 frames, 50 damage (sprite 0x10/0x24)'),
+  lavaAqua: v('an aqua attack on lava turns it normal', 'rom-verified', '0x3007746'),
+  roads: v('conveyor panels; revert after 1800 frames', 'rom-verified', '0x800C45C (0x708); movement not modelled yet'),
+};
+
 export const WEAKNESS = { aqua: 'fire', elec: 'aqua', wood: 'elec', fire: 'wood' };
 export const WEAKNESS_CONFIDENCE = 'recalled';
 
@@ -308,7 +327,7 @@ export const AI = {
     stay: v(63, 'rom-verified', '0x8115876: 0x3F'),
     after: v(180, 'rom-verified', 'table 0x81159AA'),
     moveWait: v(100, 'rom-verified', 'table 0x8115998'),
-    area: v('MegaMan\'s panel and the ones above and below it', 'recalled', 'highlight type 4 and the three cracked panels (0x80B8748) both cover that column; panel cracking not modelled yet'),
+    area: v('MegaMan\'s panel and the ones above and below it; all three crack', 'recalled', 'highlight type 4 and the three cracked panels (0x80B8748) both cover that column'),
     damage: v([50, 120, 200, 220, 150, 220], 'rom-verified', 'table 0x8115980 (low half)'),
   },
   Nightmare: { // AI 29, table 0x8115DE0
@@ -674,27 +693,27 @@ export const NAVI_AI = {
     moveCount: v([3, 2, 2, 2, 2], 'rom-verified', 'table 0x810039C'),
     moveWait: v([30, 24, 18, 12, 12], 'rom-verified', 'table 0x8100408 (+60 with flag 0xA000; not simulated)'),
     warpTicks: v([3, 3], 'recalled'),
-    elementOrder: v(['none', 'wood', 'fire', 'elec', 'aqua'], 'rom-verified', '0xA (0x81008C2): index = (index + 1) mod 5 over byte_810090C (0, 4, 1, 3, 2)'),
-    elementPalette: v({ none: 0, wood: 6, fire: 2, elec: 8, aqua: 4 }, 'rom-verified', 'palette bytes after byte_810090C (0, 6, 2, 8, 4); odd palettes are the lighter flash'),
+    elementOrder: v(['none', 'aqua', 'wood', 'elec', 'fire'], 'rom-verified', '0xA (0x81008C2): index = (index + 1) mod 5 over byte_810090C (0, 4, 1, 3, 2); names from the element each attack sets (Unk_02, 0x81005A6–0x810064C)'),
+    elementPalette: v({ none: 0, aqua: 6, wood: 2, elec: 8, fire: 4 }, 'rom-verified', 'palette bytes after byte_810090C (0, 6, 2, 8, 4); odd palettes are the lighter flash'),
     changeTicks: v([19, 20, 10, 10], 'rom-verified', '0xA: animation 5 for 0x13, animation 6 + sound for 0x14, white flash 0x0A, animation 0 for 0x0A'),
     twisterSpeed: v([4, 4.5, 5, 5.5, 5.5], 'rom-verified', 'type3 0x90 speed 0x80D7248 (px per frame)'),
     twisterLegs: v([200, 48, 240], 'rom-verified', 'leg lengths 0x80D725C in px: forward 5 panels, 2 rows across, back 6 panels; directions 0x80D726C'),
     twisterStart: v('back column, random row; turns down from the top half, up from the bottom row', 'unverified', 'start 0x810112C (column 6, random row); direction set choice not decoded'),
-    elementIds: v({ fire: 1, aqua: 2, elec: 3, wood: 4 }, 'recalled', 'BN6 element numbering; ExtraVars 2 → 0xB, 4 → 0xC, 1 → 0xD, 3 → 0xE, anything else → 0xF'),
+    elementIds: v({ fire: 1, aqua: 2, elec: 3, wood: 4 }, 'rom-verified', 'element enum ELEM_HEAT 1 … ELEM_WOOD 4; ExtraVars 2 → 0xB (sets element 1, fire), 4 → 0xC (2, aqua), 1 → 0xD (4, wood), 3 → 0xE (3, elec), anything else → 0xF'),
     towerDamage: v([60, 100, 140, 240, 240], 'rom-verified', 'table 0x8100708 (0xF basic attack: type3 0x90, a tornado on sprite 0x10/0x42)'),
     towerMark: v(10, 'rom-verified', 'table 0x8100534'),
     towerWait: v([1, 1, 1, 1, 1], 'rom-verified', 'read via 0x8100558 (code bytes)'),
-    aquaDamage: v([60, 90, 120, 200, 200], 'rom-verified', 'table 0x81006E8 (0xB, type3 0x8D)'),
-    aquaCount: v({ normal: [4, 4, 5, 6, 6], lowHp: [6, 6, 8, 10, 10] }, 'rom-verified', 'table 0x8100464'),
-    aquaMark: v(10, 'rom-verified', 'table 0x810041C: each target panel lit first'),
-    aquaWait: v([20, 16, 14, 12, 12], 'rom-verified', 'table 0x8100440'),
-    woodDamage: v([30, 50, 70, 120, 120], 'rom-verified', 'table 0x81006F0 (0xC, type3 0x8E)'),
-    woodMark: v([16, 14, 12, 10, 10], 'rom-verified', 'table 0x810047C'),
-    woodReach: v(3, 'unverified', '0x81010A0 loops 3 spawns in front of him'),
-    fireDamage: v([30, 50, 70, 120, 120], 'rom-verified', 'table 0x81006F8 (0xD, type3 0x8F)'),
-    fireLead: v(10, 'rom-verified', 'table 0x81004C0'),
-    fireGap: v([20, 16, 12, 10, 10], 'rom-verified', 'table 0x81004C4'),
-    fireCount: v(5, 'rom-verified', 'loop until 5 in 0xD'),
+    fireDamage: v([60, 90, 120, 200, 200], 'rom-verified', 'table 0x81006E8 (0xB fire: falling meteors, type3 0x8D sprite 0xC/0x31)'),
+    fireCount: v({ normal: [4, 4, 5, 6, 6], lowHp: [6, 6, 8, 10, 10] }, 'rom-verified', 'table 0x8100464'),
+    fireMark: v(10, 'rom-verified', 'table 0x810041C: each target panel lit first'),
+    fireWait: v([20, 16, 14, 12, 12], 'rom-verified', 'table 0x8100440'),
+    aquaDamage: v([30, 50, 70, 120, 120], 'rom-verified', 'table 0x81006F0 (0xC aqua: type3 0x8E, sparkle 0x10/0x0F; turns its panel to ice, 0x80D6E70)'),
+    aquaMark: v([16, 14, 12, 10, 10], 'rom-verified', 'table 0x810047C'),
+    aquaReach: v(3, 'unverified', '0x81010A0 loops 3 spawns in front of him'),
+    woodDamage: v([30, 50, 70, 120, 120], 'rom-verified', 'table 0x81006F8 (0xD wood: type3 0x8F, his tower animation 0x12/0x13; turns its panel to grass, 0x80D7008)'),
+    woodLead: v(10, 'rom-verified', 'table 0x81004C0'),
+    woodGap: v([20, 16, 12, 10, 10], 'rom-verified', 'table 0x81004C4'),
+    woodCount: v(5, 'rom-verified', 'loop until 5 in 0xD'),
     elecDamage: v([60, 100, 140, 240, 240], 'rom-verified', 'table 0x8100700 (0xE, type4 0x57 at the first panel ahead)'),
     elecLead: v(10, 'rom-verified', 'table 0x81004FC'),
     elementWait: v([40, 36, 32, 28, 28], 'rom-verified', 'tables 0x81004A0 / 0x81004E8 / 0x8100520'),

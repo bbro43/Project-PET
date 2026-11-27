@@ -31,7 +31,7 @@ $('#cpu-navi').addEventListener('change', fillNaviVariants);
 if (prefs.family) $('#family').value = prefs.family;
 fillVariants();
 $('#family').addEventListener('change', fillVariants);
-for (const id of ['navi', 'mode', 'family', 'variant', 'count', 'cpu-navi', 'cpu-variant']) {
+for (const id of ['navi', 'mode', 'family', 'variant', 'count', 'cpu-navi', 'cpu-variant', 'field']) {
   if (prefs[id]) $('#' + id).value = prefs[id];
   $('#' + id).addEventListener('change', () => { prefs[id] = $('#' + id).value; savePrefs(); syncMenu(); });
 }
@@ -128,7 +128,7 @@ function start() {
   const mode = $('#mode').value;
   const enemies = mode === 'navi' ? naviBattle($('#cpu-navi').value, +$('#cpu-variant').value)
     : formation($('#family').value, +$('#variant').value, +$('#count').value);
-  state = createBattle({ mode: mode === 'navi' ? 'virus' : mode, enemies, seed: (Date.now() & 0x7fffffff) });
+  state = createBattle({ mode: mode === 'navi' ? 'virus' : mode, enemies, field: $('#field').value, seed: (Date.now() & 0x7fffffff) });
   $('#menu').hidden = true; $('#battle').hidden = false;
   showCustom();
   last = performance.now(); acc = 0;
