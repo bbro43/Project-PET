@@ -4,7 +4,8 @@
  "confidence": {
   "rom-verified": "Bytes decoded from the ROM and checked against an independent export or hash.",
   "visual-candidate": "Role assigned by looking at decoded frames; not yet confirmed by a runtime trace.",
-  "unverified": "Recalled or estimated; must be checked against the game."
+  "unverified": "Recalled or estimated; must be checked against the game.",
+  "ai-set": "Sequence number read from the AI code that sets it (CurAnim / sprite object anim); the frames themselves are the ROM's."
  },
  "sprites": {
   "megaman": {
@@ -104,7 +105,7 @@
      "confidence": "visual-candidate"
     }
    },
-   "note": "Variant palettes: slot = variant index (0 base, 1 \"2\", 2 \"3\", 3 \u03a9, 4 Rare, 5 Rare2); visually confirmed."
+   "note": "Variant palettes: slot = variant index (0 base, 1 \"2\", 2 \"3\", 3 Ω, 4 Rare, 5 Rare2); visually confirmed."
   },
   "champy": {
    "label": "Champy",
@@ -461,7 +462,7 @@
    }
   },
   "swordfx": {
-   "label": "Sword slash effect (effect objects 0x25/0x27 \u2192 sprite list 0xC index 0x14)",
+   "label": "Sword slash effect (effect objects 0x25/0x27 → sprite list 0xC index 0x14)",
    "note": "Shape-to-sequence mapping (wide 0, long 1, sword 2) is visual; effect table 0x80E0398 lists animations 3 and 0 for ids 0x25/0x27.",
    "sources": {
     "bn6f": {
@@ -703,7 +704,7 @@
    }
   },
   "clawfx": {
-   "label": "SlashMan claw slash (effects 0x39/0x3A \u2192 sprite 0x10/0x38)",
+   "label": "SlashMan claw slash (effects 0x39/0x3A → sprite 0x10/0x38)",
    "sources": {
     "bn6f": {
      "offset": "381340",
@@ -3198,19 +3199,19 @@
    "sequences": {
     "idle": {
      "seq": 0,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
     },
     "bank": {
      "seq": 1,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
     },
     "bomb": {
      "seq": 2,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
     },
     "return": {
      "seq": 3,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
     }
    }
   },
@@ -3235,29 +3236,54 @@
    "sequences": {
     "idle": {
      "seq": 0,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set",
+     "layers": [
+      0,
+      6
+     ]
     },
     "ready": {
      "seq": 1,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set",
+     "layers": [
+      0,
+      6
+     ]
     },
-    "slash": {
-     "seq": 3,
-     "confidence": "visual-candidate"
+    "hold": {
+     "seq": 2,
+     "confidence": "ai-set",
+     "layers": [
+      0,
+      6
+     ]
     },
     "throw": {
+     "seq": 3,
+     "confidence": "ai-set",
+     "layers": [
+      0,
+      6
+     ]
+    },
+    "dash": {
+     "seq": 4,
+     "confidence": "ai-set",
+     "layers": [
+      0,
+      6
+     ]
+    },
+    "slash": {
      "seq": 5,
-     "confidence": "visual-candidate"
-    },
-    "sword": {
-     "seq": 6,
-     "confidence": "visual-candidate"
-    },
-    "guard": {
-     "seq": 12,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set",
+     "layers": [
+      0,
+      6
+     ]
     }
-   }
+   },
+   "note": "Body seq n is drawn with its separate sword object at seq n+6 (AI 0x8113840 sets both)."
   },
   "snakearm": {
    "label": "SnakeArm (BN6 virus, AI 26)",
@@ -3278,27 +3304,28 @@
     }
    },
    "sequences": {
-    "idle": {
+    "hole": {
      "seq": 0,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
     },
-    "reach": {
+    "leap1": {
      "seq": 1,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
     },
-    "grab": {
+    "leap2": {
      "seq": 2,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
     },
-    "arm": {
-     "seq": 5,
-     "confidence": "visual-candidate"
+    "leap3": {
+     "seq": 3,
+     "confidence": "ai-set"
     },
-    "fist": {
-     "seq": 9,
-     "confidence": "visual-candidate"
+    "leap4": {
+     "seq": 4,
+     "confidence": "ai-set"
     }
-   }
+   },
+   "note": "AI 0x81144B4: CurAnim 1-4 by quarter of the leap, 0 = in a hole."
   },
   "armadillo": {
    "label": "Armadillo (BN6 virus, AI 27)",
@@ -3321,19 +3348,27 @@
    "sequences": {
     "idle": {
      "seq": 0,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
     },
     "walk": {
      "seq": 1,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
     },
     "curl": {
+     "seq": 2,
+     "confidence": "ai-set"
+    },
+    "ball": {
      "seq": 3,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
     },
     "roll": {
      "seq": 4,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
+    },
+    "uncurl": {
+     "seq": 5,
+     "confidence": "ai-set"
     }
    }
   },
@@ -3358,19 +3393,23 @@
    "sequences": {
     "idle": {
      "seq": 0,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
     },
     "lift": {
      "seq": 1,
-     "confidence": "visual-candidate"
-    },
-    "hold": {
-     "seq": 2,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
     },
     "throw": {
-     "seq": 5,
-     "confidence": "visual-candidate"
+     "seq": 2,
+     "confidence": "ai-set"
+    },
+    "catch": {
+     "seq": 3,
+     "confidence": "ai-set"
+    },
+    "settle": {
+     "seq": 4,
+     "confidence": "ai-set"
     }
    }
   },
@@ -3395,23 +3434,118 @@
    "sequences": {
     "hidden": {
      "seq": 0,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
     },
-    "idle": {
-     "seq": 4,
-     "confidence": "visual-candidate"
-    },
-    "appear": {
+    "raise": {
      "seq": 1,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
     },
     "slash": {
      "seq": 2,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
     },
-    "fade": {
+    "idle": {
+     "seq": 4,
+     "confidence": "ai-set"
+    },
+    "appear": {
      "seq": 5,
-     "confidence": "visual-candidate"
+     "confidence": "ai-set"
+    }
+   }
+  },
+  "elecball": {
+   "label": "DarkMech elec ball (object type3 0xC0, sprite 0x10/0x16)",
+   "sources": {
+    "bn6f": {
+     "offset": "35F424",
+     "compression": "none",
+     "bytes": 5035,
+     "sha256": "a09675cc3091fa7abd3978ad70d85bb17fe4642715fa384ea63c9a474895d3dc",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "35E99C",
+     "compression": "none",
+     "bytes": 5035,
+     "sha256": "a09675cc3091fa7abd3978ad70d85bb17fe4642715fa384ea63c9a474895d3dc",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "fly": {
+     "seq": 0,
+     "confidence": "ai-set"
+    },
+    "hit": {
+     "seq": 1,
+     "confidence": "ai-set"
+    }
+   }
+  },
+  "craggerarm": {
+   "label": "Cragger rock fist (object type1 0x02, sprite 0x10/0x30; plays Cragger's own animation number)",
+   "sources": {
+    "bn6f": {
+     "offset": "37D8E0",
+     "compression": "none",
+     "bytes": 4715,
+     "sha256": "83ed74316c0f1d80d8bf03c27d7c9d9827ef21ab91acb7c55b740f53e6307eae",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "37CE58",
+     "compression": "none",
+     "bytes": 4715,
+     "sha256": "83ed74316c0f1d80d8bf03c27d7c9d9827ef21ab91acb7c55b740f53e6307eae",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "ai-set"
+    },
+    "lift": {
+     "seq": 1,
+     "confidence": "ai-set"
+    },
+    "throw": {
+     "seq": 2,
+     "confidence": "ai-set"
+    },
+    "catch": {
+     "seq": 3,
+     "confidence": "ai-set"
+    },
+    "settle": {
+     "seq": 4,
+     "confidence": "ai-set"
+    }
+   }
+  },
+  "bombblast": {
+   "label": "FighterPlane bomb blast (object type3 0xD3, sprite 0x10/0x26)",
+   "sources": {
+    "bn6f": {
+     "offset": "372410",
+     "compression": "none",
+     "bytes": 2849,
+     "sha256": "53d34779c89e976f6d8313f5381b3ee6a3f73a4a8ab45d419f1ff8b2289191ac",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "371988",
+     "compression": "none",
+     "bytes": 2849,
+     "sha256": "53d34779c89e976f6d8313f5381b3ee6a3f73a4a8ab45d419f1ff8b2289191ac",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "burst": {
+     "seq": 0,
+     "confidence": "ai-set"
     }
    }
   }

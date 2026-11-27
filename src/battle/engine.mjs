@@ -127,10 +127,16 @@ function hitEnemy(s, e, damage, extra = {}) {
   }
 }
 
-function hitPlayer(s, damage) {
+function hitPlayer(s, damage, opts = {}) {
   const p = s.player;
   if (p.invuln > 0 || p.hp <= 0) return;
   p.hp = Math.max(0, p.hp - damage);
+  if (opts.paralyze) { // paralysis: no flinch and no flashing; MegaMan just freezes (DarkMech waits for this)
+    p.paralyzed = opts.paralyze; p.state = 'paralyzed'; p.stateT = 0; setAnim(p, 'idle'); p.holdT = 0; p.charge = 0; p.dest = null;
+    s.events.push({ type: 'playerHit', damage, paralyze: true });
+    return;
+  }
+  p.paralyzed = 0;
   p.state = 'flinch'; p.stateT = 0; setAnim(p, 'flinch');
   p.invuln = val('invincibleTicks'); p.holdT = 0; p.charge = 0; p.dest = null;
   s.events.push({ type: 'playerHit', damage });
@@ -163,6 +169,13 @@ function stepPlayer(s, input) {
     if (keys && keys !== p.trapKeys) p.trapped -= p.trapMash || 0;
     p.trapKeys = keys; p.trapped--; p.prevA = !!input.a;
     if (p.trapped <= 0) { p.trapped = 0; p.state = 'idle'; setAnim(p, 'idle'); }
+    return;
+  }
+  if (p.paralyzed > 0) { // mashing shortens it (0x8017628)
+    const keys = (input.a ? 'a' : '') + (input.b ? 'b' : '') + (input.dir || '');
+    if (keys && keys !== p.trapKeys) p.paralyzed--;
+    p.trapKeys = keys; p.paralyzed--; p.prevA = !!input.a; p.animT = 0;
+    if (p.paralyzed <= 0) { p.paralyzed = 0; p.state = 'idle'; setAnim(p, 'idle'); }
     return;
   }
   if (p.state === 'flinch') {
@@ -212,8 +225,8 @@ function virusApi(s) {
   return {
     s,
     at: (x, y) => at(s, x, y),
-    hitPlayerAt(x, y, damage) { if (p.x === x && p.y === y && p.state !== 'vanish') hitPlayer(s, damage); },
-    hitPlayerCells(cells, damage) { if (p.state !== 'vanish' && cells.some(([x, y]) => p.x === x && p.y === y)) hitPlayer(s, damage); },
+    hitPlayerAt(x, y, damage, opts) { if (p.x === x && p.y === y && p.state !== 'vanish') hitPlayer(s, damage, opts); },
+    hitPlayerCells(cells, damage, opts) { if (p.state !== 'vanish' && cells.some(([x, y]) => p.x === x && p.y === y)) hitPlayer(s, damage, opts); },
     rng: () => rng(s),
     coils: owner => s.enemies.filter(c => c.kind === 'coil' && c.owner === owner.id && c.hp > 0),
     addEnemy(o) { o.id = s.nextId++; s.enemies.push(o); return o; },
@@ -352,6 +365,21 @@ function stepHazards(s) {
       if (h.until && s.tick >= h.until) return false;
       if (h.x === p.x && h.y === p.y && p.state !== 'vanish' && !h.hit) { h.hit = true; hitPlayer(s, h.damage); if (!h.keep) return false; }
       return h.fx > -1.5;
+    }
+    if (h.kind === 'elecball') { // DarkMech (object type3 0xC0): along the row to MegaMan's column, then up or down it
+      if (h.vy === undefined) {
+        h.fx -= h.speed / 40;
+        if (Math.abs(h.fx - p.x) * 40 <= 3) { h.fx = p.x; h.vy = p.y >= h.fy ? 1 : -1; }
+      } else h.fy += h.vy * h.speed / 24;
+      h.x = Math.round(h.fx); h.y = Math.round(h.fy);
+      if (h.x === p.x && h.y === p.y && p.state !== 'vanish' && !(p.invuln > 0)) { hitPlayer(s, h.damage, { paralyze: h.paralyze }); s.effects.push({ kind: 'elechit', x: h.fx, y: h.fy, t: 0 }); return false; }
+      return h.fx > -0.5 && h.fy > -0.5 && h.fy < 2.5;
+    }
+    if (h.kind === 'planebomb') { // FighterPlane bomb (object type3 0xD3): the panel flashes, then it bursts
+      if (s.tick < h.burst) return true;
+      if (p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      s.effects.push({ kind: 'bombblast', x: h.x, y: h.y, t: 0 });
+      return false;
     }
     if (h.kind === 'twister') { // ElementMan's basic tornado: forward 5 panels, 2 rows across, back 6 panels
       if (!s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;

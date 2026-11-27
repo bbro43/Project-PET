@@ -350,8 +350,60 @@ test('FighterPlane bombs all nine panels of MegaMan\'s area in a snake', () => {
   const s = start({ seed: 120, enemies: formation('FighterPlane', 0, 1) });
   s.player.invuln = 1e9;
   const seen = [];
-  for (let i = 0; i < 2000 && seen.length < 9; i++) { step(s, {}); for (const f of s.effects) if (f.kind === 'blast' && f.t === 1) seen.push(`${f.x},${f.y}`); }
+  for (let i = 0; i < 3000 && seen.length < 9; i++) { step(s, {}); for (const f of s.effects) if (f.kind === 'bombblast' && f.t === 1) seen.push(`${f.x},${f.y}`); }
   assert.deepEqual(seen, ['2,0', '2,1', '2,2', '1,2', '1,1', '1,0', '0,0', '0,1', '0,2']);
+});
+
+test('FighterPlane flies through MegaMan\'s row, wraps round and comes home', () => {
+  const s = start({ seed: 121, enemies: formation('FighterPlane', 0, 1) });
+  const e = s.enemies[0], home = e.x;
+  s.player.y = e.y; s.player.x = 1;
+  let hit = false, wrapped = false;
+  for (let i = 0; i < 400; i++) { step(s, {}); hit ||= s.events.some(ev => ev.type === 'playerHit'); wrapped ||= e.state === 'fly' && e.drawX > home; s.player.invuln = 0; s.player.hp = 1000; }
+  assert.ok(hit && wrapped); assert.equal(e.x, home);
+});
+
+test('DarkMech elec ball paralyzes MegaMan, then a DarkMech warps beside him and slashes', () => {
+  const s = start({ seed: 122, enemies: formation('DarkMech', 0, 1) });
+  const e = s.enemies[0];
+  let para = false, slash = false;
+  for (let i = 0; i < 2400 && !slash; i++) {
+    if (!(s.player.paralyzed > 0)) { s.player.y = e.y; s.player.x = 1; }
+    const hp = s.player.hp; step(s, {});
+    if (s.player.paralyzed > 0) { para = true; assert.ok(!(s.player.invuln > 0)); }
+    if (para && hp - s.player.hp === 100) slash = true;
+    if (s.player.hp < 300) s.player.hp = 1000;
+  }
+  assert.ok(para, 'paralyzed'); assert.ok(slash, 'slashed for 100');
+});
+
+test('SnakeArm pops up two panels ahead of MegaMan and leaps onto his panel', () => {
+  const s = start({ seed: 123, enemies: formation('SnakeArm', 0, 1) });
+  const e = s.enemies[0]; s.player.x = 2; s.player.y = 1;
+  let popped = null, hit = false;
+  for (let i = 0; i < 1800 && !hit; i++) { step(s, {}); if (e.state === 'warn' && !popped) popped = [e.x, e.y]; hit = s.events.some(ev => ev.type === 'playerHit'); }
+  assert.deepEqual(popped, [4, 1]); assert.ok(hit);
+  assert.equal(s.player.hp, 100 - 60);
+});
+
+test('Armadillo rolls 3 panels forward, then hops back home', () => {
+  const s = start({ seed: 124, enemies: formation('Armadillo', 0, 1) });
+  const e = s.enemies[0]; s.player.invuln = 1e9; s.player.y = e.y; const home = e.x;
+  let far = 9;
+  for (let i = 0; i < 1200; i++) { step(s, {}); if (e.state === 'roll' || e.state === 'wait') far = Math.min(far, e.fx); if (e.state === 'rest') break; }
+  assert.equal(far, Math.max(0, home - 3)); assert.equal(e.x, home);
+});
+
+test('Cragger punches MegaMan\'s column (the panels above and below too)', () => {
+  const s = start({ seed: 125, enemies: formation('Cragger', 0, 1) });
+  s.player.x = 1; s.player.y = 1;
+  let marked = null;
+  for (let i = 0; i < 400; i++) {
+    step(s, {});
+    const e = s.enemies[0]; if (e.highlight && !marked) { marked = e.highlight[0].map(c => c.join(',')); s.player.y = 0; }
+    if (s.events.some(ev => ev.type === 'playerHit')) break;
+  }
+  assert.deepEqual(marked, ['1,0', '1,1', '1,2']); assert.equal(s.player.hp, 50);
 });
 
 test('sprites come from imported ROMs in order Gregar, Falzar, Colonel, ProtoMan, Red Sun, Blue Moon', async () => {

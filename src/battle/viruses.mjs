@@ -27,77 +27,148 @@ const go = (e, state, anim) => { e.state = state; e.stateT = 0; if (anim) setAni
 // api: { s, at(x,y), hitPlayerAt(x,y,damage,element), spawnWave(e,x,y,stepTicks), turnFree(e), takeTurn(e), endTurn(e) }
 const BEHAVIOUR = {
 
-  // 0x81135CC: fly across, then a bombing run snaking over MegaMan's whole area.
+  // 0x81135CC: flies forward across the whole field (wrapping round), twice; then a bombing run over MegaMan's area.
   FighterPlane(e, api) {
-    const P = AI.FighterPlane, s = api.s, v = e.variant;
+    const P = AI.FighterPlane, s = api.s, p = s.player, v = e.variant;
     switch (e.state) {
       case 'idle':
         if (--e.think > 0) return;
-        e.flights = (e.flights || 0) + 1;
-        if (e.flights <= 2 || !api.turnFree(e)) {
-          const row = [3, 4, 5].filter(x => x !== e.x && !api.at(x, e.y));
-          if (row.length) e.x = row[Math.floor(api.rng() * row.length)];
-          e.think = pv(P.wait, v); return;
+        if ((e.flights || 0) < 2) { e.flights = (e.flights || 0) + 1; e.fx = e.x; e.wrapped = false; e.passHit = -1; return go(e, 'fly', 'idle'); }
+        if (!api.turnFree(e)) { e.think = pv(P.wait, v); return; }
+        e.flights = 0; api.takeTurn(e); return go(e, 'windup', 'bank');
+      case 'fly': {
+        e.fx -= pv(P.flySpeed, v) / 40;
+        if (!e.wrapped && e.fx < -0.5) { // off MegaMan's edge, back in from the far side
+          e.fx += 6; e.wrapped = true;
+          if (v > 0 && e.flights === 1 && p.y !== e.y && !api.at(e.x, p.y)) e.y = p.y;
         }
-        e.flights = 0; api.takeTurn(e); return go(e, 'run', 'bank');
-      case 'run': {
-        const t = e.stateT - P.windup.value, gap = pv(P.bombGap, v);
-        if (t === 0) setAnim(e, 'bomb');
-        if (t >= 0 && t % gap === 0 && t / gap <= P.path.value.length) {
-          const k = t / gap; let x = 2, y = 0;
-          for (let i = 0; i < k; i++) { x -= P.path.value[i][0]; y += P.path.value[i][1]; }
-          api.hitPlayerAt(x, y, pv(P.damage, v)); s.effects.push({ kind: 'blast', x, y, t: 0 });
-        }
-        if (t >= gap * (P.path.value.length + 1)) { setAnim(e, 'return'); api.endTurn(e); e.think = pv(P.wait, v); go(e, 'idle', null); }
+        const x = Math.round(e.fx);
+        if (x === p.x && e.y === p.y && e.passHit !== x) { e.passHit = x; api.hitPlayerAt(x, e.y, e.damage); }
+        if (e.wrapped && e.fx <= e.x) { e.drawX = null; e.think = pv(P.wait, v); return go(e, 'idle', null); }
+        e.drawX = e.fx;
         return;
       }
+      case 'windup':
+        if (e.stateT >= P.windup.value) { e.k = 0; e.bx = 2; e.by = 0; go(e, 'bombs', 'bomb'); BEHAVIOUR.FighterPlane(e, api); }
+        return;
+      case 'bombs': {
+        const gap = pv(P.bombGap, v), path = P.path.value;
+        if (e.stateT % gap === 0 && e.k <= path.length) {
+          if (e.k > 0) { e.bx -= path[e.k - 1][0]; e.by += path[e.k - 1][1]; }
+          s.hazards.push({ kind: 'planebomb', x: e.bx, y: e.by, burst: s.tick + gap, damage: pv(P.damage, v), owner: e.id });
+          e.k++;
+        }
+        if (e.k > path.length && e.stateT % gap === 0) go(e, 'end', 'return');
+        return;
+      }
+      case 'end':
+        if (e.stateT >= 8) { setAnim(e, 'idle'); api.endTurn(e); e.think = pv(P.wait, v); go(e, 'idle', null); }
+        return;
     }
   },
 
-  // 0x8113D50: sword throws, and a heavy slash when MegaMan is right in front.
+  // 0x8113D50: moves; every 3rd turn throws an elec ball that paralyzes; warps next to a paralyzed MegaMan and slashes.
   DarkMech(e, api) {
     const P = AI.DarkMech, s = api.s, p = s.player, v = e.variant;
+    const front = () => e.x + (e.faceBack ? 1 : -1);
     switch (e.state) {
-      case 'idle':
+      case 'idle': {
         if (--e.think > 0) return;
-        if (p.x === e.x - 1 && p.y === e.y && api.turnFree(e)) { api.takeTurn(e); return go(e, 'slash', 'ready'); }
-        e.turns = (e.turns || 0) + 1;
-        if (e.turns >= 3) { e.turns = 0; return go(e, 'throw', 'throw'); }
-        {
-          const free = []; for (let x = 3; x < 6; x++) for (let y = 0; y < 3; y++) if (!api.at(x, y)) free.push([x, y]);
-          const near = free.filter(([x, y]) => y === p.y).sort((a, b) => a[0] - b[0]);
-          const spot = near[0] || free[Math.floor(api.rng() * free.length)];
-          if (spot) [e.x, e.y] = spot;
+        if (p.paralyzed > 0 && !(p.invuln > 0) && api.turnFree(e)) {
+          const spot = [[p.x + 1, p.y], [p.x - 1, p.y]].find(([x, y]) => x >= 0 && x <= 5 && !api.at(x, y));
+          if (spot) { api.takeTurn(e); e.home = [e.x, e.y]; e.dest = spot; return go(e, 'charge', 'dash'); }
         }
+        e.turns = (e.turns || 0) + 1;
+        if (e.turns >= 3) { e.turns = 0; return go(e, 'throw', 'ready'); }
+        const free = []; for (let x = 3; x < 6; x++) for (let y = 0; y < 3; y++) if (!api.at(x, y)) free.push([x, y]);
+        if (free.length) [e.x, e.y] = free[Math.floor(api.rng() * free.length)];
         e.think = pv(P.moveWait, v); return;
-      case 'throw':
-        if (e.stateT === P.throwTicks.value) s.hazards.push({ kind: 'bolt', x: e.x - 1, fx: e.x - 1, y: e.y, dx: -0.25, damage: P.throwDamage.value, sprite: 'darkmech', seq: 'sword', owner: e.id });
-        if (e.stateT >= P.throwTicks.value + P.throwAfter.value) { e.think = pv(P.moveWait, v); go(e, 'idle', 'idle'); }
+      }
+      case 'throw': {
+        const rel = 4 + P.throwTicks.value;
+        if (e.stateT === 4) setAnim(e, 'hold');
+        if (e.stateT === rel) {
+          setAnim(e, 'throw');
+          s.hazards.push({ kind: 'elecball', fx: e.x - 1, fy: e.y, x: e.x - 1, y: e.y, speed: pv(P.ballSpeed, v), damage: P.throwDamage.value, paralyze: P.paralyzeTicks.value, owner: e.id });
+        }
+        if (e.stateT >= rel + P.throwAfter.value) { setAnim(e, 'idle'); e.think = pv(P.moveWait, v); go(e, 'idle', null); }
+        return;
+      }
+      case 'charge': // the dash-ready animation runs, then it warps over two frames a panel
+        if (e.stateT >= 3 + P.charge.value) { e.from = [e.x, e.y]; e.dashT = Math.max(1, Math.abs(e.dest[0] - e.x) * P.dashTicksPerPanel.value); go(e, 'dash', null); }
+        return;
+      case 'dash': {
+        const k = Math.min(1, e.stateT / e.dashT);
+        e.drawX = e.from[0] + (e.dest[0] - e.from[0]) * k; e.drawY = e.from[1] + (e.dest[1] - e.from[1]) * k;
+        e.hidden = (e.stateT & 2) && k < 1;
+        if (k >= 1) {
+          e.hidden = false; e.drawX = e.drawY = null;
+          if (!api.at(...e.dest)) [e.x, e.y] = e.dest;
+          e.faceBack = e.x < p.x; e.highlight = [[[front(), e.y]]];
+          go(e, 'warn', null);
+        }
+        return;
+      }
+      case 'warn':
+        if (e.stateT >= P.slashWarn.value) { e.highlight = null; go(e, 'slash', 'slash'); }
         return;
       case 'slash':
-        if (e.stateT === 12) { setAnim(e, 'slash'); api.hitPlayerAt(e.x - 1, e.y, pv(P.slashDamage, v)); s.effects.push({ kind: 'slash', area: 'wide', x: e.x, y: e.y, t: 0 }); }
-        if (e.stateT >= 12 + pv(P.slashAfter, v)) { api.endTurn(e); e.think = pv(P.moveWait, v); go(e, 'idle', 'idle'); }
+        if (e.stateT === 3) { api.hitPlayerAt(front(), e.y, pv(P.slashDamage, v)); s.effects.push({ kind: 'slash', area: 'sword', x: e.x, y: e.y, t: 0, flip: e.faceBack }); }
+        if (e.stateT >= 12 + pv(P.slashAfter, v)) {
+          const [hx, hy] = e.home; if (!api.at(hx, hy)) { e.x = hx; e.y = hy; }
+          e.faceBack = false; setAnim(e, 'idle'); api.endTurn(e); e.think = pv(P.moveWait, v); go(e, 'idle', null);
+        }
         return;
     }
   },
 
-  // 0x8114710: the fist snakes out of the hole toward MegaMan, one panel at a time.
+  // 0x8114710: hops between holes; pops up two panels in front of MegaMan and leaps onto him.
   SnakeArm(e, api) {
-    const P = AI.SnakeArm, s = api.s, v = e.variant;
+    const P = AI.SnakeArm, s = api.s, p = s.player, v = e.variant;
+    const leap = (T, next) => {
+      const k = Math.min(1, e.stateT / T);
+      e.drawX = e.from[0] + (e.dest[0] - e.from[0]) * k; e.drawY = e.from[1] + (e.dest[1] - e.from[1]) * k;
+      e.z = Math.sin(Math.PI * k) * P.leapHeight.value;
+      const q = Math.min(3, Math.floor(k * 4)); if (e.anim !== 'leap' + (q + 1)) setAnim(e, 'leap' + (q + 1));
+      const x = Math.round(e.drawX);
+      if (next === 'stay' && x !== e.lastX) { e.lastX = x; api.hitPlayerAt(x, e.dest[1], pv(P.damage, v)); }
+      if (k >= 1) { e.z = 0; e.drawX = e.drawY = null; [e.x, e.y] = e.dest; e.airborne = false; setAnim(e, 'hole'); go(e, next, null); }
+    };
     switch (e.state) {
-      case 'idle':
+      case 'idle': {
+        if (e.anim !== 'hole') setAnim(e, 'hole');
         if (--e.think > 0) return;
-        if (!api.turnFree(e)) { e.think = 20; return; }
-        api.takeTurn(e); setAnim(e, 'reach');
-        s.hazards.push({ kind: 'bee', look: 'fist', fx: e.x - 1, fy: e.y, x: e.x - 1, y: e.y, step: pv(P.step, v), next: s.tick + pv(P.step, v), until: s.tick + pv(P.step, v) * 8, damage: pv(P.damage, v), owner: e.id });
-        return go(e, 'reach', null);
-      case 'reach':
-        if (!s.hazards.some(h => h.kind === 'bee' && h.owner === e.id)) { setAnim(e, 'idle'); api.endTurn(e); e.think = P.after.value; go(e, 'idle', null); }
+        const tx = p.x + 2;
+        if (api.turnFree(e) && tx <= 5 && (tx >= 3 || p.x === 0) && (!api.at(tx, p.y) || api.at(tx, p.y) === e)) {
+          api.takeTurn(e); e.home = [e.x, e.y]; e.holes = [[e.x, e.y]];
+          e.x = tx; e.y = p.y; e.dest = [tx - 2, p.y];
+          e.highlight = [[[tx - 1, p.y], [tx - 2, p.y]].filter(([x]) => x <= 2)];
+          return go(e, 'warn', null);
+        }
+        const free = []; for (let x = 3; x < 6; x++) for (let y = 0; y < 3; y++) if (!api.at(x, y)) free.push([x, y]);
+        if (!free.length) { e.think = pv(P.hopWait, v); return; }
+        e.from = [e.x, e.y]; e.dest = free[Math.floor(api.rng() * free.length)]; e.airborne = true;
+        return go(e, 'hop', null);
+      }
+      case 'hop': return leap(pv(P.hopTicks, v), 'rest');
+      case 'rest': e.think = pv(P.hopWait, v); return go(e, 'idle', null);
+      case 'warn':
+        if (e.stateT >= P.warn.value) { e.highlight = null; e.from = [e.x, e.y]; e.lastX = e.x; e.airborne = true; go(e, 'leap', null); }
+        return;
+      case 'leap': return leap(pv(P.leapTicks, v), 'stay');
+      case 'stay':
+        if (e.stateT >= pv(P.stay, v)) {
+          const [hx, hy] = e.home; if (!api.at(hx, hy)) { e.x = hx; e.y = hy; }
+          e.holes = null; go(e, 'after', null);
+        }
+        return;
+      case 'after':
+        if (e.stateT >= P.after.value) { api.endTurn(e); e.think = pv(P.hopWait, v); go(e, 'idle', null); }
         return;
     }
   },
 
-  // 0x81154F0: line up with MegaMan's row, then roll back and forth along it.
+  // 0x81154F0: lines up with MegaMan's row, curls up and rolls 3–5 panels forward, then hops home.
   Armadillo(e, api) {
     const P = AI.Armadillo, s = api.s, p = s.player, v = e.variant;
     switch (e.state) {
@@ -108,86 +179,120 @@ const BEHAVIOUR = {
           if (!api.at(e.x, ny)) { e.from = e.y; e.dest = ny; return go(e, 'slide', 'walk'); }
           e.think = 20; return;
         }
-        if (s.enemies.some(o => o !== e && o.family === 'Armadillo' && o.state === 'roll' && o.y === e.y)) { e.think = 20; return; }
-        e.home = e.x; e.fx = e.x; e.dir = -1; e.left = pv(P.rolls, v); e.hitThis = false;
-        return go(e, 'roll', 'roll');
+        if (s.enemies.some(o => o !== e && o.hp > 0 && o.family === 'Armadillo' && o.rolling && o.y === e.y)) { e.think = 20; return; }
+        e.rolling = true; e.fx = e.x; e.left = pv(P.rolls, v); e.passHit = -1;
+        return go(e, 'curl', 'curl');
       }
       case 'slide': {
         const T = Math.round(24 / pv(P.slideSpeed, v)), k = Math.min(1, e.stateT / T);
         e.drawY = e.from + (e.dest - e.from) * k;
-        if (k >= 1) { if (!api.at(e.x, e.dest)) e.y = e.dest; e.drawY = e.y; e.think = 1; go(e, 'idle', 'idle'); }
+        if (k >= 1) { if (!api.at(e.x, e.dest)) e.y = e.dest; e.drawY = null; e.think = 1; go(e, 'idle', 'idle'); }
         return;
       }
+      case 'curl':
+        if (e.stateT >= P.curl.value) { e.next = e.x - 1; go(e, 'roll', 'roll'); }
+        return;
       case 'roll': {
-        e.fx += e.dir * pv(P.rollSpeed, v) / 40; e.drawX = e.fx;
+        e.fx = Math.max(e.next, e.fx - pv(P.rollSpeed, v) / 40); e.drawX = e.fx;
         const x = Math.round(e.fx);
-        if (!e.hitThis && x === p.x && e.y === p.y && p.state !== 'vanish') { e.hitThis = true; api.hitPlayerAt(x, e.y, e.damage); }
-        if ((e.dir < 0 && e.fx <= 0) || (e.dir > 0 && e.fx >= 5)) { e.dir = -e.dir; e.hitThis = false; if (--e.left <= 0 && e.dir < 0) e.left = 0; }
-        if (e.left <= 0 && e.dir < 0 && e.fx >= e.home) {
-          e.x = e.home; e.drawX = e.x; e.think = P.after.value; go(e, 'idle', 'idle');
+        if (x === p.x && e.y === p.y && e.passHit !== x) { e.passHit = x; api.hitPlayerAt(x, e.y, e.damage); }
+        if (e.fx <= e.next) {
+          if (--e.left <= 0 || e.next - 1 < 0) return go(e, 'wait', 'ball');
+          e.next--;
         }
         return;
       }
+      case 'wait':
+        if (e.stateT >= P.after.value) { e.hopFrom = e.fx; go(e, 'hop', 'roll'); }
+        return;
+      case 'hop': {
+        const T = P.hop.value, k = Math.min(1, e.stateT / T);
+        e.drawX = e.hopFrom + (e.x - e.hopFrom) * k; e.z = Math.sin(Math.PI * k) * 70;
+        if (e.stateT === T - 8) setAnim(e, 'uncurl');
+        if (k >= 1) { e.drawX = null; e.z = 0; e.rolling = false; go(e, 'rest', null); }
+        return;
+      }
+      case 'rest':
+        if (e.stateT === 16) setAnim(e, 'idle');
+        if (e.stateT >= 24) { e.think = 20; go(e, 'idle', null); }
+        return;
     }
   },
 
-  // 0x8115950: lift a boulder and throw it onto MegaMan's panel.
+  // 0x8115950: raises its rock fist while MegaMan's column flashes, punches it down onto him, then catches it.
   Cragger(e, api) {
     const P = AI.Cragger, s = api.s, p = s.player, v = e.variant;
     switch (e.state) {
       case 'idle':
-        if (e.think === 30 && !e.started) { e.started = true; e.think = P.firstWait.value; }
+        if (!e.started) { e.started = true; e.think = P.firstWait.value; }
         if (--e.think > 0) return;
+        if (v > 0 && !e.moved) {
+          e.moved = true;
+          const free = []; for (let x = 3; x < 6; x++) for (let y = 0; y < 3; y++) if (!api.at(x, y)) free.push([x, y]);
+          if (free.length) [e.x, e.y] = free[Math.floor(api.rng() * free.length)];
+          e.think = P.moveWait.value; return;
+        }
+        e.moved = false;
+        e.tgt = [p.x, p.y]; e.cells = [-1, 0, 1].map(dy => [p.x, p.y + dy]).filter(([, y]) => y >= 0 && y <= 2);
+        e.highlight = [e.cells];
         return go(e, 'lift', 'lift');
       case 'lift':
-        if (e.stateT >= P.lift.value) {
-          setAnim(e, 'throw');
-          s.hazards.push({ kind: 'lob', x: e.x, tx: p.x, y: p.y, start: s.tick, land: s.tick + P.flight.value, damage: pv(P.damage, v), owner: e.id });
-          go(e, 'rest', null);
-        }
+        if (e.stateT >= P.lift.value) go(e, 'throw', 'throw');
         return;
-      case 'rest':
-        if (e.stateT === 20) setAnim(e, 'idle');
-        if (e.stateT >= P.after.value) {
-          if (v > 0) { const free = []; for (let x = 3; x < 6; x++) for (let y = 0; y < 3; y++) if (!api.at(x, y)) free.push([x, y]); if (free.length) [e.x, e.y] = free[Math.floor(api.rng() * free.length)]; }
-          e.think = 1; go(e, 'idle', null);
+      case 'throw': {
+        if (e.stateT === P.release.value) e.fist = { x: e.tgt[0], y: e.tgt[1], start: s.tick, land: s.tick + P.slam.value };
+        if (e.stateT === P.release.value + P.slam.value) {
+          api.hitPlayerCells(e.cells, pv(P.damage, v));
+          s.effects.push({ kind: 'shake', t: 0 });
+          for (const [x, y] of e.cells) s.effects.push({ kind: 'spark', x, y, t: 0 });
         }
+        if (e.stateT >= P.release.value + P.slam.value + P.stay.value) { e.highlight = null; go(e, 'catch', 'catch'); }
+        else if (e.stateT >= P.release.value + P.slam.value + 3) e.highlight = null;
+        return;
+      }
+      case 'catch':
+        if (e.stateT === 8) setAnim(e, 'settle');
+        if (e.stateT >= 11) { e.fist = null; setAnim(e, 'idle'); e.think = P.after.value; go(e, 'idle', null); }
         return;
     }
   },
 
-  // 0x8115DE0: hidden at first, then moves around and swings its scythe over its front column.
+  // 0x8115DE0: hidden at first, then rises; moves around and swings its scythe over the column in front.
   Nightmare(e, api) {
     const P = AI.Nightmare, s = api.s, v = e.variant;
     switch (e.state) {
       case 'idle':
-        if (!e.shown) { e.airborne = true; setAnim(e, 'hidden'); if (s.tick >= P.hiddenTicks.value) { e.shown = true; e.airborne = false; setAnim(e, 'appear'); e.think = 20; } return; }
-        if (e.anim === 'appear' && e.animT > 16) setAnim(e, 'idle');
+        if (!e.shown) { e.airborne = true; if (e.anim !== 'hidden') setAnim(e, 'hidden'); if (s.tick >= P.hiddenTicks.value) { e.shown = true; e.airborne = false; go(e, 'rise', 'appear'); } return; }
         if (--e.think > 0) return;
         e.moves = (e.moves || 0) + 1;
         if (e.moves <= pv(P.moves, v) || !api.turnFree(e)) {
-          const free = []; for (let x = 3; x < 6; x++) for (let y = 0; y < 3; y++) if (!api.at(x, y)) free.push([x, y]);
-          if (free.length) [e.x, e.y] = free[Math.floor(api.rng() * free.length)];
+          const free = []; for (let x = 3; x < 6; x++) for (let y = 0; y < 3; y++) if (!api.at(x, y) || api.at(x, y) === e) free.push([x, y]);
+          const last = e.moves === pv(P.moves, v), py = s.player.y;
+          const pick = (last && free.find(([x, y]) => x === 3 && y === py)) || free.filter(([, y]) => y === py)[Math.floor(api.rng() * 3)] || free[Math.floor(api.rng() * free.length)];
+          if (pick) [e.x, e.y] = pick;
           e.think = pv(P.moveWait, v); return;
         }
         e.moves = 0; api.takeTurn(e);
-        e.cells = [-1, 0, 1].map(dy => [e.x - 1, e.y + dy]).filter(([x, y]) => y >= 0 && y <= 2);
-        e.highlight = [e.cells]; return go(e, 'mark', null);
-      case 'mark':
-        if (e.stateT >= 16 + P.mark.value) {
+        e.cells = [-1, 0, 1].map(dy => [e.x - 1, e.y + dy]).filter(([, y]) => y >= 0 && y <= 2);
+        return go(e, 'mark', 'raise');
+      case 'rise':
+        if (e.stateT >= 35) { e.think = 20; go(e, 'idle', 'idle'); }
+        return;
+      case 'mark': // 16 frames with the scythe up, then the column flashes
+        if (e.stateT === P.raise.value) e.highlight = [e.cells];
+        if (e.stateT >= P.raise.value + P.mark.value) {
           e.highlight = null; setAnim(e, 'slash'); api.hitPlayerCells(e.cells, pv(P.damage, v));
-          for (const [x, y] of e.cells) s.effects.push({ kind: 'spark', x, y, t: 0 });
+          s.effects.push({ kind: 'slash', area: 'wide', x: e.x, y: e.y, t: 0 });
           go(e, 'after', null);
         }
         return;
       case 'after':
-        if (e.stateT === 20) setAnim(e, 'idle');
-        if (e.stateT >= pv(P.after, v)) { api.endTurn(e); e.think = 30; go(e, 'idle', null); }
+        if (e.stateT === 26) setAnim(e, 'idle');
+        if (e.stateT >= 26 + pv(P.after, v)) { api.endTurn(e); e.think = 1; go(e, 'idle', null); }
         return;
     }
   },
 
-  // 0x8110DC0: guarded while closed; lines up, opens and fires a pulse down its row.
   PulseBulb(e, api) {
     const P = AI.PulseBulb, s = api.s, p = s.player, v = e.variant;
     switch (e.state) {

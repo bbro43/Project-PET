@@ -339,7 +339,13 @@ export function render(g, s, bank) {
   const p = s.player;
   if (p.hp > 0 && !(p.invuln > 0 && p.state !== 'flinch' && (s.tick >> 1) & 1)) {
     const [ax, ay] = anchor(p.x, p.y);
-    draw.push({ y: p.y, fn: () => sprite(g, bank, 'megaman', p.anim, p.animT, ax, ay, placeholderNavi) });
+    draw.push({ y: p.y, fn: () => {
+      sprite(g, bank, 'megaman', p.anim, p.animT, ax, ay, placeholderNavi);
+      if (p.paralyzed > 0 && (s.tick >> 1) & 1) { // paralysis: flicker bright
+        g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.6;
+        sprite(g, bank, 'megaman', p.anim, p.animT, ax, ay, () => {}); g.restore();
+      }
+    } });
   }
   for (const e of s.enemies) {
     if (e.hp <= 0 || e.hidden) continue;
@@ -348,8 +354,18 @@ export function render(g, s, bank) {
     const fallback = e.big ? placeholderBeast : e.kind === 'navi' ? placeholderEnemyNavi : e.kind === 'coil' ? placeholderCoil : placeholderVirus;
     if (e.hover && bank?.get(e.sprite)?.shadow) sprite(g, bank, e.sprite, 'shadow', 0, ax + 30, ay0, () => {}, e.palette, true); // under his talons
     else if (e.z > 0) { g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(ax, ay0 - 2, e.hover ? 30 : 10, e.hover ? 8 : 4, 0, 0, 7); g.fill(); }
+    const flip = (e.kind !== 'coil' || !!e.flip) && !e.faceBack;
+    if (e.holes) for (const [hx, hy] of e.holes) { // SnakeArm: its hole stays behind while it is out
+      const [bx, by] = anchor(hx, hy);
+      draw.push({ y: hy - 0.01, fn: () => sprite(g, bank, 'snakearm', 'hole', s.tick, bx, by, () => {}, e.palette, true) });
+    }
+    if (e.fist) { // Cragger's rock fist, punched down onto MegaMan's panel (object type1 0x02)
+      const k = Math.min(1, (s.tick - e.fist.start) / Math.max(1, e.fist.land - e.fist.start)), [fx, fy] = anchor(e.fist.x, e.fist.y);
+      draw.push({ y: e.fist.y + 0.01, fn: () => sprite(g, bank, 'craggerarm', 'catch', 0, fx + 20 * (1 - k), fy - 40 * (1 - k), (g, x, y) => { g.fillStyle = '#999'; g.beginPath(); g.arc(x, y - 12, 10, 0, 7); g.fill(); }, e.palette, true) });
+    }
     draw.push({ y: e.drawY ?? e.y, fn: () => {
-      sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, fallback, e.palette, e.kind !== 'coil' || !!e.flip); // ROM sprites face right; Navis and viruses face MegaMan
+      sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, fallback, e.palette, flip); // ROM sprites face right; Navis and viruses face MegaMan
+      if (e.family === 'Cragger' && !e.fist) sprite(g, bank, 'craggerarm', e.anim, e.animT, ax, ay, () => {}, e.palette, flip);
       if (e.kind === 'coil' && e.discharge > 0 && !bank?.has('eleccoil')) { g.strokeStyle = '#80f0ff'; g.lineWidth = 2; g.beginPath(); g.moveTo(ax, FIELD_Y); g.lineTo(ax, FIELD_Y + 3 * PANEL_H); g.stroke(); }
       if (e.guard) { g.fillStyle = 'rgba(200,230,255,.7)'; g.fillRect(ax - 18, ay - 34, 3, 28); }
       if (e.flash) { g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(ax - 14, ay - 26, 28, 26); g.globalCompositeOperation = 'source-over'; }
@@ -413,9 +429,10 @@ export function render(g, s, bank) {
       const fx = bank?.get('swordfx');
       if (fx) { // game slash sprite, mirrored for an enemy swinging left
         const seq = { wide: ['wide'], long: ['long'], both: ['wide', 'long'], sword: ['sword'] }[f.area];
-        const [ax, ay] = anchor(f.x - 1, f.y);
+        const [ax, ay] = anchor(f.flip ? f.x + 1 : f.x - 1, f.y);
         for (const k of seq) {
           const fr = frameAt(fx[k], f.t);
+          if (f.flip) { g.drawImage(fr.image, Math.round(ax - 20 - fr.originX), Math.round(ay - 12 - fr.originY)); continue; } // swinging right (DarkMech from behind)
           g.save(); g.translate(Math.round(ax + 20), 0); g.scale(-1, 1);
           g.drawImage(fr.image, -fr.originX, Math.round(ay - 12 - fr.originY)); g.restore();
         }
@@ -451,7 +468,24 @@ export function render(g, s, bank) {
     const x = sx + (tx - sx) * k, y = sy + (ty - sy) * k - 40 * Math.sin(Math.PI * k) - 16;
     g.fillStyle = '#222'; g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill();
   }
+  // DarkMech elec ball (sprite 0x10/0x16); FighterPlane bombs flash their panel, then burst (sprite 0x10/0x26)
+  for (const h of s.hazards) {
+    if (h.kind === 'elecball') {
+      const [bx, by] = anchor(h.fx, h.fy);
+      sprite(g, bank, 'elecball', 'fly', s.tick, bx, by - 14, (g, x, y) => { g.fillStyle = (s.tick >> 1) & 1 ? '#fff' : '#ffe040'; g.beginPath(); g.arc(x, y, 6, 0, 7); g.fill(); });
+    }
+    if (h.kind === 'planebomb' && !((s.tick >> 2) & 1)) {
+      g.fillStyle = 'rgba(255,240,80,.85)'; g.fillRect(h.x * PANEL_W + 3, FIELD_Y + h.y * PANEL_H + 3, PANEL_W - 6, PANEL_H - 9);
+    }
+  }
   for (const f of s.effects) {
+    if (f.kind === 'bombblast' || f.kind === 'elechit') {
+      if (f.t > 16) continue;
+      const [bx, by] = anchor(f.x, f.y);
+      if (f.kind === 'bombblast') sprite(g, bank, 'bombblast', 'burst', f.t, bx, by, (g, x, y) => { g.strokeStyle = '#ffe070'; g.lineWidth = 2; g.beginPath(); g.arc(x, y - 10, 4 + f.t, 0, 7); g.stroke(); });
+      else sprite(g, bank, 'elecball', 'hit', f.t, bx, by - 14, () => {});
+      continue;
+    }
     if (f.kind === 'gust') { // WindBox / VacuumFan gust along a row
       if (f.t > 10) continue;
       const [x0, y0] = anchor(f.dir < 0 ? 5 : 0, f.y), [x1] = anchor(f.dir < 0 ? 0 : 5, f.y), k = f.t / 10;
