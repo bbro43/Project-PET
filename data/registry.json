@@ -2163,11 +2163,8 @@
      "confidence": "rom-verified"
     }
    },
-   "note": "Only the Falzar ROM carries the full battle sprite (sprite table category 8, index 0x15); the Gregar ROM's entry at that index is a small 31-sequence block, so a Gregar-only install falls back to the Falzar ROM if it is imported, else placeholder art. 44 sequences: four layers of 10 animations (0-9 back wing, 10-19 body, 20-29 head, 30-39 front wing; animation ids 0x14-0x1D), shadow 40, effects 41-43. Animation 9 is the drill form.",
+   "note": "Only the Falzar ROM carries the full battle sprite (sprite table category 8, index 0x15); the Gregar ROM's entry at that index is a small 31-sequence block, so a Gregar-only install falls back to the Falzar ROM if it is imported, else placeholder art. 44 sequences: four layers of 10 animations (0-9 back wing, 10-19 body, 20-29 head, 30-39 front wing; animation ids 0x14-0x1D), shadow 40, effects 41-43. Animation 9 is the drill form. The body is drawn in the air (its talons hang ~66 px below the sprite origin) and the shadow (40) separately on the ground under his head.",
    "layers": [
-    {
-     "seq": 40
-    },
     0,
     10,
     20,
@@ -2204,13 +2201,14 @@
     },
     "drill": {
      "seq": 9,
-     "confidence": "visual-candidate",
+     "confidence": "visual-candidate"
+    },
+    "shadow": {
+     "seq": 40,
      "layers": [
-      0,
-      10,
-      20,
-      30
-     ]
+      0
+     ],
+     "confidence": "visual-candidate"
     }
    }
   }

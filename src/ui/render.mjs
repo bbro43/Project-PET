@@ -315,7 +315,8 @@ export function render(g, s, bank) {
     const [ax, ay0] = anchor(e.drawX ?? e.x, e.drawY ?? e.y);
     const ay = ay0 - (e.z || 0);
     const fallback = e.big ? placeholderBeast : e.kind === 'navi' ? placeholderEnemyNavi : e.kind === 'coil' ? placeholderCoil : placeholderVirus;
-    if (e.z > 0) { g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(ax, ay0 - 2, 10, 4, 0, 0, 7); g.fill(); }
+    if (e.hover && bank?.get(e.sprite)?.shadow) sprite(g, bank, e.sprite, 'shadow', 0, ax + 30, ay0, () => {}, e.palette, true); // under his talons
+    else if (e.z > 0) { g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(ax, ay0 - 2, e.hover ? 30 : 10, e.hover ? 8 : 4, 0, 0, 7); g.fill(); }
     draw.push({ y: e.drawY ?? e.y, fn: () => {
       sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, fallback, e.palette, e.kind === 'navi');
       if (e.kind === 'coil' && e.discharge > 0 && !bank?.has('eleccoil')) { g.strokeStyle = '#80f0ff'; g.lineWidth = 2; g.beginPath(); g.moveTo(ax, FIELD_Y); g.lineTo(ax, FIELD_Y + 3 * PANEL_H); g.stroke(); }

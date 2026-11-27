@@ -1762,6 +1762,8 @@ function gregar(e, api) {
 // Decision 0x81054D8 → 9 move, 0xA Feather Rain, 0xB Gust, 0xC Feather Shot, 0xD Feather Storm, 0xE Drill Dive.
 function falzar(e, api) {
   const P = NAVI_AI.Falzar, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  // He hovers: body in the air, his shadow on the ground (render), with a slow bob.
+  e.hover = true; e.z = (e.state === 'dive' ? 12 : 22) + Math.round(3 * Math.sin(s.tick / 14));
   const wait = t => { go(e, 'idle', 'idle'); e.think = Math.max(1, t); };
   const panelsOfMegaMan = () => { const out = []; for (let x = 0; x < 3; x++) for (let y = 0; y < 3; y++) out.push([x, y]); return out; };
   const strikeAt = (x, y, mark, dmg) => s.hazards.push({ kind: 'estrike', x, y, hit: s.tick + mark, damage: dmg, elem: 'feather', owner: e.id });
@@ -1769,10 +1771,18 @@ function falzar(e, api) {
     case 'idle':
       if (--e.think > 0) return;
       return decide();
-    case 'move': // 9: fades out and back in somewhere else in his area
-      if (e.stateT === 12) { e.drawY = pick([0, 1, 2], api) * 0.5 + 0.5; setAnim(e, 'appear'); }
-      if (e.stateT >= 24) wait(P.moveWait.value + 20);
+    case 'move': { // 9: flies to another spot over his area
+      const T = 30;
+      if (e.stateT === 1) {
+        e.from = [e.drawX, e.drawY];
+        const spots = [[3.8, 0.8], [4, 1], [3.8, 1.2], [4.2, 0.8], [4.2, 1.2], [4, 0.8], [4, 1.2]].filter(([x, y]) => Math.abs(x - e.drawX) + Math.abs(y - e.drawY) > 0.2);
+        e.dest = pick(spots, api);
+      }
+      const k = Math.min(1, e.stateT / T), ease = k * k * (3 - 2 * k);
+      e.drawX = e.from[0] + (e.dest[0] - e.from[0]) * ease; e.drawY = e.from[1] + (e.dest[1] - e.from[1]) * ease;
+      if (e.stateT >= T) wait(P.moveWait.value + 20);
       return;
+    }
     case 'rain': { // 0xA: feathers on lit panels, the first on MegaMan
       const mark = pv(P.rainMark, v), gap = P.rainGap.value, n = pv(P.rainCount, v);
       const t = e.stateT - 10;
@@ -1811,8 +1821,9 @@ function falzar(e, api) {
     }
     case 'dive': { // 0xE: drill form through MegaMan's row
       const mark = pv(P.diveMark, v);
-      if (e.stateT === 1) { e.cellsHit = [[0, p.y], [1, p.y], [2, p.y]]; e.highlight = [e.cellsHit]; e.drawY = p.y; }
-      if (e.stateT > mark && e.stateT <= mark + 20) e.drawX = 4 - (e.stateT - mark) * 0.3;
+      if (e.stateT === 1) { e.cellsHit = [[0, p.y], [1, p.y], [2, p.y]]; e.highlight = [e.cellsHit]; e.from = [e.drawX, e.drawY]; }
+      if (e.stateT <= mark) { const k = e.stateT / mark; e.drawX = e.from[0]; e.drawY = e.from[1] + (p.y - e.from[1]) * k; }
+      if (e.stateT > mark && e.stateT <= mark + 20) e.drawX = e.from[0] - (e.stateT - mark) * 0.3;
       if (e.stateT === mark + 6) {
         e.highlight = null; s.effects.push({ kind: 'shake', t: 0 });
         api.hitPlayerCells(e.cellsHit, pv(P.diveDamage, v));
@@ -1825,7 +1836,7 @@ function falzar(e, api) {
   }
 
   function decide() {
-    if (m.c4 < 2) { m.c4++; return go(e, 'move', 'rise'); }
+    if (m.c4 < 2) { m.c4++; return go(e, 'move', 'idle'); }
     m.c4 = 0;
     if (m.c5 < 2) { m.c5++; return rnd16(api) < 6 ? go(e, 'shot', 'crouch') : go(e, 'gust', 'crouch'); }
     m.c5 = 0;
