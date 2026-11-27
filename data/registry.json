@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "note": "Offsets and metadata only. No game graphics are stored in this repository; sprites are decoded on the player's device from ROMs they import.",
+  "confidence": {
+    "rom-verified": "Bytes decoded from the ROM and checked against an independent export or hash.",
+    "visual-candidate": "Role assigned by looking at decoded frames; not yet confirmed by a runtime trace.",
+    "unverified": "Recalled or estimated; must be checked against the game."
+  },
+  "sprites": {
+    "megaman": {
+      "label": "MegaMan.EXE (base)",
+      "sources": {
+        "bn6f": { "offset": "1D8000", "compression": "none", "bytes": 29728, "sha256": "3c170c2acb1147931db572baf9e67507cb99e7d9ef972d7eeb7d056796079db6", "confidence": "rom-verified" },
+        "bn6g": { "offset": "1D8000", "compression": "none", "bytes": 29728, "sha256": "3c170c2acb1147931db572baf9e67507cb99e7d9ef972d7eeb7d056796079db6", "confidence": "rom-verified" }
+      },
+      "sequences": {
+        "idle": { "seq": 0, "confidence": "visual-candidate" },
+        "flinch": { "seq": 1, "confidence": "visual-candidate" },
+        "appear": { "seq": 3, "confidence": "visual-candidate" },
+        "vanish": { "seq": 4, "confidence": "visual-candidate" },
+        "buster": { "seq": 9, "confidence": "visual-candidate" },
+        "charge-hold": { "seq": 10, "confidence": "visual-candidate" },
+        "throw": { "seq": 5, "confidence": "visual-candidate" },
+        "slash": { "seq": 6, "confidence": "visual-candidate" },
+        "cannon": { "seq": 8, "confidence": "visual-candidate" }
+      }
+    },
+    "mettaur": {
+      "label": "Mettaur",
+      "sources": {
+        "bn6f": { "offset": "241EC4", "compression": "lz77", "bytes": 10224, "sha256": "911026111060efa7f1368db25c14f1970e9c7b8e522cf1299f7e36f3414e7690", "confidence": "rom-verified" },
+        "bn6g": { "offset": "241EC4", "compression": "lz77", "bytes": 10224, "sha256": "911026111060efa7f1368db25c14f1970e9c7b8e522cf1299f7e36f3414e7690", "confidence": "rom-verified" }
+      },
+      "sequences": {
+        "idle": { "seq": 0, "confidence": "visual-candidate" },
+        "attack": { "seq": 1, "confidence": "visual-candidate" },
+        "hide": { "seq": 2, "confidence": "visual-candidate" },
+        "hidden": { "seq": 3, "confidence": "visual-candidate" },
+        "unhide": { "seq": 4, "confidence": "visual-candidate" }
+      }
+    }
+  }
+}

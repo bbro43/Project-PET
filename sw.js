@@ -1,22 +1,33 @@
 importScripts('./release.js');
-const { app, assets } = self.SIGNAL_YARD_RELEASE;
-const version = app + ':assets-' + assets;
+const { app, assets } = self.PROJECT_PET_RELEASE;
 const scope = self.registration.scope;
-const prefix = 'signal-yard:' + scope + ':';
-const cacheName = prefix + version;
-const shell = ['index.html', 'client.mjs', 'shared/combat.mjs',
-  'manifest.webmanifest', 'release.js', 'icon-192.png', 'icon-512.png'];
+// Cache names from every release use these prefixes so older caches can be removed.
+const prefixes = ['signal-yard:' + scope + ':', 'project-pet:' + scope + ':'];
+const cacheName = prefixes[1] + app + ':assets-' + assets;
+const shell = [
+  '', 'index.html', 'release.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
+  'src/ui/app.mjs', 'src/ui/render.mjs', 'src/battle/engine.mjs',
+  'src/rom/gba.mjs', 'src/rom/zip.mjs', 'src/rom/lz77.mjs', 'src/rom/sprite.mjs', 'src/rom/store.mjs', 'src/rom/bank.mjs',
+  'data/rules.mjs', 'data/registry.json',
+  'prototype/', 'prototype/index.html', 'prototype/client.mjs', 'prototype/shared/combat.mjs',
+];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(cacheName).then(cache => cache.addAll(
-    shell.map(path => new Request(new URL(path, scope), { cache: 'reload' })))));
+  event.waitUntil((async () => {
+    const cache = await caches.open(cacheName);
+    await cache.addAll(shell.filter(p => p && !p.endsWith('/')).map(p => new Request(new URL(p, scope), { cache: 'reload' })));
+    // 0.1.x installs have no in-app update prompt, so take over immediately once.
+    const keys = await caches.keys();
+    if (keys.some(k => k.startsWith(prefixes[0]))) self.skipWaiting();
+  })());
 });
+
+self.addEventListener('message', event => { if (event.data === 'skipWaiting') self.skipWaiting(); });
 
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter(key => key.startsWith(prefix) && key !== cacheName)
-      .map(key => caches.delete(key)));
+    await Promise.all(keys.filter(k => prefixes.some(p => k.startsWith(p)) && k !== cacheName).map(k => caches.delete(k)));
     await self.clients.claim();
   })());
 });
@@ -24,11 +35,11 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET' || !request.url.startsWith(scope)) return;
-  const path = request.url.slice(scope.length);
-  if (request.mode !== 'navigate' && !shell.includes(path)) return;
+  let path = new URL(request.url).pathname.slice(new URL(scope).pathname.length);
+  if (request.mode === 'navigate' && (path === '' || path.endsWith('/'))) path += 'index.html';
+  if (!shell.includes(path)) return;
   event.respondWith((async () => {
     const cache = await caches.open(cacheName);
-    const key = request.mode === 'navigate' ? new URL('index.html', scope).href : request;
-    return (await cache.match(key)) || fetch(request);
+    return (await cache.match(new URL(path, scope).href)) || fetch(request);
   })());
 });

@@ -1,0 +1,10 @@
+# Recovered development history (summary, not verbatim transcript)
+- Nov 26–27: Dump Game Assets conversation. User requested continuation until all partial/pending tasks complete. Prior assistant reported BN_Simulator_Asset_Revision.zip with 2,200 decoded blocks and 13,251 PNG frames. User clarified standalone GBA-like simulator, all Navis playable and CPU, original moves/patterns, selected-Navi menu, virus selection and endless survival, online mobile battles, private GitHub. Added Navi Customizer. Master prompt produced around 02:18 UTC.
+- Nov 27 02:23 UTC: Battle Simulator Audit conversation started with master specification. Prior assistant reported auditing 13 ZIPs and six ROM checksums; 563 unresolved blocks, 971 unclassified entries, 108 Navi-category entries across 26 candidate names. Frame references reportedly resolved, but identities, palettes and timing not generally verified. These counts are historical reports, not revalidated here.
+- User connected GitHub, uploaded assets, confirmed main and public temporarily, eventual private. Requested phone app. Questioned Signal Yard naming. Explained previous Claude workflow: GitHub Pages installed app, JSON and other files updated by commits, version and asset pack numbers incremented with releases.
+- Prior assistant reported original Signal Yard prototype on signal-yard-source, three simulation tests passed; two original pilots, 6x3 combat, CPU duels, formations, survival, touch controls, selected-pilot persistence. Missing NaviCust, folder editor and private online rooms. Tests not rerun during migration.
+- Verified GitHub commits on main (UTC):
+  - 02:54:27 74d7fd534cf232e10dae8bce97ea7335e0eb0e5e: Grid-Battle-Checkpoint.zip upload.
+  - 03:03:03 03202626c9a90a2e8092f2c32c4ace37e5bf9ad6: BN_Simulator_Asset_Revision.zip and Frames.zip uploads.
+  - 14:52:45 920f7f32a91096b0aec3d8d8b2724f8be30968c4: versioned mobile app from Pages root.
+  - 15:01:45 64eafc020a0fc9c28bf77e512bd775942f66d965: ROM-backed Falzar MegaMan audit.

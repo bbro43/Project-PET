@@ -1,0 +1,7 @@
+# Proposed roadmap
+1. Clone main and signal-yard-source; inspect archive contents, hash files, reconcile extraction totals, recover missing source archives and original master prompt. Run existing tests and smoke-test current phone install. Record baseline and release version.
+2. Continue Falzar MegaMan audit: trace shot/move dispatch, hardware palette and tile mapping, anchors, hit timing. Build first verified playable Navi vertical slice using original assets, then one verified virus and CPU encounter. Keep generic prototype available until replacement works.
+3. Implement version-specific core combat, panel effects, charge and chip system. Test deterministic replay and compare observed game traces. Expand registry, Navi roster, transformations and CPU patterns in verified batches.
+4. Add virus selector and endless waves, folder editor and Navi Customizer with per-Navi saves, rule validation and bugs. Verify original mechanics and user-facing menus.
+5. Add private mobile multiplayer, select secure transport/backend, test on two devices. Verify PWA updates, offline solo, cache migration and version display. Confirm private repository/hosting arrangement before visibility change.
+6. Final acceptance: complete roster/asset coverage matrix, canonical move/AI evidence, tests for each mode and customizer rules, two-phone match, release notes and reproducible checkpoint. Report every unresolved item rather than declaring premature completion.

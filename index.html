@@ -1,55 +1,111 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#15131c">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1830">
 <link rel="manifest" href="./manifest.webmanifest" crossorigin="use-credentials">
-<title>Signal Yard</title>
+<link rel="icon" href="./icon-192.png">
+<title>Project PET</title>
 <style>
 * { box-sizing: border-box }
-body { margin: auto; padding: 1rem; max-width: 62rem; background: #15131c; color: #f3eaf7; font: 16px system-ui; }
+html, body { margin: 0; background: #0b1830; color: #e8f1ff; font: 15px/1.35 system-ui, sans-serif; }
 [hidden] { display: none !important; }
-h1 { margin: 0 0 .75rem; font-size: 1.5rem; }
-form, footer, .actions, .directions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
-footer { justify-content: space-between; padding-top: .5rem; }
-canvas { display: block; width: 100%; max-height: 52vh; object-fit: contain; background: #201c2a; margin-top: .75rem; }
-select, button { min-height: 44px; background: #342842; color: inherit; border: 1px solid #957caa; border-radius: .5rem; padding: 0 .75rem; font: inherit; }
-footer button, canvas { touch-action: none; user-select: none; }
-button[data-held] { background: #795695; }
-#status { min-height: 1.5rem; margin: .5rem 0 0; }
-small { color: #d4c7df; }
-@media(max-height: 430px) and (orientation: landscape) {
-  body { padding: .4rem; }
-  h1 { display: none; }
-
-  canvas { margin-top: .3rem; max-height: calc(100dvh - 145px); }
-}
+main { max-width: 760px; margin: auto; padding: max(.6rem, env(safe-area-inset-top)) .6rem .6rem; }
+h1 { font-size: 1.3rem; margin: .2rem 0 .6rem; letter-spacing: .04em; }
+h2 { font-size: 1rem; margin: 1rem 0 .4rem; color: #9fd0ff; }
+button, select, .file { min-height: 44px; background: #17345e; color: inherit; border: 1px solid #4f8fd6; border-radius: 8px; padding: 0 .9rem; font: inherit; }
+button:disabled { opacity: .45; }
+.card { background: #102446; border: 1px solid #234a80; border-radius: 10px; padding: .7rem; }
+.row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+#navi-card { display: flex; gap: .8rem; align-items: center; }
+#navi-preview { width: 96px; height: 96px; image-rendering: pixelated; background: #0a1a33; border-radius: 8px; }
+small, .muted { color: #a8bbd8; }
+.file input { display: none; }
+.file { display: inline-flex; align-items: center; cursor: pointer; }
+#roms li { margin: .2rem 0; }
+.warn { color: #ffd27a; }
+#banner { position: fixed; left: .5rem; right: .5rem; bottom: .5rem; z-index: 9; background: #1c5a2e; border: 1px solid #5fd08a; border-radius: 10px; padding: .6rem; display: flex; gap: .6rem; align-items: center; justify-content: space-between; }
+/* Battle */
+#battle { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: env(safe-area-inset-top); touch-action: none; user-select: none; -webkit-user-select: none; }
+#screen { width: min(100vw, calc((100dvh - 210px) * 1.5)); aspect-ratio: 3 / 2; image-rendering: pixelated; background: #000; }
+#pad { width: 100%; max-width: 560px; flex: 1; display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding: .4rem .8rem max(.6rem, env(safe-area-inset-bottom)); }
+.dpad { display: grid; grid-template-columns: repeat(3, 58px); grid-template-rows: repeat(3, 58px); gap: 4px; }
+.dpad button, .ab button, .shoulders button { padding: 0; font-weight: 700; background: #1e2b44; border-color: #51698f; touch-action: none; }
+.dpad [data-k=up] { grid-area: 1/2 } .dpad [data-k=left] { grid-area: 2/1 } .dpad [data-k=right] { grid-area: 2/3 } .dpad [data-k=down] { grid-area: 3/2 }
+.ab { justify-self: end; display: grid; grid-template-columns: 70px 70px; gap: 10px; transform: rotate(-14deg); }
+.ab button { width: 70px; height: 70px; border-radius: 50%; font-size: 1.2rem; }
+.ab [data-k=a] { margin-top: -30px; }
+.shoulders { width: 100%; max-width: 560px; display: flex; justify-content: space-between; padding: .3rem .8rem 0; }
+.shoulders button { min-width: 84px; }
+button.held { background: #3b5f99; }
+#custom { position: absolute; left: 0; right: 0; top: env(safe-area-inset-top); display: flex; justify-content: center; }
+#custom .panel { width: min(100vw, 560px); background: rgba(8, 26, 60, .96); border: 2px solid #5aa0ff; border-radius: 10px; margin: .3rem; padding: .5rem; }
+#hand { display: grid; grid-template-columns: repeat(5, 1fr); gap: .35rem; margin: .4rem 0; }
+#hand button { min-height: 64px; padding: .2rem; font-size: .8rem; line-height: 1.1; display: flex; flex-direction: column; justify-content: center; }
+#hand button.picked { background: #2f6d3c; border-color: #8be09b; }
+#hand b { font-size: .95rem; }
+#queue { min-height: 1.4em; font-size: .85rem; }
 </style>
-<main>
-  <h1>Signal Yard</h1>
-  <button type="button" id="install-app" hidden>Install app</button>
-  <form>
-    <label>Pilot <select id="pilot"><option value="relay">Relay</option><option value="coil">Coil</option></select></label>
-    <label>Mode <select id="mode"><option value="duel">CPU Duel</option><option value="formation">Sentry Formation</option><option value="survival">Survival</option></select></label>
-    <label id="formation" hidden>Sentries <select id="count"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></label>
-    <button>Start Battle</button>
-  </form>
-  <canvas width="576" height="246" role="img" aria-label="Six-column, three-row battlefield"></canvas>
-  <p id="status" aria-live="polite"></p>
-  <footer aria-label="Battle controls">
-    <div class="directions">
-      <button data-action="left" aria-label="Move left">←</button>
-      <button data-action="up" aria-label="Move up">↑</button>
-      <button data-action="down" aria-label="Move down">↓</button>
-      <button data-action="right" aria-label="Move right">→</button>
+<main id="menu">
+  <h1>PROJECT PET</h1>
+  <div class="card" id="navi-card">
+    <canvas id="navi-preview" width="64" height="64" aria-label="Selected Navi"></canvas>
+    <div>
+      <label>Navi <select id="navi"><option value="megaman">MegaMan.EXE</option></select></label>
+      <div class="muted" id="navi-note"></div>
     </div>
-    <div class="actions">
-      <button data-action="fire">Pulse</button>
-      <button data-action="heavy">Heavy Pulse</button>
-      <button id="pause" type="button">Pause</button>
+  </div>
+
+  <h2>Battle</h2>
+  <div class="card">
+    <div class="row">
+      <label>Mode <select id="mode">
+        <option value="virus">Virus Battle</option>
+        <option value="survival">Endless Survival</option>
+      </select></label>
+      <label id="formation-wrap">Viruses <select id="formation"></select></label>
+      <button id="start" type="button">Start</button>
     </div>
-  </footer>
-  <p><small>Keyboard · Arrow keys to move, Z for Pulse, X for Heavy Pulse.</small></p>
+    <p class="muted" style="margin:.5rem 0 0">Controls: D-pad move · A buster (hold to charge) · B use chip · L/R open Custom when the gauge is full.<br>Keyboard: arrows · X = A · Z = B · A/S = L/R.</p>
+  </div>
+
+  <h2>Game data</h2>
+  <div class="card">
+    <p style="margin-top:0">Original sprites are decoded on this phone from your own Battle Network ROMs (.gba or .zip). Files stay on this device and are never uploaded.</p>
+    <div class="row">
+      <label class="file">Import ROMs<input id="rom-input" type="file" accept=".gba,.zip,application/zip,application/octet-stream" multiple></label>
+      <label>Sprites from <select id="sprite-source"></select></label>
+    </div>
+    <ul id="roms"></ul>
+    <p id="rom-status" class="muted" aria-live="polite"></p>
+  </div>
+
+  <h2>Other</h2>
+  <div class="card row">
+    <a href="./prototype/" style="color:#9fd0ff">Signal Yard (original prototype)</a>
+    <button id="install-app" type="button" hidden>Install app</button>
+  </div>
+  <p class="muted" id="version"></p>
 </main>
-<script type="module" src="./client.mjs"></script>
+
+<section id="battle" hidden>
+  <div class="shoulders"><button data-k="l">L</button><button id="quit" type="button">Menu</button><button data-k="r">R</button></div>
+  <canvas id="screen" width="240" height="160"></canvas>
+  <div id="custom" hidden>
+    <div class="panel">
+      <div class="row" style="justify-content:space-between"><b>CUSTOM</b><span class="muted">Same code or same name</span></div>
+      <div id="hand"></div>
+      <div id="queue"></div>
+      <div class="row" style="justify-content:flex-end"><button id="undo" type="button">Undo</button><button id="ok" type="button">OK</button></div>
+    </div>
+  </div>
+  <div id="pad">
+    <div class="dpad"><button data-k="up">▲</button><button data-k="left">◀</button><button data-k="right">▶</button><button data-k="down">▼</button></div>
+    <div class="ab"><button data-k="b">B</button><button data-k="a">A</button></div>
+  </div>
+</section>
+
+<div id="banner" hidden><span>Update ready.</span><button id="reload" type="button">Restart app</button></div>
+<script src="./release.js"></script>
+<script type="module" src="./src/ui/app.mjs"></script>
 </html>

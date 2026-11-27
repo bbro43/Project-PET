@@ -151,8 +151,4 @@ window.addEventListener('appinstalled', () => {
   installButton.hidden = true;
 });
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(error => {
-    console.warn('Signal Yard offline setup failed', error);
-  });
-}
+// The installed Project PET app's root service worker covers this page.
