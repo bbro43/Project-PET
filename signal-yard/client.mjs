@@ -152,7 +152,7 @@ window.addEventListener('appinstalled', () => {
 });
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(error => {
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(error => {
     console.warn('Signal Yard offline setup failed', error);
   });
 }

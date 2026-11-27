@@ -1,9 +1,11 @@
-const version = 'signal-yard-v2';
+importScripts('./release.js');
+const { app, assets } = self.SIGNAL_YARD_RELEASE;
+const version = app + ':assets-' + assets;
 const scope = self.registration.scope;
 const prefix = 'signal-yard:' + scope + ':';
 const cacheName = prefix + version;
 const shell = ['index.html', 'client.mjs', 'shared/combat.mjs',
-  'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
+  'manifest.webmanifest', 'release.js', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(cacheName).then(cache => cache.addAll(
