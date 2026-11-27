@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'BlastMan', 'DiveMan', 'CircusMan', 'JudgeMan', 'ElementMan', 'Colonel', 'Bass', 'Gregar', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', BlastMan: 'blastman', DiveMan: 'diveman', CircusMan: 'circusman', JudgeMan: 'judgeman', ElementMan: 'elementman', Colonel: 'colonel', Bass: 'bass', Gregar: 'gregar', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'BlastMan', 'DiveMan', 'CircusMan', 'JudgeMan', 'ElementMan', 'Colonel', 'Bass', 'Gregar', 'Falzar', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', BlastMan: 'blastman', DiveMan: 'diveman', CircusMan: 'circusman', JudgeMan: 'judgeman', ElementMan: 'elementman', Colonel: 'colonel', Bass: 'bass', Gregar: 'gregar', Falzar: 'falzar', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -20,15 +20,15 @@ export function createNavi(navi, variant, x, y, id) {
     x, y, drawX: x, drawY: y, homeX: x, homeY: y, hp: st.hp, maxHp: st.hp, element: st.element,
     state: 'idle', stateT: 0, anim: 'idle', animT: 0, think: 40, flash: 0,
     mem: { c4: 0, c5: 0, c6: 0, c7: 0, c7x: 0, toggle: 0, special: 0 }, plan: null, guard: false, guardHit: false,
-    ...(navi === 'Gregar' ? cybeast(NAVI_AI.Gregar, variant) : {}),
+    ...(navi === 'Gregar' || navi === 'Falzar' ? cybeast(NAVI_AI[navi], variant, navi === 'Falzar' ? 4 : 5) : {}),
   };
 }
 
 // Cybeasts fill the whole enemy area: drawn from its centre, hit on any of its 9 panels.
-function cybeast(P, variant) {
+function cybeast(P, variant, drawX) {
   const hp = pv(P.hp, variant), cells = [];
   for (let x = 3; x < 6; x++) for (let y = 0; y < 3; y++) cells.push([x, y]);
-  return { hp, maxHp: hp, x: 4, y: 1, drawX: 5, drawY: 1, homeX: 4, homeY: 1, cells, big: true };
+  return { hp, maxHp: hp, x: 4, y: 1, drawX, drawY: 1, homeX: 4, homeY: 1, cells, big: true };
 }
 
 const setAnim = (e, anim) => { e.anim = anim; e.animT = 0; };
@@ -1758,7 +1758,86 @@ function gregar(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, BlastMan: blastman, DiveMan: diveman, CircusMan: circusman, JudgeMan: judgeman, ElementMan: elementman, Colonel: colonel, Bass: bass, Gregar: gregar, ProtoMan: protoman };
+// ======================= Cybeast Falzar =======================
+// Decision 0x81054D8 → 9 move, 0xA Feather Rain, 0xB Gust, 0xC Feather Shot, 0xD Feather Storm, 0xE Drill Dive.
+function falzar(e, api) {
+  const P = NAVI_AI.Falzar, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const wait = t => { go(e, 'idle', 'idle'); e.think = Math.max(1, t); };
+  const panelsOfMegaMan = () => { const out = []; for (let x = 0; x < 3; x++) for (let y = 0; y < 3; y++) out.push([x, y]); return out; };
+  const strikeAt = (x, y, mark, dmg) => s.hazards.push({ kind: 'estrike', x, y, hit: s.tick + mark, damage: dmg, elem: 'feather', owner: e.id });
+  switch (e.state) {
+    case 'idle':
+      if (--e.think > 0) return;
+      return decide();
+    case 'move': // 9: fades out and back in somewhere else in his area
+      if (e.stateT === 12) { e.drawY = pick([0, 1, 2], api) * 0.5 + 0.5; setAnim(e, 'appear'); }
+      if (e.stateT >= 24) wait(P.moveWait.value + 20);
+      return;
+    case 'rain': { // 0xA: feathers on lit panels, the first on MegaMan
+      const mark = pv(P.rainMark, v), gap = P.rainGap.value, n = pv(P.rainCount, v);
+      const t = e.stateT - 10;
+      if (t === 0) setAnim(e, 'wings');
+      if (t >= 0 && t % gap === 0 && t / gap < n) { const [x, y] = t === 0 ? [p.x, p.y] : pick(panelsOfMegaMan(), api); strikeAt(x, y, mark, pv(P.rainDamage, v)); }
+      if (t >= gap * (n - 1) + mark + 12) wait(pv(P.rainWait, v));
+      return;
+    }
+    case 'gust': { // 0xB: MegaMan's row lit, then a wing gust down it
+      const mark = P.gustMark.value;
+      if (e.stateT === 1) { e.cellsHit = [[0, p.y], [1, p.y], [2, p.y]]; e.highlight = [e.cellsHit]; }
+      if (e.stateT === mark) {
+        e.highlight = null; setAnim(e, 'attack'); s.effects.push({ kind: 'shake', t: 0 });
+        api.hitPlayerCells(e.cellsHit, pv(P.gustDamage, v));
+        for (const [x, y] of e.cellsHit) s.effects.push({ kind: 'spark', x, y, t: 0 });
+      }
+      if (e.stateT >= mark + 20) wait(pv(P.gustWait, v));
+      return;
+    }
+    case 'shot': { // 0xC: a whirlwind down MegaMan's row
+      const lead = P.shotLead.value;
+      if (e.stateT === lead) {
+        setAnim(e, 'attack');
+        s.hazards.push({ kind: 'shock', style: 'wind', x0: 2, y: p.y, start: s.tick + 1, step: P.shotStep.value, damage: pv(P.shotDamage, v), owner: e.id });
+      }
+      if (e.stateT >= lead + P.shotStep.value * 3 + 8) wait(pv(P.shotWait, v));
+      return;
+    }
+    case 'storm': { // 0xD: strikes that follow MegaMan
+      const mark = P.stormMark.value, gap = P.stormGap.value, n = pv(P.stormCount, v);
+      if (e.stateT === 1) setAnim(e, 'wings2');
+      const t = e.stateT - 10;
+      if (t >= 0 && t % gap === 0 && t / gap < n) strikeAt(p.x, p.y, mark, pv(P.stormDamage, v));
+      if (t >= gap * (n - 1) + mark + 12) wait(pv(P.stormWait, v));
+      return;
+    }
+    case 'dive': { // 0xE: drill form through MegaMan's row
+      const mark = pv(P.diveMark, v);
+      if (e.stateT === 1) { e.cellsHit = [[0, p.y], [1, p.y], [2, p.y]]; e.highlight = [e.cellsHit]; e.drawY = p.y; }
+      if (e.stateT > mark && e.stateT <= mark + 20) e.drawX = 4 - (e.stateT - mark) * 0.3;
+      if (e.stateT === mark + 6) {
+        e.highlight = null; s.effects.push({ kind: 'shake', t: 0 });
+        api.hitPlayerCells(e.cellsHit, pv(P.diveDamage, v));
+        for (const [x, y] of e.cellsHit) s.effects.push({ kind: 'spark', x, y, t: 0 });
+      }
+      if (e.stateT === mark + 30) { e.drawX = 4; e.drawY = 1; setAnim(e, 'appear'); }
+      if (e.stateT >= mark + 44) wait(pv(P.diveWait, v));
+      return;
+    }
+  }
+
+  function decide() {
+    if (m.c4 < 2) { m.c4++; return go(e, 'move', 'rise'); }
+    m.c4 = 0;
+    if (m.c5 < 2) { m.c5++; return rnd16(api) < 6 ? go(e, 'shot', 'crouch') : go(e, 'gust', 'crouch'); }
+    m.c5 = 0;
+    if (m.c6 < 2) { m.c6++; return go(e, 'rain', 'crouch'); }
+    m.c6 = 0;
+    if (e.hp >= e.maxHp / 2) return go(e, 'storm', 'crouch');
+    const was = m.c7; m.c7 = was ? 0 : 1;
+    return was ? go(e, 'dive', 'drill') : go(e, 'storm', 'crouch');
+  }
+}
+
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, BlastMan: blastman, DiveMan: diveman, CircusMan: circusman, JudgeMan: judgeman, ElementMan: elementman, Colonel: colonel, Bass: bass, Gregar: gregar, Falzar: falzar, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;

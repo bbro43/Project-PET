@@ -2151,6 +2151,68 @@
      "confidence": "visual-candidate"
     }
    }
+  },
+  "falzar": {
+   "label": "Cybeast Falzar (BN6 Falzar)",
+   "sources": {
+    "bn6f": {
+     "offset": "2E8470",
+     "compression": "lz77",
+     "bytes": 70168,
+     "sha256": "2839c486606cf3b87ac628d4238c8c859c24d5888117b5636d1cf5e83cabd743",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "Only the Falzar ROM carries the full battle sprite (sprite table category 8, index 0x15); the Gregar ROM's entry at that index is a small 31-sequence block, so a Gregar-only install falls back to the Falzar ROM if it is imported, else placeholder art. 44 sequences: four layers of 10 animations (0-9 back wing, 10-19 body, 20-29 head, 30-39 front wing; animation ids 0x14-0x1D), shadow 40, effects 41-43. Animation 9 is the drill form.",
+   "layers": [
+    {
+     "seq": 40
+    },
+    0,
+    10,
+    20,
+    30
+   ],
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "rise": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "crouch": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "wings": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "wings2": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "attack": {
+     "seq": 6,
+     "confidence": "visual-candidate"
+    },
+    "drill": {
+     "seq": 9,
+     "confidence": "visual-candidate",
+     "layers": [
+      0,
+      10,
+      20,
+      30
+     ]
+    }
+   }
   }
  },
  "tables": {

@@ -890,3 +890,39 @@ test('Gregar below half HP alternates Beast Breath and Giga Rush', () => {
   run(s, NAVI_AI.Gregar.rushMark.value[0] + 2);
   assert.equal(1000 - s.player.hp, NAVI_AI.Gregar.rushDamage.value[0]);
 });
+
+test('Falzar: HP from the spawn hook, fills the enemy area', () => {
+  assert.deepEqual(naviVariants('Falzar').slice(0, 4).map(v => [v.name, v.hp]), [['Falzar', 2000], ['FalzarEX', 2800], ['FalzarSP', 3200], ['FalzarRV', 4000]]);
+  const s = start('Falzar'), e = s.enemies[0];
+  assert.equal(e.sprite, 'falzar');
+  assert.equal(e.cells.length, 9);
+});
+
+test('Falzar moves twice, then Feather Shot or Gust; every third round Feather Rain', () => {
+  const s = start('Falzar'), e = s.enemies[0]; s.player.invuln = 1e9;
+  const seen = [];
+  for (let i = 0; i < 20000 && seen.length < 9; i++) { const was = e.state; step(s, {}); if (e.state !== was && e.state !== 'idle') seen.push(e.state); }
+  assert.deepEqual(seen.slice(0, 2), ['move', 'move']);
+  assert.ok(['shot', 'gust'].includes(seen[2]));
+  assert.deepEqual(seen.slice(3, 5), ['move', 'move']);
+  assert.ok(['shot', 'gust'].includes(seen[5]));
+  assert.deepEqual(seen.slice(6, 9), ['move', 'move', 'rain']);
+});
+
+test('Falzar Feather Rain: the first feather lands on MegaMan for rain damage', () => {
+  const { s } = findState('Falzar', 0, 'rain', s => { s.player.invuln = 1e9; });
+  s.player.invuln = 0; s.player.hp = 1000;
+  run(s, 10 + NAVI_AI.Falzar.rainMark.value[0] + 1);
+  assert.equal(1000 - s.player.hp, NAVI_AI.Falzar.rainDamage.value[0]);
+});
+
+test('Falzar below half HP alternates Feather Storm and Drill Dive', () => {
+  const s = start('Falzar'), e = s.enemies[0]; s.player.invuln = 1e9;
+  e.hp = 900; Object.assign(e.mem, { c4: 2, c5: 2, c6: 2 }); e.think = 1;
+  step(s, {}); assert.equal(e.state, 'storm');
+  Object.assign(e.mem, { c4: 2, c5: 2, c6: 2 }); e.state = 'idle'; e.think = 1;
+  step(s, {}); assert.equal(e.state, 'dive');
+  s.player.invuln = 0; s.player.hp = 1000;
+  run(s, NAVI_AI.Falzar.diveMark.value[0] + 8);
+  assert.equal(1000 - s.player.hp, NAVI_AI.Falzar.diveDamage.value[0]);
+});

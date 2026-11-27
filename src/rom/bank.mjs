@@ -45,7 +45,7 @@ export function buildBank(rom, gameId, registry, others = {}) {
       for (const [role, { seq, layers: own }] of Object.entries(b.roles)) {
         const stack = own || b.layers;
         if (stack && stack.length > 1) {
-          const layers = stack.map(off => sequenceFrames(b.data, b.block, seq + off));
+          const layers = stack.map(off => sequenceFrames(b.data, b.block, typeof off === 'object' ? off.seq : seq + off)); // {seq} = a fixed sequence (shadow)
           sequences[role] = layers[0].map((rec, i) => {
             const parts = layers.map(l => decodeFrame(b.data, l[Math.min(i, l.length - 1)], { palette }));
             const c = compose(parts);
@@ -53,7 +53,7 @@ export function buildBank(rom, gameId, registry, others = {}) {
           });
           continue;
         }
-        sequences[role] = sequenceFrames(b.data, b.block, seq + (stack ? stack[0] : 0)).map(rec => {
+        sequences[role] = sequenceFrames(b.data, b.block, seq + (stack && typeof stack[0] === 'number' ? stack[0] : 0)).map(rec => {
           const f = decodeFrame(b.data, rec, { palette });
           return { image: toCanvas(f), originX: f.originX, originY: f.originY, ticks: f.ticks, loop: !!(f.flags & 0x40) };
         });

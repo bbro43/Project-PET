@@ -247,7 +247,11 @@ export function render(g, s, bank) {
       sprite(g, bank, 'circusman', 'handr', 0, ax, ay - 30 * (1 - k), '#fff', 0, true);
     }
     if (h.kind === 'hoop') { const [ax, ay] = anchor(h.x, h.y); sprite(g, bank, 'circusman', 'hoop', s.tick - h.start, ax, ay, '#f84', 0, true); }
-    if (h.kind === 'shock' && h.x !== undefined) {
+    if (h.kind === 'shock' && h.x !== undefined && h.style === 'wind') {
+      const [ax, ay] = anchor(h.x, h.y);
+      g.strokeStyle = '#d0f0ff'; g.lineWidth = 2;
+      for (let i = 0; i < 4; i++) { g.beginPath(); g.ellipse(ax, ay - 6 - i * 7, 6 + i * 3, 3, 0, 0, 7); g.stroke(); }
+    } else if (h.kind === 'shock' && h.x !== undefined) {
       const [ax, ay] = anchor(h.x, h.y);
       g.fillStyle = '#c8a060'; g.beginPath(); g.moveTo(ax - 14, ay); g.lineTo(ax - 6, ay - 14); g.lineTo(ax, ay - 6); g.lineTo(ax + 6, ay - 16); g.lineTo(ax + 14, ay); g.fill();
     }
@@ -269,7 +273,7 @@ export function render(g, s, bank) {
     if (s.tick < h.hit) { g.fillStyle = 'rgba(255,240,120,.45)'; g.fillRect(ax - PANEL_W / 2 + 2, ay - 14, PANEL_W - 4, 16); continue; }
     const t = s.tick - h.hit;
     if (h.elem === 'none') { sprite(g, bank, 'elementman', 'tower', t, ax, ay, '#a7d', 0, false); continue; }
-    const col = { fire: '#ff7030', aqua: '#80d8ff', elec: '#fff060', wood: '#70e060', dark: '#b060ff', beast: '#ff9a30' }[h.elem];
+    const col = { fire: '#ff7030', aqua: '#80d8ff', elec: '#fff060', wood: '#70e060', dark: '#b060ff', beast: '#ff9a30', feather: '#ff5060' }[h.elem];
     g.fillStyle = col; g.globalAlpha = 1 - t / 12;
     if (h.elem === 'elec') g.fillRect(ax - PANEL_W / 2, ay - 18, PANEL_W, 6);
     else { g.beginPath(); g.moveTo(ax - 10, ay); g.lineTo(ax, ay - 26 - t); g.lineTo(ax + 10, ay); g.fill(); }
