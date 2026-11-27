@@ -672,3 +672,48 @@ test('DiveMan big wave rolls down all three rows of MegaMan\'s area', () => {
   for (let i = 0; i < 40 && s.player.hp === 500; i++) step(s, {});
   assert.equal(s.player.hp, 470, 'base wave damage 30');
 });
+
+test('CircusMan names and HP from the ROM tables', () => {
+  const vs = naviVariants('CircusMan');
+  assert.equal(vs[0].name, 'CrcusMan', 'ROM abbreviation');
+  assert.equal(start('CircusMan').enemies[0].sprite, 'circusman');
+});
+
+test('CircusMan clap: MegaMan\'s column lights up, then the hands clap on it', () => {
+  const { s, e } = findState('CircusMan', 0, 'clap', s => { s.player.invuln = 1e9; });
+  run(s, 1);
+  assert.deepEqual(e.highlight[0].map(c => c[0]), [s.player.x, s.player.x, s.player.x]);
+  s.player.invuln = 0; s.player.y = (s.player.y + 1) % 3;
+  run(s, NAVI_AI.CircusMan.clapMark.value[0] + NAVI_AI.CircusMan.clapHit.value + 1);
+  assert.equal(s.player.hp, 80);
+});
+
+test('CircusMan lions: 3 lions run down MegaMan\'s row through the hoop', () => {
+  const { s, e } = findState('CircusMan', 0, 'lions', s => { s.player.invuln = 1e9; });
+  const lions = new Set();
+  for (let i = 0; i < 200; i++) { step(s, {}); for (const h of s.hazards) if (h.kind === 'lion') lions.add(h); }
+  assert.equal(lions.size, 3);
+  assert.ok([...lions].every(h => h.y === [...lions][0].y));
+});
+
+test('CircusMan tent traps MegaMan; mashing gets him out sooner', () => {
+  const trapFor = mash => {
+    const { s, e } = findState('CircusMan', 0, 'tentmark', s => { s.player.invuln = 1e9; });
+    s.player.invuln = 0;
+    for (let i = 0; i < 60 && !(s.player.trapped > 0); i++) step(s, {});
+    assert.ok(s.player.trapped > 0, 'trapped');
+    let t = 0;
+    while (s.player.trapped > 0 && t < 400) { step(s, mash ? { a: t % 2 === 0 } : {}); t++; }
+    return { t, s };
+  };
+  const still = trapFor(false), mashed = trapFor(true);
+  assert.ok(still.t >= NAVI_AI.CircusMan.tentHold.value[0] - 2);
+  assert.ok(mashed.t < still.t / 2);
+  assert.ok(still.s.player.hp < 100, 'took tent damage');
+});
+
+test('CircusMan tent does not catch an invincible MegaMan', () => {
+  const { s, e } = findState('CircusMan', 0, 'tentmark', s => { s.player.invuln = 1e9; });
+  for (let i = 0; i < 60; i++) step(s, {});
+  assert.ok(!(s.player.trapped > 0));
+});

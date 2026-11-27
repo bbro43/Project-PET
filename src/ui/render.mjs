@@ -234,6 +234,21 @@ export function render(g, s, bank) {
     sprite(g, bank, 'diveman', 'torpedo', s.tick - h.start, x0 + (x1 - x0) * k, y0 + (y1 - y0) * k - 12, '#9cf', 0, true);
   }
 
+  // CircusMan: giant hands, hoop and lions (sequences of his own sprite)
+  for (const h of s.hazards) {
+    if (h.kind === 'clap' && s.tick <= h.hit + 6) {
+      const [ax, ay] = anchor(h.cells[1][0], h.cells[1][1]), k = Math.min(1, (s.tick - h.start) / (h.hit - h.start));
+      // the two hand sequences sit above and below the column; they close in on its middle
+      sprite(g, bank, 'circusman', 'handl', 0, ax, ay + 30 * (1 - k), '#fff', 0, true);
+      sprite(g, bank, 'circusman', 'handr', 0, ax, ay - 30 * (1 - k), '#fff', 0, true);
+    }
+    if (h.kind === 'hoop') { const [ax, ay] = anchor(h.x, h.y); sprite(g, bank, 'circusman', 'hoop', s.tick - h.start, ax, ay, '#f84', 0, true); }
+    if (h.kind === 'lion' && h.x !== undefined) {
+      const f = ((s.tick - h.start) % h.step) / h.step, [ax, ay] = anchor(h.x - f, h.y);
+      sprite(g, bank, 'circusman', 'lion', s.tick - h.start, ax, ay, '#da4', 0, true);
+    }
+  }
+
   // Hazards under actors.
   const wave = bank?.get('shockwave');
   for (const h of s.hazards) {

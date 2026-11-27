@@ -1672,6 +1672,104 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "circusman": {
+      "label": "CircusMan (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "2D6FE4",
+          "compression": "lz77",
+          "bytes": 43792,
+          "sha256": "3053db7fa31e9153ee624de4059f6647affda87589d6d6a44dfc03d7228fc320",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "2D6FE4",
+          "compression": "lz77",
+          "bytes": 43792,
+          "sha256": "3053db7fa31e9153ee624de4059f6647affda87589d6d6a44dfc03d7228fc320",
+          "confidence": "rom-verified"
+        }
+      },
+      "note": "LZ77-compressed, 64 sequences: body 0-19 (tent 14-18), separate hand layers 20-59 (not drawn here), giant hands 60/61, hoop 62, lion 63. AI animation ids map to sequences directly.",
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "jump": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "raise": {
+          "seq": 7,
+          "confidence": "visual-candidate"
+        },
+        "clap": {
+          "seq": 8,
+          "confidence": "visual-candidate"
+        },
+        "bow": {
+          "seq": 9,
+          "confidence": "visual-candidate"
+        },
+        "whip": {
+          "seq": 10,
+          "confidence": "visual-candidate"
+        },
+        "present": {
+          "seq": 11,
+          "confidence": "visual-candidate"
+        },
+        "tentprep": {
+          "seq": 12,
+          "confidence": "visual-candidate"
+        },
+        "leap": {
+          "seq": 13,
+          "confidence": "visual-candidate"
+        },
+        "tent": {
+          "seq": 14,
+          "confidence": "visual-candidate"
+        },
+        "tentdrop": {
+          "seq": 15,
+          "confidence": "visual-candidate"
+        },
+        "tentshake": {
+          "seq": 16,
+          "confidence": "visual-candidate"
+        },
+        "handl": {
+          "seq": 60,
+          "confidence": "visual-candidate"
+        },
+        "handr": {
+          "seq": 61,
+          "confidence": "visual-candidate"
+        },
+        "hoop": {
+          "seq": 62,
+          "confidence": "visual-candidate"
+        },
+        "lion": {
+          "seq": 63,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {

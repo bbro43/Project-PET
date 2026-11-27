@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'BlastMan', 'DiveMan', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', BlastMan: 'blastman', DiveMan: 'diveman', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'BlastMan', 'DiveMan', 'CircusMan', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', BlastMan: 'blastman', DiveMan: 'diveman', CircusMan: 'circusman', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -1136,6 +1136,100 @@ function diveman(e, api) {
   function surface(t, after) { e.surfaceFor = t; e.after = after; go(e, 'surface', 'surface'); }
 }
 
+// ======================= CircusMan =======================
+// Decision 0x80FE8E4: every attack starts with a hop; clap 0xA / lion hoop 0xB, every 5th counted attack the tent 0xC.
+function circusman(e, api) {
+  const P = NAVI_AI.CircusMan, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const wait = t => { go(e, 'idle', 'idle'); e.think = Math.max(1, t); };
+  switch (e.state) {
+    case 'idle':
+      if (--e.think > 0) return;
+      return decide();
+    case 'hop': {
+      const k = Math.min(1, e.stateT / P.hop.value);
+      e.drawX = e.from[0] + (e.dest[0] - e.from[0]) * k; e.drawY = e.from[1] + (e.dest[1] - e.from[1]) * k;
+      e.z = Math.round(Math.sin(Math.PI * k) * 40); e.airborne = k < 1;
+      if (k >= 1) { [e.x, e.y] = e.dest; e.z = 0; const a = e.after; e.after = null; a(); }
+      return;
+    }
+    // ---- 0xA: giant hands clap on MegaMan's column, 1/3/3/5 times
+    case 'clap': {
+      const mark = pv(P.clapMark, v), cyc = mark + P.clapHit.value + 6;
+      const t = e.stateT % cyc, n = Math.floor(e.stateT / cyc);
+      if (n >= pv(P.clapCount, v)) { setAnim(e, 'bow'); return wait(P.attackWait.value + 23); }
+      if (t === 1) { setAnim(e, 'raise'); e.clapCells = [0, 1, 2].map(y => [p.x, y]); e.highlight = [e.clapCells]; }
+      if (t === mark) {
+        e.highlight = null; setAnim(e, 'clap');
+        s.hazards.push({ kind: 'clap', cells: e.clapCells, start: s.tick, hit: s.tick + P.clapHit.value, damage: pv(P.clapDamage, v), owner: e.id });
+      }
+      return;
+    }
+    // ---- 0xB: hoop in front of MegaMan's row, lions run through it
+    case 'lions': {
+      const lead = P.lionLead.value, gap = pv(P.lionGap, v), n = pv(P.lionCount, v);
+      if (e.stateT === lead) { setAnim(e, 'present'); e.hoop = { kind: 'hoop', x: 3, y: p.y, start: s.tick, until: s.tick + lead + gap * n + 40, owner: e.id }; s.hazards.push(e.hoop); }
+      const t = e.stateT - lead;
+      if (t >= 0 && t % gap === 0 && t / gap < n) s.hazards.push({ kind: 'lion', x0: 3, y: e.hoop.y, start: s.tick, step: P.lionStep.value, damage: pv(P.lionDamage, v), owner: e.id });
+      if (t >= gap * n + 30) { s.hazards = s.hazards.filter(h => h !== e.hoop); wait(P.attackWait.value); }
+      return;
+    }
+    // ---- 0xC: lights MegaMan's panel, leaps and drops the tent on it
+    case 'tentmark':
+      if (e.stateT === 1) { e.tentAt = [p.x, p.y]; e.highlight = [[e.tentAt]]; }
+      if (e.stateT >= P.tentMark.value) { e.highlight = null; go(e, 'tentleap', 'leap'); }
+      return;
+    case 'tentleap': {
+      const [up, drop] = P.tentLeap.value;
+      if (e.stateT === 1) { e.from = [e.x, e.y]; e.airborne = true; }
+      const k = Math.min(1, e.stateT / (up + drop));
+      e.drawX = e.from[0] + (e.tentAt[0] - e.from[0]) * k; e.drawY = e.from[1] + (e.tentAt[1] - e.from[1]) * k;
+      e.z = Math.round(Math.sin(Math.PI * k) * 60);
+      if (e.stateT === up) setAnim(e, 'tentdrop');
+      if (e.stateT >= up + drop) {
+        [e.x, e.y] = e.tentAt; e.z = 0; e.airborne = false;
+        s.effects.push({ kind: 'shake', t: 0 });
+        if (p.x === e.x && p.y === e.y && p.state !== 'vanish' && p.hp > 0 && !(p.invuln > 0)) {
+          p.trapped = pv(P.tentHold, v); p.trapMash = P.tentMash.value; p.state = 'trapped'; p.trapKeys = '';
+          return go(e, 'tent', 'tentshake');
+        }
+        return go(e, 'tentmiss', 'tent');
+      }
+      return;
+    }
+    case 'tent':
+      if (p.trapped > 0 && e.stateT % P.tentTick.value === 0) { p.hp = Math.max(0, p.hp - pv(P.tentDamage, v)); s.events.push({ type: 'playerHit', damage: pv(P.tentDamage, v) }); }
+      if (!(p.trapped > 0)) return tentDone();
+      return;
+    case 'tentmiss':
+      if (e.stateT >= pv(P.tentGap, v)) {
+        if (--e.tries > 0) return go(e, 'tentmark', 'tentprep');
+        return tentDone();
+      }
+      return;
+  }
+
+  function decide() {
+    if (m.c5 < 5) {
+      if (rnd16(api) < 14) m.c5++;
+      if (m.c6 >= 1) { m.c6 = 0; return hop(() => go(e, 'lions', 'whip')); }
+      if (rnd16(api) < 8) m.c6++;
+      return hop(() => go(e, 'clap', 'raise'));
+    }
+    m.c5 = 0; m.alt = (m.alt || 0) ^ 1;
+    e.tries = pv(P.tentTries, v); e.homeX = e.x; e.homeY = e.y;
+    go(e, 'tentmark', 'tentprep');
+  }
+  function tentDone() {
+    const home = (!api.at(e.homeX, e.homeY) || api.at(e.homeX, e.homeY) === e) ? [e.homeX, e.homeY] : (pick(freeEnemyPanels(e, api), api) || [5, 1]);
+    const t = pv(P.tentWait.value.base, v) + (m.alt ? P.tentWait.value.alternate : 0);
+    hop(() => wait(t), home);
+  }
+  function hop(after, dest) {
+    e.from = [e.x, e.y]; e.dest = dest || pick(freeEnemyPanels(e, api), api) || [e.x, e.y]; e.after = after;
+    go(e, 'hop', 'jump');
+  }
+}
+
 const AREAS = {
   wide: [[-1, -1], [-1, 0], [-1, 1]],
   long: [[-1, 0], [-2, 0]],
@@ -1251,7 +1345,7 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, BlastMan: blastman, DiveMan: diveman, ProtoMan: protoman };
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, BlastMan: blastman, DiveMan: diveman, CircusMan: circusman, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;

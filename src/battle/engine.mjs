@@ -155,6 +155,13 @@ function stepPlayer(s, input) {
   const pressedA = input.a && !p.prevA, releasedA = !input.a && p.prevA;
   p.prevA = !!input.a;
 
+  if (p.trapped > 0) { // CircusMan's tent: mash buttons to get out sooner
+    const keys = (input.a ? 'a' : '') + (input.b ? 'b' : '') + (input.dir || '');
+    if (keys && keys !== p.trapKeys) p.trapped -= p.trapMash || 0;
+    p.trapKeys = keys; p.trapped--; p.prevA = !!input.a;
+    if (p.trapped <= 0) { p.trapped = 0; p.state = 'idle'; setAnim(p, 'idle'); }
+    return;
+  }
   if (p.state === 'flinch') {
     if (p.stateT >= val('flinchTicks')) { p.state = 'idle'; setAnim(p, 'idle'); }
     return;
@@ -249,6 +256,18 @@ function stepHazards(s) {
       }
       if (!h.locked && s.tick >= h.until) h.locked = true;
       return true;
+    }
+    if (h.kind === 'hoop') return s.tick < h.until && s.enemies.some(e => e.id === h.owner && e.hp > 0);
+    if (h.kind === 'lion') { // CircusMan's lion runs down the row through the hoop
+      const k = Math.floor((s.tick - h.start) / h.step);
+      if (k < 0) return true;
+      h.x = h.x0 - k;
+      if (h.x === p.x && h.y === p.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      return h.x >= -1;
+    }
+    if (h.kind === 'clap') {
+      if (s.tick === h.hit && h.cells.some(([x, y]) => p.x === x && p.y === y) && p.state !== 'vanish') hitPlayer(s, h.damage);
+      return s.tick < h.hit + 10;
     }
     if (h.kind === 'torpedo') { // DiveMan's torpedo: flies to the panel MegaMan was on
       if (s.tick < h.land) return true;
@@ -348,6 +367,7 @@ function endBattleEffects(s) {
   s.hazards = [];
   s.effects = s.effects.filter(f => f.kind === 'delete' || f.kind === 'blast');
   for (const e of s.enemies) { e.highlight = null; e.target = null; }
+  s.player.trapped = 0;
 }
 
 // ---------- main step ----------
