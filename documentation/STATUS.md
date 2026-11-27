@@ -33,7 +33,7 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 | MegaMan (BN6) | ✓ (on device) | ✓ | candidate roles | ✓ | – | engine tests |
 | Mettaur (BN6) | ✓ (on device) | ✓ ROM tables | candidate roles | – | ✓ AI (partly ROM) | engine tests |
 | Champy, Gunner (BN6) | ✓ (on device) | ✓ ROM tables | candidate roles | – | ✓ AI (recalled) | engine tests |
-| 26 other BN6 virus families | offsets ✓ | ✓ ROM names/stats | – | – | – | ROM hash test |
+| 26 other BN6 virus families | ✓ (on device) | ✓ ROM names/stats | AI-set animations | – | ✓ decoded AI (some timings estimated) | per-family engine tests |
 | HeatMan, ElecMan, SlashMan, EraseMan, ChargeMan, SpoutMan, TomahawkMan, TenguMan, GroundMan, DustMan, BlastMan, DiveMan, CircusMan, JudgeMan, ElementMan, ProtoMan (BN6) CPU — all 16 | ✓ | ✓ ROM tables | AI-set animations + effect sprites | – | ✓ decoded AI (some timings estimated) | 79 tests |
 | 19 BN6 Navis, 35 BN4/BN5 Navis | offsets ✓ | ✓ (BN6 labels / BN4-5 visual) | – | – | – | ROM hash test |
 
