@@ -309,3 +309,24 @@ test('the base Kettle never attacks; ScareCrow heals itself every 180 frames', (
   assert.equal(k.state, 'idle');
   assert.equal(c.hp, c.maxHp);
 });
+
+for (const [fam, versions] of [['PulseBulb', [0, 1, 2, 3, 4, 5]], ['BigHat', [0, 1, 2, 3, 4, 5]], ['BombCorn', [0, 1, 2, 3, 4, 5]], ['Shrubby', [0, 1, 2, 3, 4, 5]], ['HoneyBomber', [0, 1, 2, 3, 4, 5]]]) {
+  test(`${fam} attacks MegaMan within 30 seconds`, () => {
+    for (const v of versions) {
+      const s = start({ seed: 90 + v, enemies: formation(fam, v, 1) });
+      let hit = false;
+      for (let i = 0; i < 1800 && !hit; i++) {
+        s.player.hp = 1000; s.player.invuln = 0;
+        const e = s.enemies[0]; if (e && i % 60 === 0) { s.player.y = e.y; s.player.x = 2; }
+        step(s, {}); hit = s.events.some(ev => ev.type === 'playerHit');
+      }
+      assert.ok(hit, `${fam} version ${v}`);
+    }
+  });
+}
+
+test('PulseBulb is guarded while closed', () => {
+  const s = start({ seed: 99, enemies: formation('PulseBulb', 0, 1) });
+  run(s, {}, 2);
+  assert.ok(s.enemies[0].guard);
+});

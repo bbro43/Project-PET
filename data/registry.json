@@ -2987,6 +2987,195 @@
      "confidence": "visual-candidate"
     }
    }
+  },
+  "pulsebulb": {
+   "label": "PulseBulb (BN6 virus, AI 18)",
+   "sources": {
+    "bn6f": {
+     "offset": "25859C",
+     "compression": "lz77",
+     "bytes": 7212,
+     "sha256": "b1d36605230f975dcf956564a698e921ca8b37ab2c506af2a56b9065b44df8d5",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "25859C",
+     "compression": "lz77",
+     "bytes": 7212,
+     "sha256": "b1d36605230f975dcf956564a698e921ca8b37ab2c506af2a56b9065b44df8d5",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "turn": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "open": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "pulse": {
+     "seq": 6,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "bighat": {
+   "label": "BigHat (BN6 virus, AI 19)",
+   "sources": {
+    "bn6f": {
+     "offset": "258FF8",
+     "compression": "lz77",
+     "bytes": 12972,
+     "sha256": "98f8388db84a713cb5a63db6d37b211130fd2c89af594caf9d0572c103e52e1e",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "258FF8",
+     "compression": "lz77",
+     "bytes": 12972,
+     "sha256": "98f8388db84a713cb5a63db6d37b211130fd2c89af594caf9d0572c103e52e1e",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "aim": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "throw": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "bare": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "hat": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "bombcorn": {
+   "label": "BombCorn (BN6 virus, AI 20)",
+   "sources": {
+    "bn6f": {
+     "offset": "25A0D8",
+     "compression": "lz77",
+     "bytes": 6632,
+     "sha256": "06460a78bdb1e388bb92543692f03cbaf433909f5861c66e9a17cae8eb553268",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "25A0D8",
+     "compression": "lz77",
+     "bytes": 6632,
+     "sha256": "06460a78bdb1e388bb92543692f03cbaf433909f5861c66e9a17cae8eb553268",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "hop": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "aim": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "shoot": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "shrubby": {
+   "label": "Shrubby (BN6 virus, AI 21)",
+   "sources": {
+    "bn6f": {
+     "offset": "25AD90",
+     "compression": "lz77",
+     "bytes": 6812,
+     "sha256": "02d5a66da059c07aae2771833b57e8e54b8d83b279f3e9e313100f5451f89950",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "25AD90",
+     "compression": "lz77",
+     "bytes": 6812,
+     "sha256": "02d5a66da059c07aae2771833b57e8e54b8d83b279f3e9e313100f5451f89950",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "walk": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "roll": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "attack": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "honeybomber": {
+   "label": "HoneyBomber (BN6 virus, AI 22)",
+   "sources": {
+    "bn6f": {
+     "offset": "25B860",
+     "compression": "lz77",
+     "bytes": 5604,
+     "sha256": "159ebd0afea42a3f0d0d1ccaaa5872c246b7fd35392e7aa2f58ce6cd28375328",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "25B860",
+     "compression": "lz77",
+     "bytes": 5604,
+     "sha256": "159ebd0afea42a3f0d0d1ccaaa5872c246b7fd35392e7aa2f58ce6cd28375328",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "open": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "release": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "close": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    }
+   }
   }
  },
  "tables": {

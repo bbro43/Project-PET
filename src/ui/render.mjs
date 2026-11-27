@@ -259,6 +259,7 @@ export function render(g, s, bank) {
       sprite(g, bank, 'circusman', 'handr', 0, ax, ay - 30 * (1 - k), '#fff', 0, true);
     }
     if (h.kind === 'hoop') { const [ax, ay] = anchor(h.x, h.y); sprite(g, bank, 'circusman', 'hoop', s.tick - h.start, ax, ay, '#f84', 0, true); }
+    if (h.kind === 'bee') { const [ax, ay] = anchor(h.fx, h.fy); g.fillStyle = '#ffd030'; g.beginPath(); g.ellipse(ax, ay - 22, 5, 4, 0, 0, 7); g.fill(); g.fillStyle = '#222'; g.fillRect(ax - 1, ay - 26, 2, 8); }
     if (h.kind === 'bolt') { const [ax, ay] = anchor(h.fx, h.y), own = bank?.get(h.sprite)?.[h.seq]; sprite(g, own ? bank : null, h.sprite, h.seq, s.tick, ax, ay, h.seq === 'bubble' ? (g, x, y) => { g.strokeStyle = '#bff'; g.lineWidth = 2; g.beginPath(); g.arc(x, y - 14, 7, 0, 7); g.stroke(); } : (g, x, y) => { g.fillStyle = '#cde'; g.fillRect(x - 8, y - 12, 16, 6); }, 0, true); }
     if (h.kind === 'portal' && s.tick >= h.start) {
       const [ax, ay] = anchor(h.x, h.y), lunge = s.tick >= h.hit;
@@ -301,6 +302,7 @@ export function render(g, s, bank) {
     if (h.elem === 'none') { sprite(g, bank, 'elementman', 'tower', t, ax, ay, '#a7d', 0, false); continue; }
     if (h.look === 'tower') { sprite(g, bank, 'elementman', 'tower', t, ax, ay, () => {}, 2, true); if (bank?.has('elementman')) continue; }
     if (h.look === 'meteor' && bank?.has('elmeteor')) { sprite(g, bank, 'elmeteor', 'fall', t, ax, ay - 4, () => {}, 1, false); continue; }
+    if (h.look === 'hat') { sprite(g, bank, 'bighat', 'hat', t, ax, ay - 4, () => { g.fillStyle = '#7040a0'; g.fillRect(ax - 8, ay - 14, 16, 8); }, 0, true); continue; }
     if (h.look === 'sparkle' && bank?.has('elsparkle')) { sprite(g, bank, 'elsparkle', 'burst', t, ax, ay - 8, () => {}, 0, false); continue; }
     const col = { fire: '#ff7030', aqua: '#80d8ff', elec: '#fff060', wood: '#70e060', dark: '#b060ff', beast: '#ff9a30', feather: '#ff5060' }[h.elem];
     g.fillStyle = col; g.globalAlpha = 1 - t / 12;

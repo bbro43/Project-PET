@@ -3,8 +3,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_FAMILIES = ['Mettaur', 'Piranha', 'Heady', 'Swordy', 'KillerEye', 'Quaker', 'Catack', 'Champy', 'WindBox', 'Trumpy', 'OldStove', 'HauntedCandle', 'Kettle', 'Puffy', 'StarFish', 'Dragon', 'ScareCrow', 'Gunner'];
-const SPRITE = { Mettaur: 'mettaur', Piranha: 'piranha', Heady: 'heady', Swordy: 'swordy', KillerEye: 'killereye', Quaker: 'quaker', Catack: 'catack', Champy: 'champy', WindBox: 'windbox', Trumpy: 'trumpy', OldStove: 'oldstove', HauntedCandle: 'hauntedcandle', Kettle: 'kettle', Puffy: 'puffy', StarFish: 'starfish', Dragon: 'dragon', ScareCrow: 'scarecrow', Gunner: 'gunner' };
+export const PLAYABLE_FAMILIES = ['Mettaur', 'Piranha', 'Heady', 'Swordy', 'KillerEye', 'Quaker', 'Catack', 'Champy', 'WindBox', 'Trumpy', 'OldStove', 'HauntedCandle', 'Kettle', 'Puffy', 'StarFish', 'Dragon', 'ScareCrow', 'PulseBulb', 'BigHat', 'BombCorn', 'Shrubby', 'HoneyBomber', 'Gunner'];
+const SPRITE = { Mettaur: 'mettaur', Piranha: 'piranha', Heady: 'heady', Swordy: 'swordy', KillerEye: 'killereye', Quaker: 'quaker', Catack: 'catack', Champy: 'champy', WindBox: 'windbox', Trumpy: 'trumpy', OldStove: 'oldstove', HauntedCandle: 'hauntedcandle', Kettle: 'kettle', Puffy: 'puffy', StarFish: 'starfish', Dragon: 'dragon', ScareCrow: 'scarecrow', PulseBulb: 'pulsebulb', BigHat: 'bighat', BombCorn: 'bombcorn', Shrubby: 'shrubby', HoneyBomber: 'honeybomber', Gunner: 'gunner' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[variant] : param.value;
 
 // In-game names, read from the ROM's enemy name strings.
@@ -26,6 +26,126 @@ const go = (e, state, anim) => { e.state = state; e.stateT = 0; if (anim) setAni
 
 // api: { s, at(x,y), hitPlayerAt(x,y,damage,element), spawnWave(e,x,y,stepTicks), turnFree(e), takeTurn(e), endTurn(e) }
 const BEHAVIOUR = {
+
+  // 0x8110DC0: guarded while closed; lines up, opens and fires a pulse down its row.
+  PulseBulb(e, api) {
+    const P = AI.PulseBulb, s = api.s, p = s.player, v = e.variant;
+    switch (e.state) {
+      case 'idle':
+        e.guard = true;
+        if (--e.think > 0) return;
+        if (e.y !== p.y) { const ny = e.y + Math.sign(p.y - e.y); if (!api.at(e.x, ny)) e.y = ny; e.think = 20; return; }
+        if (!api.turnFree(e)) { e.think = 30; return; }
+        api.takeTurn(e); e.guard = false; return go(e, 'open', 'open');
+      case 'open':
+        if (e.stateT >= pv(P.openTicks, v)) {
+          setAnim(e, 'pulse');
+          s.hazards.push({ kind: 'bolt', x: e.x - 1, fx: e.x - 1, y: e.y, dx: -1 / P.pulseStep.value, damage: pv(P.damage, v), sprite: 'pulsebulb', seq: 'ring', owner: e.id });
+          go(e, 'close', null);
+        }
+        return;
+      case 'close':
+        if (e.stateT >= pv(P.closeTicks, v)) { e.guard = true; api.endTurn(e); e.think = 60; go(e, 'idle', 'idle'); }
+        return;
+    }
+  },
+
+  // 0x8111330: three moves, then a hat thrown onto a marked panel.
+  BigHat(e, api) {
+    const P = AI.BigHat, s = api.s, p = s.player, v = e.variant;
+    switch (e.state) {
+      case 'idle':
+        if (--e.think > 0) return;
+        e.moves = (e.moves || 0) + 1;
+        if (e.moves <= 3 || !api.turnFree(e)) {
+          const free = []; for (let x = 3; x < 6; x++) for (let y = 0; y < 3; y++) if (!api.at(x, y)) free.push([x, y]);
+          if (free.length) [e.x, e.y] = free[Math.floor(api.rng() * free.length)];
+          e.think = pv(P.moveTicks, v) + 20; return;
+        }
+        e.moves = 0; api.takeTurn(e); e.target = [p.x, p.y]; e.highlight = [[e.target]]; return go(e, 'aim', 'aim');
+      case 'aim':
+        if (e.stateT >= P.mark.value) { e.highlight = null; setAnim(e, 'throw'); go(e, 'throw', null); }
+        return;
+      case 'throw':
+        if (e.stateT === P.throwTicks.value) s.hazards.push({ kind: 'estrike', x: e.target[0], y: e.target[1], hit: s.tick + 1, damage: pv(P.damage, v), elem: 'none', look: 'hat', owner: e.id });
+        if (e.stateT >= P.throwTicks.value + P.after.value) { api.endTurn(e); e.think = 30; go(e, 'idle', 'idle'); }
+        return;
+    }
+  },
+
+  // 0x8111DC0: from the front of its area, lob corn bombs onto MegaMan.
+  BombCorn(e, api) {
+    const P = AI.BombCorn, s = api.s, p = s.player, v = e.variant;
+    switch (e.state) {
+      case 'idle':
+        if (--e.think > 0) return;
+        if (e.x > 3 && !api.at(e.x - 1, e.y)) { e.x--; e.think = 30; return; }
+        if (s.enemies.filter(o => o.family === 'BombCorn' && o.state === 'fire').length >= 2) { e.think = 20; return; }
+        return go(e, 'fire', 'aim');
+      case 'fire': {
+        const n = pv(P.count, v), t = e.stateT - P.windup.value;
+        if (t >= 0 && t % P.gap.value === 0 && t / P.gap.value < n) {
+          if (t === 0) setAnim(e, 'shoot');
+          s.hazards.push({ kind: 'lob', x: e.x, tx: p.x, y: p.y, start: s.tick, land: s.tick + P.flight.value, damage: pv(P.damage, v), owner: e.id });
+        }
+        if (t >= P.gap.value * n + pv(P.after, v)) { e.think = 30; go(e, 'idle', 'idle'); }
+        return;
+      }
+    }
+  },
+
+  // 0x81121F0: walk around; after standing a while, a thorn wave down the row.
+  Shrubby(e, api) {
+    const P = AI.Shrubby, s = api.s, p = s.player, v = e.variant;
+    switch (e.state) {
+      case 'idle':
+        if (--e.think > 0) return;
+        e.steps = (e.steps || 0) + 1;
+        if (e.steps <= 3 || !api.turnFree(e)) {
+          const ny = e.y + Math.sign(p.y - e.y);
+          if (ny !== e.y && !api.at(e.x, ny)) e.y = ny;
+          else { const free = []; for (let x = 3; x < 6; x++) if (!api.at(x, e.y)) free.push(x); if (free.length) e.x = free[Math.floor(api.rng() * free.length)]; }
+          e.think = pv(P.walkWait, v); return;
+        }
+        e.steps = 0; api.takeTurn(e);
+        e.highlight = [[0, 1, 2, 3, 4, 5].filter(x => x < e.x).map(x => [x, e.y])];
+        return go(e, 'aim', 'roll');
+      case 'aim':
+        if (e.stateT >= pv(P.mark, v)) {
+          e.highlight = null; setAnim(e, 'attack');
+          s.hazards.push({ kind: 'bolt', x: e.x - 1, fx: e.x - 1, y: e.y, dx: -1 / P.waveStep.value, damage: pv(P.damage, v), sprite: 'shrubby', seq: 'thorn', owner: e.id });
+          go(e, 'after', null);
+        }
+        return;
+      case 'after':
+        if (e.stateT >= pv(P.after, v) + 20) { api.endTurn(e); e.think = 60; go(e, 'idle', 'idle'); }
+        return;
+    }
+  },
+
+  // 0x81129A0: hop around now and then; one hive at a time releases 3 homing bees.
+  HoneyBomber(e, api) {
+    const P = AI.HoneyBomber, s = api.s, v = e.variant;
+    const every = pv(P.moveEvery, v);
+    if (every && e.state === 'idle' && s.tick % every === 0) {
+      const free = []; for (let x = 3; x < 6; x++) for (let y = 0; y < 3; y++) if (!api.at(x, y)) free.push([x, y]);
+      if (free.length) [e.x, e.y] = free[Math.floor(api.rng() * free.length)];
+    }
+    switch (e.state) {
+      case 'idle':
+        if (--e.think > 0) return;
+        if (s.hazards.some(h => h.kind === 'bee' && h.owner === e.id) || !api.turnFree(e)) { e.think = 20; return; }
+        api.takeTurn(e); return go(e, 'open', 'open');
+      case 'open': {
+        const T = pv(P.open, v), t = e.stateT - T;
+        if (t === 0) setAnim(e, 'release');
+        if (t >= 0 && t % P.beeGap.value === 0 && t / P.beeGap.value < P.bees.value)
+          s.hazards.push({ kind: 'bee', fx: e.x - 1, fy: e.y, x: e.x - 1, y: e.y, step: P.beeStep.value, next: s.tick + P.beeStep.value, until: s.tick + 240, damage: pv(P.damage, v), owner: e.id });
+        if (t >= P.beeGap.value * P.bees.value + P.after.value) { setAnim(e, 'close'); api.endTurn(e); e.think = 60; go(e, 'idle', null); }
+        return;
+      }
+    }
+  },
 
   // 0x810E7B0: the base Kettle is harmless; others appear beside MegaMan and burst steam.
   Kettle(e, api) {

@@ -339,6 +339,13 @@ function stepHazards(s) {
       s.effects.push({ kind: 'rockbreak', x: h.x, y: h.y, t: 0 });
       return false;
     }
+    if (h.kind === 'bee') { // HoneyBomber's bee: steps a panel toward MegaMan at a time
+      if (s.tick >= h.until || !s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
+      if (s.tick >= h.next) { h.next = s.tick + h.step; if (h.x !== p.x) h.x += Math.sign(p.x - h.x); else if (h.y !== p.y) h.y += Math.sign(p.y - h.y); }
+      h.fx += (h.x - h.fx) * 0.3; h.fy += (h.y - h.fy) * 0.3;
+      if (h.x === p.x && h.y === p.y && p.state !== 'vanish') { hitPlayer(s, h.damage); return false; }
+      return true;
+    }
     if (h.kind === 'bolt') { // a projectile flying along a row (virus torpedoes, Heady's head)
       if (!s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
       h.fx += h.dx; h.x = Math.round(h.fx);
