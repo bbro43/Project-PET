@@ -1,4 +1,4 @@
-# Project PET — status (updated 27 Nov 2026, app 0.12.0 / assets 13)
+# Project PET — status (updated 27 Nov 2026, app 0.12.1 / assets 13)
 
 Legend: **Done** = implemented and tested · **Partial** = works but incomplete or using unverified values · **Pending** = not started · **Unverified** = claim without fresh evidence.
 
@@ -8,7 +8,7 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 | Repo + branch audit | Done | documentation/audit/2026-11-27-baseline-and-sprite-format.md |
 | Prototype tests | Done | 3/3 re-run; kept as tests/prototype.test.mjs |
 | Signal Yard prototype | Kept | Moved to /prototype/, still playable, linked from menu |
-| Live Pages + install identity | Done for 0.2.0 | Same id/scope/start_url `./`; display name now "Project PET" |
+| Live Pages + install identity | Done for 0.2.0 | Same id/scope/start_url `./`; display name now "P.E.T." (0.12.1) |
 | Phone update flow | Partial | In-app "Update ready" banner; 0.1.x installs auto-migrate once. Real-phone test pending. |
 | Sprite format (tiles/OAM/palette) | Done (BN6) | 78/78 MegaMan frames pixel-exact; JS = Python on 108 frames |
 | Runtime palette choice, flip bits | Unverified | See audit |
