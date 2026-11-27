@@ -1598,6 +1598,80 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "diveman": {
+      "label": "DiveMan (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "2D2AC8",
+          "compression": "lz77",
+          "bytes": 41296,
+          "sha256": "9fe98933f93355bf45f70a042b7e8764c32f76906c00a52a1dc710174df219a2",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "2D2AC8",
+          "compression": "lz77",
+          "bytes": 41296,
+          "sha256": "9fe98933f93355bf45f70a042b7e8764c32f76906c00a52a1dc710174df219a2",
+          "confidence": "rom-verified"
+        }
+      },
+      "note": "LZ77-compressed. AI animation ids 3-8 map to sequences directly (3 = submerged periscope); the wave (20), torpedo (23/24) and splash (25) are sequences of this same sprite.",
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 7,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 8,
+          "confidence": "visual-candidate"
+        },
+        "submerged": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "leap": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "slam": {
+          "seq": 5,
+          "confidence": "visual-candidate"
+        },
+        "launch": {
+          "seq": 6,
+          "confidence": "visual-candidate"
+        },
+        "surface": {
+          "seq": 7,
+          "confidence": "visual-candidate"
+        },
+        "dive": {
+          "seq": 8,
+          "confidence": "visual-candidate"
+        },
+        "wave": {
+          "seq": 20,
+          "confidence": "visual-candidate"
+        },
+        "torpedo": {
+          "seq": 24,
+          "confidence": "visual-candidate"
+        },
+        "splash": {
+          "seq": 25,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {

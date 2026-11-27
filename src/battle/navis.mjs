@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'BlastMan', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', BlastMan: 'blastman', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'BlastMan', 'DiveMan', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', BlastMan: 'blastman', DiveMan: 'diveman', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -1067,6 +1067,75 @@ function blastman(e, api) {
   function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
 }
 
+// ======================= DiveMan =======================
+// Decision 0x80FDE04: swims twice (submerged), then surfaces for torpedoes 0xA or a pause 0xC; every 4th attack the big wave 0xB.
+function diveman(e, api) {
+  const P = NAVI_AI.DiveMan, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const [DIVE, GLIDE] = P.swimTicks.value;
+  const wait = t => { go(e, 'idle', e.anim === 'submerged' ? 'submerged' : 'idle'); e.think = Math.max(1, t); };
+  switch (e.state) {
+    case 'idle':
+      if (--e.think > 0) return;
+      return decide();
+    case 'dive':
+      if (e.stateT >= DIVE) { e.from = [e.x, e.y]; [e.x, e.y] = e.dest; go(e, 'swim', 'submerged'); }
+      return;
+    case 'swim': {
+      const k = Math.min(1, e.stateT / GLIDE);
+      e.drawX = e.from[0] + (e.x - e.from[0]) * k; e.drawY = e.from[1] + (e.y - e.from[1]) * k;
+      if (k >= 1) wait(P.moveWait.value);
+      return;
+    }
+    case 'surface':
+      if (e.stateT >= e.surfaceFor) { const a = e.after; e.after = null; a(); }
+      return;
+    case 'pause':
+      return wait(pv(P.pauseWait, v));
+    // ---- 0xA: two torpedoes at MegaMan's panel
+    case 'torpedo': {
+      const [aim, each] = P.torpedoAim.value, n = P.torpedoCount.value;
+      const t = e.stateT - aim;
+      if (t >= 0 && t % each === 0 && t / each < n) {
+        setAnim(e, 'launch');
+        s.hazards.push({ kind: 'torpedo', x0: e.x, y0: e.y, x: p.x, y: p.y, start: s.tick, land: s.tick + P.torpedoFlight.value, damage: pv(P.torpedoDamage, v), owner: e.id });
+      }
+      if (t >= each * n) wait(pv(P.torpedoWait, v));
+      return;
+    }
+    // ---- 0xB: leap with the rows lit, slam, a wave rolls down every row
+    case 'leap':
+      if (e.stateT === 1) e.highlight = [[0, 1, 2].flatMap(y => [0, 1, 2].map(x => [x, y]))];
+      if (e.stateT >= P.waveLift.value[1]) { e.highlight = null; go(e, 'slam', 'slam'); }
+      return;
+    case 'slam':
+      if (e.stateT === P.waveHit.value) {
+        s.effects.push({ kind: 'shake', t: 0 });
+        for (let y = 0; y < 3; y++) s.hazards.push({ kind: 'wave', x: 2, y, dir: -1, step: P.waveStep.value, next: s.tick + P.waveStep.value, damage: pv(P.waveDamage, v), owner: e.id, family: 'DiveMan', big: true, start: s.tick });
+      }
+      if (e.stateT >= P.waveHit.value + 3 * P.waveStep.value + 6) wait(P.waveWait.value);
+      return;
+  }
+
+  function decide() {
+    if (m.c4 < 2) {
+      m.c4++;
+      const options = freeEnemyPanels(e, api).filter(([x, y]) => !(e.prev && x === e.prev[0] && y === e.prev[1]));
+      e.prev = [e.x, e.y];
+      e.dest = pick(options, api) || [e.x, e.y];
+      return go(e, 'dive', 'dive');
+    }
+    m.c4 = 0;
+    if (m.c5 < 3) {
+      m.c5++;
+      if (rnd16(api) >= 6) return surface(P.surface.value, () => go(e, 'pause', 'idle'));
+      return surface(P.surface.value, () => go(e, 'torpedo', 'idle'));
+    }
+    m.c5 = 0;
+    return surface(P.waveLift.value[0], () => go(e, 'leap', 'leap'));
+  }
+  function surface(t, after) { e.surfaceFor = t; e.after = after; go(e, 'surface', 'surface'); }
+}
+
 const AREAS = {
   wide: [[-1, -1], [-1, 0], [-1, 1]],
   long: [[-1, 0], [-2, 0]],
@@ -1182,7 +1251,7 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, BlastMan: blastman, ProtoMan: protoman };
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, BlastMan: blastman, DiveMan: diveman, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;

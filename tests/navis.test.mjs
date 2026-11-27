@@ -638,3 +638,37 @@ test('BlastMan EX storm can sweep the columns from the top or bottom', () => {
   }
   assert.ok(vertical);
 });
+
+test('DiveMan names and HP from the ROM tables', () => {
+  const vs = naviVariants('DiveMan');
+  assert.equal(vs[0].name, 'DiveMan');
+  assert.equal(start('DiveMan').enemies[0].sprite, 'diveman');
+});
+
+test('DiveMan swims without returning to the panel he just left', () => {
+  const s = start('DiveMan'), e = s.enemies[0];
+  s.player.invuln = 1e9;
+  let last = null, prev = [e.x, e.y], ok = true, swims = 0;
+  for (let i = 0; i < 4000 && swims < 12; i++) {
+    const was = e.state; step(s, {});
+    if (was === 'dive' && e.state === 'swim') { if (last && e.x === last[0] && e.y === last[1]) ok = false; last = prev; prev = [e.x, e.y]; swims++; }
+  }
+  assert.ok(swims >= 4 && ok);
+});
+
+test('DiveMan torpedoes: two, each landing on the panel MegaMan stood on', () => {
+  const { s, e } = findState('DiveMan', 0, 'torpedo', s => { s.player.invuln = 1e9; });
+  let torps = 0;
+  for (let i = 0; i < 100; i++) { const n = s.hazards.filter(h => h.kind === 'torpedo').length; step(s, {}); if (s.hazards.filter(h => h.kind === 'torpedo').length > n) torps++; }
+  assert.equal(torps, 2);
+});
+
+test('DiveMan big wave rolls down all three rows of MegaMan\'s area', () => {
+  const { s, e } = findState('DiveMan', 0, 'slam', s => { s.player.invuln = 1e9; });
+  run(s, NAVI_AI.DiveMan.waveHit.value - e.stateT + 1);
+  const w = s.hazards.filter(h => h.kind === 'wave' && h.big);
+  assert.deepEqual(w.map(h => h.y).sort(), [0, 1, 2]);
+  s.player.invuln = 0; s.player.hp = s.player.maxHp = 500;
+  for (let i = 0; i < 40 && s.player.hp === 500; i++) step(s, {});
+  assert.equal(s.player.hp, 470, 'base wave damage 30');
+});

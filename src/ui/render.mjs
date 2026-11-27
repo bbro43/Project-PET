@@ -227,9 +227,17 @@ export function render(g, s, bank) {
     }
   }
 
+  // DiveMan: torpedoes (sequence of his own sprite)
+  for (const h of s.hazards) if (h.kind === 'torpedo') {
+    const k = Math.min(1, (s.tick - h.start) / (h.land - h.start));
+    const [x0, y0] = anchor(h.x0, h.y0), [x1, y1] = anchor(h.x, h.y);
+    sprite(g, bank, 'diveman', 'torpedo', s.tick - h.start, x0 + (x1 - x0) * k, y0 + (y1 - y0) * k - 12, '#9cf', 0, true);
+  }
+
   // Hazards under actors.
   const wave = bank?.get('shockwave');
   for (const h of s.hazards) {
+    if (h.kind === 'wave' && h.big) { const [ax, ay] = anchor(h.x, h.y); sprite(g, bank, 'diveman', 'wave', s.tick - h.start, ax, ay, '#46c', 0, true); continue; }
     if (h.kind === 'wave') {
       const [ax, ay] = anchor(h.x, h.y);
       if (wave) {

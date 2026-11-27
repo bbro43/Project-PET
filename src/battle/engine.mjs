@@ -250,6 +250,12 @@ function stepHazards(s) {
       if (!h.locked && s.tick >= h.until) h.locked = true;
       return true;
     }
+    if (h.kind === 'torpedo') { // DiveMan's torpedo: flies to the panel MegaMan was on
+      if (s.tick < h.land) return true;
+      if (p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      s.effects.push({ kind: 'blast', x: h.x, y: h.y, t: 0 });
+      return false;
+    }
     if (h.kind === 'blast') { // BlastMan's lingering blast on a panel
       if (p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
       return s.tick < h.until;
