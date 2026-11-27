@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'BlastMan', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', BlastMan: 'blastman', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -994,6 +994,79 @@ function dustman(e, api) {
   function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
 }
 
+// ======================= BlastMan =======================
+// Decision 0x80FD158: 3 moves; fire punch 0xA twice, then fireball 0xB or fire storm 0xC; 0xB at once if a blast sits in front of MegaMan.
+function blastman(e, api) {
+  const P = NAVI_AI.BlastMan, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const [VAN, APP] = P.warpTicks.value;
+  const wait = t => { go(e, 'idle', 'idle'); e.think = Math.max(1, t); };
+  const free = (x, y) => x >= 3 && x <= 5 && y >= 0 && y <= 2 && (!api.at(x, y) || api.at(x, y) === e);
+  const front = () => { const x = [3, 4, 5].find(x => free(x, p.y)); return x !== undefined ? [x, p.y] : [e.x, e.y]; };
+  switch (e.state) {
+    case 'idle':
+      if (--e.think > 0) return;
+      return decide();
+    case 'vanish':
+      if (e.stateT >= VAN) { [e.x, e.y] = e.dest; e.drawX = e.x; e.drawY = e.y; go(e, 'appear', 'appear'); }
+      return;
+    case 'appear':
+      if (e.stateT >= APP + 8) { const a = e.after; e.after = null; if (a) return a(); wait(pv(P.moveWait, v)); }
+      return;
+    // ---- 0xA: fire punch, a blast on the panel in front
+    case 'punch':
+      if (e.stateT === P.punchWindup.value) setAnim(e, 'punch');
+      if (e.stateT === P.punchWindup.value + P.punchHit.value) {
+        s.hazards.push({ kind: 'blast', x: e.x - 1, y: e.y, start: s.tick, until: s.tick + P.blastLife.value, damage: pv(P.punchDamage, v), owner: e.id });
+      }
+      if (e.stateT >= P.punchWindup.value + P.punchHit.value + 24) wait(pv(P.punchWait, v));
+      return;
+    // ---- 0xB: light the panels ahead, burn up, kick a fireball across them
+    case 'fireball': {
+      const range = pv(P.fireballRange, v), mark = P.fireballMark.value;
+      if (e.stateT === 10) { setAnim(e, 'burn'); e.highlight = [[...Array(range)].map((_, k) => [e.x - 1 - k, e.y]).filter(([x]) => x >= 0)]; }
+      if (e.stateT === mark) {
+        e.highlight = null; setAnim(e, 'kick');
+        s.hazards.push({ kind: 'fireball', fx: e.x - 1, y: e.y, dx: -1, dy: 0, left: range, step: P.fireballStep.value, start: s.tick, damage: pv(P.fireballDamage, v), owner: e.id, seq: 'fireball' });
+      }
+      if (e.stateT >= mark + range * P.fireballStep.value + 10) wait(pv(P.fireballWait, v));
+      return;
+    }
+    // ---- 0xC: two-second charge, then fire sweeps the whole field from one edge
+    case 'storm': {
+      const charge = P.stormCharge.value;
+      if (e.stateT === charge) setAnim(e, 'raise');
+      if (e.stateT === charge + 9) {
+        setAnim(e, 'release'); s.effects.push({ kind: 'shake', t: 0 });
+        const k = e.pattern, step = P.stormStep.value, dmg = pv(P.stormDamage, v);
+        const add = (fx, y, dx, dy, seq) => s.hazards.push({ kind: 'fireball', fx, y, dx, dy, left: dx ? 8 : 4, step, start: s.tick, damage: dmg, owner: e.id, seq });
+        if (k === 0) for (let y = 0; y < 3; y++) add(6, y, -1, 0, 'fireball');
+        if (k === 1) for (let y = 0; y < 3; y++) add(-1, y, 1, 0, 'fireball');
+        if (k === 2) for (let x = 0; x < 6; x++) add(x, 3, 0, -1, 'fireup');
+        if (k === 3) for (let x = 0; x < 6; x++) add(x, -1, 0, 1, 'fireup');
+      }
+      if (e.stateT >= charge + 9 + 9 * P.stormStep.value) wait(pv(P.stormWait, v));
+      return;
+    }
+  }
+
+  function decide() {
+    if (m.c4 < 3) { m.c4++; return warp(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], null); }
+    m.c4 = 0;
+    const blastAhead = s.hazards.some(h => h.kind === 'blast' && h.owner === e.id && h.y === p.y && h.x === p.x + 1);
+    if (!blastAhead && m.c5 < 2) { m.c5++; return warp(front(), () => go(e, 'punch', 'idle')); }
+    if (!blastAhead) { m.c5 = 0; if (rnd16(api) >= 8) return storm(); }
+    return warp(front(), () => go(e, 'fireball', 'idle'));
+  }
+  function storm() {
+    // 0x80FD376: base version always pattern 0; others draw from the weighted table
+    const table = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3];
+    e.pattern = v === 0 ? 0 : table[rnd16(api)];
+    const col = [0, 1, 2].filter(y => free(5, y)).map(y => [5, y]);
+    warp(pick(col, api) || [e.x, e.y], () => go(e, 'storm', 'charge'));
+  }
+  function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
+}
+
 const AREAS = {
   wide: [[-1, -1], [-1, 0], [-1, 1]],
   long: [[-1, 0], [-2, 0]],
@@ -1109,7 +1182,7 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, ProtoMan: protoman };
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, BlastMan: blastman, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;

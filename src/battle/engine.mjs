@@ -250,6 +250,16 @@ function stepHazards(s) {
       if (!h.locked && s.tick >= h.until) h.locked = true;
       return true;
     }
+    if (h.kind === 'blast') { // BlastMan's lingering blast on a panel
+      if (p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      return s.tick < h.until;
+    }
+    if (h.kind === 'fireball') { // moves a panel every h.step frames for h.left panels
+      const k = Math.floor((s.tick - h.start) / h.step);
+      h.x = Math.round(h.fx + h.dx * k); h.cy = h.y + h.dy * k;
+      if (h.x === p.x && h.cy === p.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      return k < h.left;
+    }
     if (h.kind === 'junk') { // DustMan's junk cube lands on the marked panel
       if (s.tick < h.land) return true;
       if (p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);

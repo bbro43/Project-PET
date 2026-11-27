@@ -590,3 +590,51 @@ test('DustMan uses the vacuum after 7 other attacks', () => {
   assert.equal(seen.length, 8);
   assert.equal(seen[7], 'vacuum');
 });
+
+test('BlastMan names and HP from the ROM tables', () => {
+  const vs = naviVariants('BlastMan');
+  assert.equal(vs[0].name, 'BlastMan');
+  assert.equal(start('BlastMan').enemies[0].sprite, 'blastman');
+});
+
+test('BlastMan fire punch leaves a blast on the panel in front of him', () => {
+  const { s, e } = findState('BlastMan', 1, 'punch', s => { s.player.invuln = 1e9; });
+  const P = NAVI_AI.BlastMan;
+  s.player.invuln = 0; s.player.x = e.x - 1 >= 0 && e.x - 1 <= 2 ? e.x - 1 : 2; s.player.y = e.y;
+  run(s, P.punchWindup.value + P.punchHit.value - e.stateT + 1);
+  const b = s.hazards.find(h => h.kind === 'blast');
+  assert.deepEqual([b.x, b.y], [e.x - 1, e.y]);
+  if (e.x === 3) assert.equal(s.player.hp, 50, 'EX punch damage 50');
+});
+
+test('BlastMan fireball: lights 3 panels ahead at base version, then the fireball crosses them', () => {
+  const { s, e } = findState('BlastMan', 0, 'fireball', s => { s.player.invuln = 1e9; });
+  run(s, 11 - e.stateT);
+  assert.equal(e.highlight[0].length, Math.min(3, e.x));
+  s.player.invuln = 0; s.player.x = e.x - 2 >= 0 ? e.x - 2 : 0; s.player.y = e.y;
+  for (let i = 0; i < 80 && s.player.hp === 100; i++) step(s, {});
+  assert.equal(s.player.hp, 90, 'base fireball damage 10');
+});
+
+test('BlastMan fire storm: 2-second charge, base version sweeps all 3 rows from the right', () => {
+  const { s, e } = findState('BlastMan', 0, 'storm', s => { s.player.invuln = 1e9; });
+  assert.equal(e.pattern, 0);
+  run(s, NAVI_AI.BlastMan.stormCharge.value + 10 - e.stateT);
+  const f = s.hazards.filter(h => h.kind === 'fireball');
+  assert.equal(f.length, 3);
+  assert.deepEqual(f.map(h => h.y).sort(), [0, 1, 2]);
+  s.player.invuln = 0;
+  for (let i = 0; i < 80 && s.player.hp === 100; i++) step(s, {});
+  assert.equal(s.player.hp, 80, 'base storm damage 20');
+});
+
+test('BlastMan EX storm can sweep the columns from the top or bottom', () => {
+  let vertical = false;
+  for (let seed = 1; seed < 60 && !vertical; seed++) {
+    const s = start('BlastMan', 1, seed), e = s.enemies[0];
+    s.player.invuln = 1e9;
+    for (let i = 0; i < 6000 && e.state !== 'storm'; i++) step(s, {});
+    if (e.pattern >= 2) vertical = true;
+  }
+  assert.ok(vertical);
+});

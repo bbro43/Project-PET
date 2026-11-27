@@ -1520,6 +1520,84 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "blastman": {
+      "label": "BlastMan (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "2CED74",
+          "compression": "lz77",
+          "bytes": 34608,
+          "sha256": "2c0da1f9e3790414035d918327d5d782a2eb96a14356e02d8d7f5e2008d82272",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "2CED74",
+          "compression": "lz77",
+          "bytes": 34608,
+          "sha256": "2c0da1f9e3790414035d918327d5d782a2eb96a14356e02d8d7f5e2008d82272",
+          "confidence": "rom-verified"
+        }
+      },
+      "note": "LZ77-compressed. AI animation ids 5, 7, 9-0xC map to sequences directly; his fire objects (type3 0x1F/0x20/0x21) use sequences 13-18 of this same sprite.",
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "punch": {
+          "seq": 5,
+          "confidence": "visual-candidate"
+        },
+        "burn": {
+          "seq": 7,
+          "confidence": "visual-candidate"
+        },
+        "kick": {
+          "seq": 9,
+          "confidence": "visual-candidate"
+        },
+        "charge": {
+          "seq": 10,
+          "confidence": "visual-candidate"
+        },
+        "release": {
+          "seq": 11,
+          "confidence": "visual-candidate"
+        },
+        "raise": {
+          "seq": 12,
+          "confidence": "visual-candidate"
+        },
+        "ring": {
+          "seq": 13,
+          "confidence": "visual-candidate"
+        },
+        "bigring": {
+          "seq": 14,
+          "confidence": "visual-candidate"
+        },
+        "fireball": {
+          "seq": 17,
+          "confidence": "visual-candidate"
+        },
+        "fireup": {
+          "seq": 18,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {

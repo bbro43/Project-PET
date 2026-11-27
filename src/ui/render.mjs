@@ -217,6 +217,16 @@ export function render(g, s, bank) {
     for (let i = 0; i < 3; i++) { const off = ((s.tick * 3 + i * 25) % 70); g.beginPath(); g.moveTo(ax - 90 + off, ay - 24 + i * 8); g.lineTo(ax - 70 + off, ay - 24 + i * 8); g.stroke(); }
   }
 
+  // BlastMan: blasts and fireballs (sequences of his own sprite)
+  for (const h of s.hazards) {
+    if (h.kind === 'blast') { const [ax, ay] = anchor(h.x, h.y); sprite(g, bank, 'blastman', 'bigring', s.tick - h.start, ax, ay, '#f60', 0, true); }
+    if (h.kind === 'fireball' && h.x !== undefined) {
+      const t = Math.min(1, ((s.tick - h.start) % h.step) / h.step);
+      const [ax, ay] = anchor(h.x + h.dx * t, h.cy + h.dy * t);
+      sprite(g, bank, 'blastman', h.seq, s.tick - h.start, ax, ay, '#f60', 0, h.dx < 0);
+    }
+  }
+
   // Hazards under actors.
   const wave = bank?.get('shockwave');
   for (const h of s.hazards) {
