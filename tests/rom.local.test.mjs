@@ -53,3 +53,27 @@ test('bn6-viruses.mjs sprite hashes match both BN6 ROMs', { skip: !dir && 'ROM_D
   }
   assert.ok(checked > 0);
 });
+
+test('navi-sprites.json blocks match ROM bytes', { skip: !dir && 'ROM_DIR not set' }, () => {
+  const doc = JSON.parse(readFileSync(new URL('../data/navi-sprites.json', import.meta.url)));
+  const roms = {};
+  for (const f of readdirSync(dir).filter(f => /\.gba$/i.test(f))) {
+    const rom = new Uint8Array(readFileSync(join(dir, f)));
+    const g = identify(rom);
+    if (g) roms[g.id] = rom;
+  }
+  let checked = 0;
+  for (const [name, navi] of Object.entries(doc.navis)) {
+    for (const game of Object.values(navi.games)) {
+      for (const [id, src] of Object.entries(game.sources)) {
+        const rom = roms[id];
+        if (!rom) continue;
+        const off = parseInt(src.offset, 16);
+        const bytes = src.compression === 'lz77' ? lz77(rom, off) : rom.subarray(off, off + src.bytes);
+        assert.equal(createHash('sha256').update(bytes).digest('hex'), src.sha256, `${name} ${id}`);
+        checked++;
+      }
+    }
+  }
+  assert.ok(checked >= 100, `only ${checked} checked`);
+});

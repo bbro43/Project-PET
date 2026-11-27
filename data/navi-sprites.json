@@ -1,0 +1,1558 @@
+{
+ "schema": 1,
+ "note": "Navi battle sprite blocks by game. Offsets/hashes only; graphics are decoded on device. BN4/BN5 identities were matched against labelled reference sprites from the owner's tabletop project folder and reviewed by eye; sequence roles are not mapped yet.",
+ "navis": {
+  "AquaMan": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "3124B8",
+       "compression": "none",
+       "bytes": 33741,
+       "sha256": "471498567c4cfced31a59a95bc10a20710a490e4617afceea83d4a180d4f6f2a",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "3124B8",
+       "compression": "none",
+       "bytes": 33741,
+       "sha256": "471498567c4cfced31a59a95bc10a20710a490e4617afceea83d4a180d4f6f2a",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite Aquaman_Exe4_Battle (score 0.967) and reviewed"
+    }
+   }
+  },
+  "AquaMan (BN6 \"SpoutMan\")": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "296F40",
+       "compression": "none",
+       "bytes": 26836,
+       "sha256": "0a3f3af6fc502db9746d5877e86f7f8e0128f635e97c775914000b4e61af50ed",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "296F40",
+       "compression": "none",
+       "bytes": 26836,
+       "sha256": "0a3f3af6fc502db9746d5877e86f7f8e0128f635e97c775914000b4e61af50ed",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 34 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "Bass": {
+   "games": {
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "2D3304",
+       "compression": "none",
+       "bytes": 67609,
+       "sha256": "ff54789394bfb5bee3dd4184f4ba6b3ffaf4193baca6d19c028b373fa2a10e73",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "2D3304",
+       "compression": "none",
+       "bytes": 67609,
+       "sha256": "ff54789394bfb5bee3dd4184f4ba6b3ffaf4193baca6d19c028b373fa2a10e73",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite MMBN6Bass (score 0.637) and reviewed"
+    }
+   }
+  },
+  "Bass (no cape)": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "2E4050",
+       "compression": "lz77",
+       "bytes": 43124,
+       "sha256": "c343e7e7356f6b158baea23e387a3d105f030f0f529bb7310cd3610b08956598",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "2E4050",
+       "compression": "lz77",
+       "bytes": 43124,
+       "sha256": "c343e7e7356f6b158baea23e387a3d105f030f0f529bb7310cd3610b08956598",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 41 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "BlastMan": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "2CED74",
+       "compression": "lz77",
+       "bytes": 34608,
+       "sha256": "2c0da1f9e3790414035d918327d5d782a2eb96a14356e02d8d7f5e2008d82272",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "2CED74",
+       "compression": "lz77",
+       "bytes": 34608,
+       "sha256": "2c0da1f9e3790414035d918327d5d782a2eb96a14356e02d8d7f5e2008d82272",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 3A named by dism-exe/bn6f"
+    }
+   }
+  },
+  "BlizzardMan": {
+   "games": {
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "2C31F4",
+       "compression": "lz77",
+       "bytes": 39988,
+       "sha256": "b7781496ca1436106d4522ee3811cdecfef1da22fec7970b6dd24d7b7c21db49",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "2C31F4",
+       "compression": "lz77",
+       "bytes": 39988,
+       "sha256": "b7781496ca1436106d4522ee3811cdecfef1da22fec7970b6dd24d7b7c21db49",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite BlizzardManEXE (score 1.0) and reviewed"
+    }
+   }
+  },
+  "BurnerMan": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "3367A0",
+       "compression": "lz77",
+       "bytes": 31832,
+       "sha256": "50dae8bf109af33a83d5ecd6eac3b64e7b852eb9e50d3f2d8b5e4bf58278b803",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "3367A0",
+       "compression": "lz77",
+       "bytes": 31832,
+       "sha256": "50dae8bf109af33a83d5ecd6eac3b64e7b852eb9e50d3f2d8b5e4bf58278b803",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite BURNERMAN.EXE_sprite (score 1.0) and reviewed"
+    }
+   }
+  },
+  "ChargeBeast form (disassembly label; Cross vs Beast not yet confirmed)": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "204108",
+       "compression": "none",
+       "bytes": 35904,
+       "sha256": "ba5220ae18423f94af6146e78db89491f89be58fa5f08586dfc31cbad197e4db",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "204108",
+       "compression": "none",
+       "bytes": 35904,
+       "sha256": "ba5220ae18423f94af6146e78db89491f89be58fa5f08586dfc31cbad197e4db",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 05 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "ChargeMan": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "28F18C",
+       "compression": "none",
+       "bytes": 32177,
+       "sha256": "81f50238d3b049b01744e9e6c1d389d850a0450e35f6dde94e4b42734894f4c0",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "28F18C",
+       "compression": "none",
+       "bytes": 32177,
+       "sha256": "81f50238d3b049b01744e9e6c1d389d850a0450e35f6dde94e4b42734894f4c0",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 33 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "CircusMan": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "2D6FE4",
+       "compression": "lz77",
+       "bytes": 43792,
+       "sha256": "3053db7fa31e9153ee624de4059f6647affda87589d6d6a44dfc03d7228fc320",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "2D6FE4",
+       "compression": "lz77",
+       "bytes": 43792,
+       "sha256": "3053db7fa31e9153ee624de4059f6647affda87589d6d6a44dfc03d7228fc320",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 3C named by dism-exe/bn6f"
+    }
+   }
+  },
+  "CloudMan": {
+   "games": {
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "2C6A40",
+       "compression": "lz77",
+       "bytes": 50444,
+       "sha256": "539646323213afe7432083d0665a3068bb65bf9e8a0a72c3f08e95c2843aa7a0",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "2C6A40",
+       "compression": "lz77",
+       "bytes": 50444,
+       "sha256": "539646323213afe7432083d0665a3068bb65bf9e8a0a72c3f08e95c2843aa7a0",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite CloudManEXE (score 1.0) and reviewed"
+    }
+   }
+  },
+  "ColdMan": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "326EAC",
+       "compression": "lz77",
+       "bytes": 25964,
+       "sha256": "091d4d1520a4cc3ec1ba04a6444f0d8dfd746b5825e634a1193ab5aed445eb60",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "326EAC",
+       "compression": "lz77",
+       "bytes": 25964,
+       "sha256": "091d4d1520a4cc3ec1ba04a6444f0d8dfd746b5825e634a1193ab5aed445eb60",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite ColdManEXE (score 1.0) and reviewed"
+    }
+   }
+  },
+  "Colonel": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "2E0114",
+       "compression": "lz77",
+       "bytes": 39612,
+       "sha256": "da3899fc9e8bdfbe6001aacf033c4c5ea62c884adc98335cabb407e85988e1b8",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "2E0114",
+       "compression": "lz77",
+       "bytes": 39612,
+       "sha256": "da3899fc9e8bdfbe6001aacf033c4c5ea62c884adc98335cabb407e85988e1b8",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 40 named by dism-exe/bn6f"
+    },
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "27E248",
+       "compression": "none",
+       "bytes": 46783,
+       "sha256": "af8149c929bbe85e8a5d8850bfe3f3a9709e7db75f2221d7040a7dd3160187f0",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "27E248",
+       "compression": "none",
+       "bytes": 46783,
+       "sha256": "af8149c929bbe85e8a5d8850bfe3f3a9709e7db75f2221d7040a7dd3160187f0",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite ColonelEXE (score 0.949) and reviewed"
+    }
+   }
+  },
+  "CosmoMan": {
+   "games": {
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "2CA708",
+       "compression": "lz77",
+       "bytes": 36004,
+       "sha256": "da572fe6c6447688f8941aa07bc086f3cd7c6d84db37437de63dc5d2dbb53892",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "2CA708",
+       "compression": "lz77",
+       "bytes": 36004,
+       "sha256": "da572fe6c6447688f8941aa07bc086f3cd7c6d84db37437de63dc5d2dbb53892",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite CosmoManEXE (score 0.853) and reviewed"
+    }
+   }
+  },
+  "Cybeast Falzar": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "2E8470",
+       "compression": "lz77",
+       "bytes": 70168,
+       "sha256": "2839c486606cf3b87ac628d4238c8c859c24d5888117b5636d1cf5e83cabd743",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "4DC738",
+       "compression": "lz77",
+       "bytes": 1788,
+       "sha256": "acd40b54595feb487cd421046270a1bdc70e184994f0a501f16f75fcb411d08f",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 43 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "Cybeast Gregar": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "4E0C4C",
+       "compression": "lz77",
+       "bytes": 1788,
+       "sha256": "acd40b54595feb487cd421046270a1bdc70e184994f0a501f16f75fcb411d08f",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "2E8470",
+       "compression": "lz77",
+       "bytes": 77232,
+       "sha256": "7199ed8eecaffaf4265b4275740be5d8826a5d39b3084c9a52de7cda39fdd9b9",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 42 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "DiveMan": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "2D2AC8",
+       "compression": "lz77",
+       "bytes": 41296,
+       "sha256": "9fe98933f93355bf45f70a042b7e8764c32f76906c00a52a1dc710174df219a2",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "2D2AC8",
+       "compression": "lz77",
+       "bytes": 41296,
+       "sha256": "9fe98933f93355bf45f70a042b7e8764c32f76906c00a52a1dc710174df219a2",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 3B named by dism-exe/bn6f"
+    }
+   }
+  },
+  "DustBeast form (disassembly label; Cross vs Beast not yet confirmed)": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "22CC50",
+       "compression": "none",
+       "bytes": 27350,
+       "sha256": "3cffd93c642231e58d028a491a674e91ea64192f4a63b87154889ad602d45c00",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "22CC50",
+       "compression": "none",
+       "bytes": 27350,
+       "sha256": "3cffd93c642231e58d028a491a674e91ea64192f4a63b87154889ad602d45c00",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 0A named by dism-exe/bn6f"
+    }
+   }
+  },
+  "DustMan": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "2BA7BC",
+       "compression": "none",
+       "bytes": 52624,
+       "sha256": "5e7b78a8d36c67e70f196f19690ba2810a1bd26ddb9ad42ed204fbc99874bde8",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "2BA7BC",
+       "compression": "none",
+       "bytes": 52624,
+       "sha256": "5e7b78a8d36c67e70f196f19690ba2810a1bd26ddb9ad42ed204fbc99874bde8",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 38 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "ElecBeast form (disassembly label; Cross vs Beast not yet confirmed)": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "1E7CC8",
+       "compression": "none",
+       "bytes": 38731,
+       "sha256": "4d6747b7557b22cf16baf042b1aea53d64bec8bc8f41712574dd7e14dd6b796d",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "1E7CC8",
+       "compression": "none",
+       "bytes": 38731,
+       "sha256": "4d6747b7557b22cf16baf042b1aea53d64bec8bc8f41712574dd7e14dd6b796d",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 02 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "ElecMan": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "26FAF0",
+       "compression": "none",
+       "bytes": 37832,
+       "sha256": "6d84a8a7e95ebb54f57e791fbea9c4523e7eef8650e4cc910f9f1b78dca2288e",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "26FAF0",
+       "compression": "none",
+       "bytes": 37832,
+       "sha256": "6d84a8a7e95ebb54f57e791fbea9c4523e7eef8650e4cc910f9f1b78dca2288e",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 30 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "ElementMan": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "2DD9A8",
+       "compression": "lz77",
+       "bytes": 22568,
+       "sha256": "6e1807a009dc061794bc2206db750bf448777f97bf9ead91412d057dacb4a237",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "2DD9A8",
+       "compression": "lz77",
+       "bytes": 22568,
+       "sha256": "6e1807a009dc061794bc2206db750bf448777f97bf9ead91412d057dacb4a237",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 3E named by dism-exe/bn6f"
+    }
+   }
+  },
+  "Falzar Beast form": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "23B768",
+       "compression": "none",
+       "bytes": 26459,
+       "sha256": "9caf12b3b77bfca118f663e18a02211b10d58310ef7e5f0eb718a304103e8209",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "23B768",
+       "compression": "none",
+       "bytes": 26459,
+       "sha256": "9caf12b3b77bfca118f663e18a02211b10d58310ef7e5f0eb718a304103e8209",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 0C named by dism-exe/bn6f"
+    }
+   }
+  },
+  "FireMan": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "2D3A24",
+       "compression": "none",
+       "bytes": 44135,
+       "sha256": "f17ffa6ed6d391a357faccdeb989ae6661e3959509d81689356dbe33cfa788d0",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "2D3A24",
+       "compression": "none",
+       "bytes": 44135,
+       "sha256": "f17ffa6ed6d391a357faccdeb989ae6661e3959509d81689356dbe33cfa788d0",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite FireEXE (score 0.697) and reviewed"
+    }
+   }
+  },
+  "Gregar Beast form": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "233728",
+       "compression": "none",
+       "bytes": 32831,
+       "sha256": "3ff812e386ac66e1cfbd3fa8879a168faa68d6c0e139ea3a2fd46a57be673f33",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "233728",
+       "compression": "none",
+       "bytes": 32831,
+       "sha256": "3ff812e386ac66e1cfbd3fa8879a168faa68d6c0e139ea3a2fd46a57be673f33",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 0B named by dism-exe/bn6f"
+    }
+   }
+  },
+  "GridMan": {
+   "games": {
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "2CFB04",
+       "compression": "lz77",
+       "bytes": 29636,
+       "sha256": "a1f9a1b74f51532b4973c0a4724dedcc7ca2e45b86a4114a2c9b87f7f2a84290",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "2CFB04",
+       "compression": "lz77",
+       "bytes": 29636,
+       "sha256": "a1f9a1b74f51532b4973c0a4724dedcc7ca2e45b86a4114a2c9b87f7f2a84290",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite GridManEXE (score 1.0) and reviewed"
+    }
+   }
+  },
+  "GroundBeast form (disassembly label; Cross vs Beast not yet confirmed)": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "223C48",
+       "compression": "none",
+       "bytes": 36869,
+       "sha256": "e865bc69e562a55231819c86bbcc7f2393058406f6b0566890bb09ff4fa171b9",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "223C48",
+       "compression": "none",
+       "bytes": 36869,
+       "sha256": "e865bc69e562a55231819c86bbcc7f2393058406f6b0566890bb09ff4fa171b9",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 09 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "GroundMan": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "2B0690",
+       "compression": "none",
+       "bytes": 41259,
+       "sha256": "11003ce415f3e7c78fadfe7bfa59791c1994db25aa7c2dae7d18279071971c41",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "2B0690",
+       "compression": "none",
+       "bytes": 41259,
+       "sha256": "11003ce415f3e7c78fadfe7bfa59791c1994db25aa7c2dae7d18279071971c41",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 37 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "GutsMan": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "2B0668",
+       "compression": "none",
+       "bytes": 60991,
+       "sha256": "a351f2f7619bf778b9b29fb418687ac3f84e76553027d76793818937455c3f9d",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "2B0668",
+       "compression": "none",
+       "bytes": 60991,
+       "sha256": "a351f2f7619bf778b9b29fb418687ac3f84e76553027d76793818937455c3f9d",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite GutsEXE (score 0.879) and reviewed"
+    }
+   }
+  },
+  "GyroMan": {
+   "games": {
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "249488",
+       "compression": "none",
+       "bytes": 47832,
+       "sha256": "19fe1d7138217f1b6d8703a255b1b622e2bb6f873a6067d462da31f5b317605f",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "249488",
+       "compression": "none",
+       "bytes": 47832,
+       "sha256": "19fe1d7138217f1b6d8703a255b1b622e2bb6f873a6067d462da31f5b317605f",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite GyroManEXE (score 0.823) and reviewed"
+    }
+   }
+  },
+  "HeatBeast form (disassembly label; Cross vs Beast not yet confirmed)": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "1DF420",
+       "compression": "none",
+       "bytes": 34981,
+       "sha256": "72056a7796ced0ca2e2dd55d487bff2c035b248ac6d3e8bd3604b8b5094496ac",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "1DF420",
+       "compression": "none",
+       "bytes": 34981,
+       "sha256": "72056a7796ced0ca2e2dd55d487bff2c035b248ac6d3e8bd3604b8b5094496ac",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 01 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "HeatMan": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "264FA0",
+       "compression": "none",
+       "bytes": 43855,
+       "sha256": "78b32868cfe37e95f56aa53ef5ec7e4d4caf253198f089fb253c5a1f6255af91",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "264FA0",
+       "compression": "none",
+       "bytes": 43855,
+       "sha256": "78b32868cfe37e95f56aa53ef5ec7e4d4caf253198f089fb253c5a1f6255af91",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 2F named by dism-exe/bn6f"
+    }
+   }
+  },
+  "HeelNavi": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "333F34",
+       "compression": "lz77",
+       "bytes": 22416,
+       "sha256": "ad38480cae45f0fa60d5abe9f66eb84a9cb819d68341462df5669ddf0ea0142e",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "333F34",
+       "compression": "lz77",
+       "bytes": 22416,
+       "sha256": "ad38480cae45f0fa60d5abe9f66eb84a9cb819d68341462df5669ddf0ea0142e",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite HeelNavi (score 1.0) and reviewed"
+    }
+   }
+  },
+  "JudgeMan": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "2DABC8",
+       "compression": "lz77",
+       "bytes": 26880,
+       "sha256": "87094a8ea43f8cadb31ae7e40b05958db9fa24e86ed2eedaf090d60ab5cb33a8",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "2DABC8",
+       "compression": "lz77",
+       "bytes": 26880,
+       "sha256": "87094a8ea43f8cadb31ae7e40b05958db9fa24e86ed2eedaf090d60ab5cb33a8",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 3D named by dism-exe/bn6f"
+    }
+   }
+  },
+  "JunkMan": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "3091D4",
+       "compression": "none",
+       "bytes": 37601,
+       "sha256": "2903d52e3892634174163cc4fdaa24751f461bb4c8123db016372c9f97c176f7",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "3091D4",
+       "compression": "none",
+       "bytes": 37601,
+       "sha256": "2903d52e3892634174163cc4fdaa24751f461bb4c8123db016372c9f97c176f7",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite JunkManEXE (score 0.976) and reviewed"
+    }
+   }
+  },
+  "KendoMan": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "3249D0",
+       "compression": "lz77",
+       "bytes": 30372,
+       "sha256": "d2449cf3b4a8e7d65c25bb8b1cc6df25ae00de301540fd953d9443f47a475dbf",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "3249D0",
+       "compression": "lz77",
+       "bytes": 30372,
+       "sha256": "d2449cf3b4a8e7d65c25bb8b1cc6df25ae00de301540fd953d9443f47a475dbf",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite KendoManEXE (score 1.0) and reviewed"
+    }
+   }
+  },
+  "KillerBeast form (disassembly label; Cross vs Beast not yet confirmed)": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "1FA9E8",
+       "compression": "none",
+       "bytes": 38685,
+       "sha256": "5781645b7dd9e601d421ff8509c25d814e5430c94caa03536d9fde7d83502d9f",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "1FA9E8",
+       "compression": "none",
+       "bytes": 38685,
+       "sha256": "5781645b7dd9e601d421ff8509c25d814e5430c94caa03536d9fde7d83502d9f",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 04 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "KillerMan": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "28324C",
+       "compression": "none",
+       "bytes": 48956,
+       "sha256": "3bfaff30d6c2487cc95b8d1452a008fdcb2b0f527e2edb204faf60f6069488e2",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "28324C",
+       "compression": "none",
+       "bytes": 48956,
+       "sha256": "3bfaff30d6c2487cc95b8d1452a008fdcb2b0f527e2edb204faf60f6069488e2",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 32 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "KnightMan": {
+   "games": {
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "2A27B8",
+       "compression": "none",
+       "bytes": 85399,
+       "sha256": "a4e5bc01400661c9707d1a84d9a01ab73a27b5e30a8bd2fd1f3091afdbd188ba",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "2A27B8",
+       "compression": "none",
+       "bytes": 85399,
+       "sha256": "a4e5bc01400661c9707d1a84d9a01ab73a27b5e30a8bd2fd1f3091afdbd188ba",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite KnightEXE (score 0.574) and reviewed"
+    }
+   }
+  },
+  "LarkMan": {
+   "games": {
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "2CDB9C",
+       "compression": "lz77",
+       "bytes": 19372,
+       "sha256": "d9fb7a7a769573aeceda400fd35cb7ccf0b2ce57b50a5029163503b6c4ab041d",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "2CDB9C",
+       "compression": "lz77",
+       "bytes": 19372,
+       "sha256": "d9fb7a7a769573aeceda400fd35cb7ccf0b2ce57b50a5029163503b6c4ab041d",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite LarkManEXE (score 1.0) and reviewed"
+    }
+   }
+  },
+  "LaserMan": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "339B6C",
+       "compression": "lz77",
+       "bytes": 43700,
+       "sha256": "dfb02728834d5563854374c13521e15fc68cc06604f32a105100a96375b4e2a3",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "339B6C",
+       "compression": "lz77",
+       "bytes": 43700,
+       "sha256": "dfb02728834d5563854374c13521e15fc68cc06604f32a105100a96375b4e2a3",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite LaserManEXE (score 1.0) and reviewed"
+    }
+   }
+  },
+  "MagnetMan": {
+   "games": {
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "26A6F4",
+       "compression": "none",
+       "bytes": 49779,
+       "sha256": "e2cbd582d49ed43934866f6128b6e7a99c310b0034a76b30b4b7f42391a290a1",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "26A6F4",
+       "compression": "none",
+       "bytes": 49779,
+       "sha256": "e2cbd582d49ed43934866f6128b6e7a99c310b0034a76b30b4b7f42391a290a1",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite MagnetEXE (score 0.699) and reviewed"
+    }
+   }
+  },
+  "MegaMan": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "1D8000",
+       "compression": "none",
+       "bytes": 29726,
+       "sha256": "99cedfa792d0c36dd37673803c86d262088bffecccd5a3c20cbd4f8c978899d4",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "1D8000",
+       "compression": "none",
+       "bytes": 29726,
+       "sha256": "99cedfa792d0c36dd37673803c86d262088bffecccd5a3c20cbd4f8c978899d4",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 00 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "NapalmMan": {
+   "games": {
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "25FB60",
+       "compression": "none",
+       "bytes": 43921,
+       "sha256": "64a86f8da3e74c4428399cb0e360087f87f0104dc143fee45779a6526b240edc",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "25FB60",
+       "compression": "none",
+       "bytes": 43921,
+       "sha256": "64a86f8da3e74c4428399cb0e360087f87f0104dc143fee45779a6526b240edc",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite NapalmEXE (score 0.833) and reviewed"
+    }
+   }
+  },
+  "NormalNavi": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "32D4CC",
+       "compression": "lz77",
+       "bytes": 21868,
+       "sha256": "7fb49809d0cff54cb96869764fac0ebc791cec204f6d6c6d5dd2144120784e15",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "32D4CC",
+       "compression": "lz77",
+       "bytes": 21868,
+       "sha256": "7fb49809d0cff54cb96869764fac0ebc791cec204f6d6c6d5dd2144120784e15",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite NormalNavi (score 1.0) and reviewed"
+    }
+   }
+  },
+  "NumberMan": {
+   "games": {
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "2918A0",
+       "compression": "none",
+       "bytes": 34851,
+       "sha256": "658b3c16983dd7d34d3666d875c284e1c9c14ada5b0bf091a3ba9d286992910c",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "2918A0",
+       "compression": "none",
+       "bytes": 34851,
+       "sha256": "658b3c16983dd7d34d3666d875c284e1c9c14ada5b0bf091a3ba9d286992910c",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite NUMBERMAN.EXE_sprite (score 0.923) and reviewed"
+    }
+   }
+  },
+  "ProtoMan": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "2C7550",
+       "compression": "none",
+       "bytes": 30754,
+       "sha256": "00d7bcc4700c0acba63adfa7238663fd995221af436e4670b3df175f38e689f1",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "2C7550",
+       "compression": "none",
+       "bytes": 30754,
+       "sha256": "00d7bcc4700c0acba63adfa7238663fd995221af436e4670b3df175f38e689f1",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 39 named by dism-exe/bn6f"
+    },
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "2E74B4",
+       "compression": "none",
+       "bytes": 51366,
+       "sha256": "bc5832c63f825346b4e7226e209911e46f148ffa119fac6cc45c7dd718fc7f8d",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "2E74B4",
+       "compression": "none",
+       "bytes": 51366,
+       "sha256": "bc5832c63f825346b4e7226e209911e46f148ffa119fac6cc45c7dd718fc7f8d",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite ProtoEXE1 (score 0.716) and reviewed"
+    }
+   }
+  },
+  "Roll": {
+   "games": {
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "32CEFC",
+       "compression": "none",
+       "bytes": 5065,
+       "sha256": "9d5c868a8a230d008ac8e296da44ccf8f1b9a3fe3b3f4060423b61a44370c6f8",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "32CEFC",
+       "compression": "none",
+       "bytes": 5065,
+       "sha256": "9d5c868a8a230d008ac8e296da44ccf8f1b9a3fe3b3f4060423b61a44370c6f8",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite RollEXE (score 0.831) and reviewed"
+    }
+   }
+  },
+  "SearchMan": {
+   "games": {
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "254F64",
+       "compression": "none",
+       "bytes": 44025,
+       "sha256": "f5441799e1d2ccd9284c66772a6c8e208a2881bbd42579fcd2085089ccc1d716",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "254F64",
+       "compression": "none",
+       "bytes": 44025,
+       "sha256": "f5441799e1d2ccd9284c66772a6c8e208a2881bbd42579fcd2085089ccc1d716",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite SearchManEXE (score 1.0) and reviewed"
+    }
+   }
+  },
+  "ShadeMan": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "3296B4",
+       "compression": "lz77",
+       "bytes": 43180,
+       "sha256": "807d32163a430b474476f965217121b5499818ce9d9e29d26f0653b266fd784e",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "3296B4",
+       "compression": "lz77",
+       "bytes": 43180,
+       "sha256": "807d32163a430b474476f965217121b5499818ce9d9e29d26f0653b266fd784e",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite Shademan_Exe4_Battle (score 1.0) and reviewed"
+    }
+   }
+  },
+  "ShadowMan": {
+   "games": {
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "289908",
+       "compression": "none",
+       "bytes": 32660,
+       "sha256": "a91ae554dc6e708fdf281b3975700981cbec54d81259a93a7c6505f453c7203a",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "289908",
+       "compression": "none",
+       "bytes": 32660,
+       "sha256": "a91ae554dc6e708fdf281b3975700981cbec54d81259a93a7c6505f453c7203a",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite ShadowEXE (score 0.89) and reviewed"
+    }
+   }
+  },
+  "SlashBeast form (disassembly label; Cross vs Beast not yet confirmed)": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "1F1414",
+       "compression": "none",
+       "bytes": 38354,
+       "sha256": "6f929138012a309ca7e3251643953f81980bd48d34a332f4174429f7886d1e68",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "1F1414",
+       "compression": "none",
+       "bytes": 38354,
+       "sha256": "6f929138012a309ca7e3251643953f81980bd48d34a332f4174429f7886d1e68",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 03 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "SlashMan": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "278EBC",
+       "compression": "none",
+       "bytes": 41870,
+       "sha256": "a11fa8b6373208279bb580263389f10badeba7c34feaefc3f3d4c38a98bf1995",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "278EBC",
+       "compression": "none",
+       "bytes": 41870,
+       "sha256": "a11fa8b6373208279bb580263389f10badeba7c34feaefc3f3d4c38a98bf1995",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 31 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "SparkMan": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "331984",
+       "compression": "lz77",
+       "bytes": 20936,
+       "sha256": "ded80f8ae06ff8f789260a5c72910c0d9140cd57b52a888e94bc47554db395b5",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "331984",
+       "compression": "lz77",
+       "bytes": 20936,
+       "sha256": "ded80f8ae06ff8f789260a5c72910c0d9140cd57b52a888e94bc47554db395b5",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite SparkEXE (score 1.0) and reviewed"
+    }
+   }
+  },
+  "SpoutBeast form (disassembly label; Cross vs Beast not yet confirmed)": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "20CD4C",
+       "compression": "none",
+       "bytes": 31419,
+       "sha256": "658aa21ccfea5eae7a666d3043ae20582a44c5345423457babc4b66c0799e809",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "20CD4C",
+       "compression": "none",
+       "bytes": 31419,
+       "sha256": "658aa21ccfea5eae7a666d3043ae20582a44c5345423457babc4b66c0799e809",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 06 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "TenguBeast form (disassembly label; Cross vs Beast not yet confirmed)": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "21C354",
+       "compression": "none",
+       "bytes": 30963,
+       "sha256": "dd1cb4a28f61f26adad4f1353f60d430e24dd0b2f8e427f0275f81176ccb5053",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "21C354",
+       "compression": "none",
+       "bytes": 30963,
+       "sha256": "dd1cb4a28f61f26adad4f1353f60d430e24dd0b2f8e427f0275f81176ccb5053",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 08 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "TenguMan": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "2A5AF0",
+       "compression": "none",
+       "bytes": 43935,
+       "sha256": "7660ca1825769128c224b5163e9cb128cfe397df8564b9ae96a02a619169b2b9",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "2A5AF0",
+       "compression": "none",
+       "bytes": 43935,
+       "sha256": "7660ca1825769128c224b5163e9cb128cfe397df8564b9ae96a02a619169b2b9",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 36 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "ThunderMan": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "2DE68C",
+       "compression": "none",
+       "bytes": 36391,
+       "sha256": "9f670b74a77b78c265033110c3422280e92aa4c7d18bba02d21360b86d5f376d",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "2DE68C",
+       "compression": "none",
+       "bytes": 36391,
+       "sha256": "9f670b74a77b78c265033110c3422280e92aa4c7d18bba02d21360b86d5f376d",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite ThunderEXE (score 0.666) and reviewed"
+    }
+   }
+  },
+  "ToadMan": {
+   "games": {
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "2B7550",
+       "compression": "none",
+       "bytes": 30429,
+       "sha256": "8a7d07735ddc37d3d59cf8b65d6125fa1822d6c8f1f2f907e744edf46280b899",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "2B7550",
+       "compression": "none",
+       "bytes": 30429,
+       "sha256": "8a7d07735ddc37d3d59cf8b65d6125fa1822d6c8f1f2f907e744edf46280b899",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite ToadEXE (score 0.891) and reviewed"
+    }
+   }
+  },
+  "TomahawkBeast form (disassembly label; Cross vs Beast not yet confirmed)": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "214808",
+       "compression": "none",
+       "bytes": 31561,
+       "sha256": "a3940796c2c9c5c52ad4b6838afc45b5b856dcba86e8dd64b34d7590894c8592",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "214808",
+       "compression": "none",
+       "bytes": 31561,
+       "sha256": "a3940796c2c9c5c52ad4b6838afc45b5b856dcba86e8dd64b34d7590894c8592",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 07 named by dism-exe/bn6f"
+    }
+   }
+  },
+  "TomahawkMan": {
+   "games": {
+    "bn6": {
+     "sources": {
+      "bn6f": {
+       "offset": "29D818",
+       "compression": "none",
+       "bytes": 33495,
+       "sha256": "35cf0410718924785dd2196e7e3d14fe4c4d3a5b4b856a0c8c024b2b64c5e765",
+       "confidence": "rom-verified"
+      },
+      "bn6g": {
+       "offset": "29D818",
+       "compression": "none",
+       "bytes": 33495,
+       "sha256": "35cf0410718924785dd2196e7e3d14fe4c4d3a5b4b856a0c8c024b2b64c5e765",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "BN6 sprite table ID 35 named by dism-exe/bn6f"
+    },
+    "bn5": {
+     "sources": {
+      "bn5tc": {
+       "offset": "29A0C4",
+       "compression": "none",
+       "bytes": 34545,
+       "sha256": "b6e5f7a18226ca0e5e0ce2b41f021a2451b585688561f22b926e3c41997b6779",
+       "confidence": "rom-verified"
+      },
+      "bn5tp": {
+       "offset": "29A0C4",
+       "compression": "none",
+       "bytes": 34545,
+       "sha256": "b6e5f7a18226ca0e5e0ce2b41f021a2451b585688561f22b926e3c41997b6779",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite TomahawkManEXE (score 1.0) and reviewed"
+    }
+   }
+  },
+  "TopMan": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "32FA18",
+       "compression": "lz77",
+       "bytes": 19728,
+       "sha256": "dbdf48b7499181d849576890831357e3daa8a1e00f4656bafcc7624ef4c10244",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "32FA18",
+       "compression": "lz77",
+       "bytes": 19728,
+       "sha256": "dbdf48b7499181d849576890831357e3daa8a1e00f4656bafcc7624ef4c10244",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite TopEXE (score 1.0) and reviewed"
+    }
+   }
+  },
+  "VideoMan": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "33D4C8",
+       "compression": "lz77",
+       "bytes": 30776,
+       "sha256": "e13cc6ff0ddae6377685a10d57ec9f7ee430241a6c7ec63feeeece899123ef79",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "33D4C8",
+       "compression": "lz77",
+       "bytes": 30776,
+       "sha256": "e13cc6ff0ddae6377685a10d57ec9f7ee430241a6c7ec63feeeece899123ef79",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite VideoManEXE (score 1.0) and reviewed"
+    }
+   }
+  },
+  "WindMan": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "2BF4A8",
+       "compression": "none",
+       "bytes": 38464,
+       "sha256": "bc22277800732891f5bbd10d33136eecbe5906882bd83f8ecfce8631752fddaa",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "2BF4A8",
+       "compression": "none",
+       "bytes": 38464,
+       "sha256": "bc22277800732891f5bbd10d33136eecbe5906882bd83f8ecfce8631752fddaa",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite WindManEXE (score 0.954) and reviewed"
+    }
+   }
+  },
+  "WoodMan": {
+   "games": {
+    "bn4": {
+     "sources": {
+      "bn4bm": {
+       "offset": "31A888",
+       "compression": "none",
+       "bytes": 41285,
+       "sha256": "c2c1bd6d768ca4a87f30a5433dc2ae93b31a646baba57c498a1f9eea771c3598",
+       "confidence": "rom-verified"
+      },
+      "bn4rs": {
+       "offset": "31A888",
+       "compression": "none",
+       "bytes": 41285,
+       "sha256": "c2c1bd6d768ca4a87f30a5433dc2ae93b31a646baba57c498a1f9eea771c3598",
+       "confidence": "rom-verified"
+      }
+     },
+     "identity": "visual: matched to reference sprite WoodEXE (score 0.763) and reviewed"
+    }
+   }
+  }
+ }
+}
