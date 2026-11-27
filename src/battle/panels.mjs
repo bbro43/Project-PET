@@ -3,17 +3,17 @@
 import { PANELS } from '../../data/rules.mjs';
 
 const P = PANELS;
-export const PANEL_TYPES = ['normal', 'cracked', 'broken', 'poison', 'holy', 'grass', 'ice', 'lava'];
-export const FIELDS = ['normal', 'cracked', 'grass', 'ice', 'holy', 'poison', 'lava', 'mixed'];
+export const PANEL_TYPES = ['normal', 'cracked', 'broken', 'poison', 'holy', 'grass', 'ice', 'volcano'];
+export const FIELDS = ['normal', 'cracked', 'grass', 'ice', 'holy', 'poison', 'volcano', 'mixed'];
 
 // Field presets for the battle menu (not canonical stage layouts).
 export function createPanels(field = 'normal', rng = Math.random) {
   const grid = Array.from({ length: 3 }, () => Array.from({ length: 6 }, () => ({ type: 'normal', t: 0, occ: false })));
   const set = (x, y, type) => { grid[y][x].type = type; };
   if (['cracked', 'grass', 'ice', 'holy'].includes(field)) for (let y = 0; y < 3; y++) for (let x = 0; x < 6; x++) set(x, y, field);
-  if (field === 'poison' || field === 'lava') for (let y = 0; y < 3; y++) { set(1, y, field); set(4, y, field); } // each side's middle column
+  if (field === 'poison' || field === 'volcano') for (let y = 0; y < 3; y++) { set(1, y, field); set(4, y, field); } // each side's middle column
   if (field === 'mixed') {
-    const kinds = ['cracked', 'poison', 'holy', 'grass', 'ice', 'lava'];
+    const kinds = ['cracked', 'poison', 'holy', 'grass', 'ice', 'volcano'];
     for (let y = 0; y < 3; y++) for (let x = 0; x < 6; x++) if (!(x === 1 && y === 1) && rng() < 0.5) set(x, y, kinds[Math.floor(rng() * kinds.length)]);
   }
   return grid;
@@ -58,26 +58,26 @@ export function panelHit(s, x, y, damage, element) {
   if (!c) return { damage, freeze };
   if (c.type === 'grass' && element === 'fire') { damage *= 2; setPanel(s, x, y, 'normal'); }
   else if (c.type === 'ice' && element === 'aqua') { freeze = P.iceFreeze.value; setPanel(s, x, y, 'normal'); }
-  else if (c.type === 'lava' && element === 'aqua') setPanel(s, x, y, 'normal');
+  else if (c.type === 'volcano' && element === 'aqua') setPanel(s, x, y, 'normal');
   if (c.type === 'holy') damage = (damage + 1) >> 1;
   return { damage, freeze };
 }
 
 // Per-frame panel update. hurt(target, damage) applies non-flinching damage (poison);
-// erupt(x, y) is called when a lava panel starts an eruption.
+// erupt(x, y) is called when a volcano panel starts an eruption.
 export function stepPanels(s, { hurtPlayer, hurtEnemy }) {
   if (!s.panels) return;
   const p = s.player;
-  s.lavaClock = (s.lavaClock ?? P.lavaCycle.value) - 1;
-  if (s.lavaClock <= 0) s.lavaClock = P.lavaCycle.value;
+  s.volcanoClock = (s.volcanoClock ?? P.volcanoCycle.value) - 1;
+  if (s.volcanoClock <= 0) s.volcanoClock = P.volcanoCycle.value;
   for (let y = 0; y < 3; y++) for (let x = 0; x < 6; x++) {
     const c = s.panels[y][x], occ = occupied(s, x, y);
     c.t++;
     if (c.type === 'cracked') { if (c.occ && !occ) { c.type = 'broken'; c.t = 0; s.effects.push({ kind: 'panelbreak', x, y, t: 0 }); } }
     else if (c.type === 'broken') { if (c.t >= P.brokenRepair.value) { c.type = 'normal'; c.t = 0; } }
-    else if (c.type === 'lava') {
-      const due = x <= 2 ? P.lavaCycle.value : P.lavaCycle.value / 2;
-      if (s.lavaClock === due) s.hazards.push({ kind: 'lava', x, y, start: s.tick, hit: s.tick + P.lavaEruption.value.warn, until: s.tick + P.lavaEruption.value.warn + P.lavaEruption.value.burn, damage: P.lavaEruption.value.damage, done: [] });
+    else if (c.type === 'volcano') {
+      const due = x <= 2 ? P.volcanoCycle.value : P.volcanoCycle.value / 2;
+      if (s.volcanoClock === due) s.hazards.push({ kind: 'volcano', x, y, start: s.tick, hit: s.tick + P.volcanoEruption.value.warn, until: s.tick + P.volcanoEruption.value.warn + P.volcanoEruption.value.burn, damage: P.volcanoEruption.value.damage, done: [] });
     }
     c.occ = occ;
   }

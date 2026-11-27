@@ -67,12 +67,12 @@ test('ice: MegaMan keeps sliding until he leaves the ice; aqua on ice freezes hi
   assert.ok(s.player.paralyzed > 0 && s.player.frozen); assert.equal(type(s, 2, 1), 'normal');
 });
 
-test('lava erupts on its cycle: bubbles 40 frames, then a 50-damage flame', () => {
-  const s = start('normal'); setPanel(s, 1, 1, 'lava');
+test('volcano erupts on its cycle: bubbles 40 frames, then a 50-damage flame', () => {
+  const s = start('normal'); setPanel(s, 1, 1, 'volcano');
   let first = null;
   for (let i = 0; i < 400 && first === null; i++) { const hp = s.player.hp; step(s, {}); if (s.player.hp < hp) first = { t: s.tick, d: hp - s.player.hp }; }
   assert.equal(first.d, 50);
-  assert.equal(first.t, PANELS.lavaCycle.value + PANELS.lavaEruption.value.warn);
+  assert.equal(first.t, PANELS.volcanoCycle.value + PANELS.volcanoEruption.value.warn);
 });
 
 test('Cragger\'s punch cracks MegaMan\'s column', () => {

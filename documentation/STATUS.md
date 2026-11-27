@@ -1,4 +1,4 @@
-# Project PET — status (updated 27 Nov 2026, app 0.34.0 / assets 37)
+# Project PET — status (updated 27 Nov 2026, app 0.35.0 / assets 38)
 
 Legend: **Done** = implemented and tested · **Partial** = works but incomplete or using unverified values · **Pending** = not started · **Unverified** = claim without fresh evidence.
 
@@ -17,7 +17,7 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 | Sequence roles (MegaMan, Mettaur) | Unverified | Visual candidates; runtime trace pending |
 | Battle engine core | Partial | 60 Hz deterministic; 6×3 field, areas, move, buster, charge, flinch + invincibility, custom gauge, chip select rules, queue. Several timings unverified (data/rules.mjs) |
 | BattleChips | Partial | 10 chips (Cannon family, AirShot, Sword family, MiniBomb, Recovery). No chip art/icons yet |
-| Panel types | Partial | Cracked/broken (+ repair), poison, holy, grass, ice (slide, freeze), lava eruptions decoded and playable; Field option in the menu (documentation/audit/2026-11-27-bn6-panels.md). Roads not modelled; panels are drawn, not ROM tiles |
+| Panel types | Partial | Cracked/broken (+ repair), poison, holy, grass, ice (slide, freeze), volcano eruptions decoded and playable; ROM panel graphics + palette animations decoded on device and pixel-matched (0.35.0); Field option in the menu (documentation/audit/2026-11-27-bn6-panels.md). Roads not modelled yet |
 | Folder editor | Pending | Test folder only (not the canonical BN6 default) |
 | Virus battles | Done (BN6) | All 29 BN6 families decoded from the ROM, all 6 versions each: Mettaur, Piranha, Heady, Swordy, KillerEye, Quaker, Catack, Champy, WindBox, Trumpy, OldStove, HauntedCandle, Kettle, Puffy, StarFish, Dragon, ScareCrow, PulseBulb, BigHat, BombCorn, Shrubby, HoneyBomber, Gunner, FighterPlane, DarkMech, SnakeArm, Armadillo, Cragger, Nightmare (documentation/audit/2026-11-27-bn6-virus-ai.md); some timings estimated. Paralysis (DarkMech's elec ball) added in 0.33.0, length unverified |
 | Endless survival | Partial | Random Mettaur/Champy/Gunner waves up to Ω; composition non-canonical |
@@ -39,6 +39,6 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 | 19 BN6 Navis, 35 BN4/BN5 Navis | offsets ✓ | ✓ (BN6 labels / BN4-5 visual) | – | – | – | ROM hash test |
 
 ## Next checkpoint
-1. BN5/BN4 Navis (sprites located; AI not decoded yet). Smaller leftovers: road panels, ROM panel graphics, TomahawkMan's eagle-to-axe during his chop.
+1. BN5/BN4 Navis (sprites located; AI not decoded yet). Smaller leftovers: road panel movement, TomahawkMan's eagle-to-axe during his chop.
 2. Trace timings in an emulator (glide speeds, hit frames, custom gauge, charge, invincibility).
 3. Chip table and icons from the ROM; folder editor; Navi Customizer.

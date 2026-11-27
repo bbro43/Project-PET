@@ -70,7 +70,7 @@ async function loadBank() {
     try {
       // Every imported ROM is a source; each sprite comes from the first ROM in SOURCE_ORDER that has it.
       const list = await listRoms().catch(() => []);
-      const need = new Set(Object.values(pickSources(registry, list.map(r => r.id))));
+      const picked = pickSources(registry, list.map(r => r.id)), need = new Set([...Object.values(picked), ...(picked.$field ? [picked.$field] : [])]);
       const roms = {};
       for (const r of list) if (need.has(r.id)) { const o = await loadRom(r.id); if (o) roms[r.id] = new Uint8Array(o.bytes); }
       bank = buildBank(roms, registry);

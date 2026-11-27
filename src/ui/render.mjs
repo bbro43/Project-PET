@@ -9,10 +9,18 @@ export const PANEL_W = 40, PANEL_H = 24, FIELD_Y = 72;
 const anchor = (x, y) => [x * PANEL_W + PANEL_W / 2, FIELD_Y + y * PANEL_H + 18];
 
 // Panel surfaces are drawn (no ROM field tiles yet); each BN6 panel type gets its own look.
-const SURFACE = { poison: '#9a48b8', holy: '#f2e2a0', grass: '#5cb24a', ice: '#cdefff', lava: '#e2542a' };
-function panels(g, s) {
+const SURFACE = { poison: '#9a48b8', holy: '#f2e2a0', grass: '#5cb24a', ice: '#cdefff', volcano: '#8a6a30' };
+// ROM panel graphics (BG tiles + tilemaps + animated palettes): the type number is the game's panel type.
+const TYPE_NUMBER = { none: 0, broken: 1, normal: 2, cracked: 3, poison: 4, holy: 5, grass: 6, ice: 7, volcano: 8, 'road-up': 9, 'road-down': 10, 'road-left': 11, 'road-right': 12 };
+function panels(g, s, bank) {
   for (let y = 0; y < 3; y++) for (let x = 0; x < 6; x++) {
     const red = x < 3, px = x * PANEL_W, py = FIELD_Y + y * PANEL_H, c = s.panels?.[y]?.[x], type = c?.type || 'normal';
+    if (bank?.field) {
+      let n = TYPE_NUMBER[type] ?? 2;
+      if (type === 'broken' && 600 - c.t <= 60 && ((600 - c.t) >> 2) & 1) n = 2; // blinks back in (0x800C3F2)
+      g.drawImage(bank.field.panel(n, red ? 0 : 1, y + 1, s.tick), px, py);
+      continue;
+    }
     g.fillStyle = red ? '#c8486a' : '#4870c8'; g.fillRect(px, py, PANEL_W, PANEL_H);
     g.fillStyle = red ? '#7a1f3a' : '#1f3a7a'; g.fillRect(px, py + PANEL_H - 4, PANEL_W, 4);
     const ix = px + 3, iy = py + 3, iw = PANEL_W - 6, ih = PANEL_H - 9;
@@ -35,7 +43,7 @@ function panels(g, s) {
       g.fillStyle = '#5e2072'; const t = (s.tick >> 3) & 3; g.fillRect(ix + 6 + t, iy + 3, 4, 3); g.fillRect(ix + 22 - t, iy + 7, 4, 3);
     } else if (type === 'holy') {
       g.fillStyle = '#fffbe0'; g.fillRect(ix + iw / 2 - 1, iy + 2, 2, 8); g.fillRect(ix + iw / 2 - 4, iy + 5, 8, 2);
-    } else if (type === 'lava') {
+    } else if (type === 'volcano') {
       g.fillStyle = (s.tick >> 3) & 1 ? '#ffb030' : '#ff8a20'; g.fillRect(ix + 5, iy + 3, 6, 3); g.fillRect(ix + 19, iy + 7, 8, 3);
     }
   }
@@ -89,7 +97,7 @@ export function render(g, s, bank) {
   const bg = g.createLinearGradient(0, 0, 0, FIELD_Y);
   bg.addColorStop(0, '#062048'); bg.addColorStop(1, '#0f4a7a');
   g.fillStyle = bg; g.fillRect(0, 0, 240, 160);
-  panels(g, s);
+  panels(g, s, bank);
 
   // Virus overlays: Piranha's sonar mark, KillerEye's scan line and beam.
   for (const e of s.enemies) if (e.hp > 0) {
@@ -493,8 +501,8 @@ export function render(g, s, bank) {
     const x = sx + (tx - sx) * k, y = sy + (ty - sy) * k - 40 * Math.sin(Math.PI * k) - 16;
     g.fillStyle = '#222'; g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill();
   }
-  // Lava eruption (object type3 0x07, sprite 0x10/0x24): bubbles, then a flame column
-  for (const h of s.hazards) if (h.kind === 'lava') {
+  // Volcano eruption (object type3 0x07, sprite 0x10/0x24): bubbles, then a flame column
+  for (const h of s.hazards) if (h.kind === 'volcano') {
     const [lx, ly] = anchor(h.x, h.y), burning = s.tick >= h.hit;
     sprite(g, bank, 'lavaflame', burning ? (s.tick - h.hit < 2 ? 'rise' : 'flame') : 'bubble', s.tick - (burning ? h.hit : h.start), lx, ly - 4, (g, x, y) => {
       g.fillStyle = burning ? ((s.tick >> 1) & 1 ? '#ffd040' : '#ff7a20') : '#ffb060';

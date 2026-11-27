@@ -55,9 +55,9 @@ export const TEST_FOLDER = [
 
 // Element weakness (attacker element → element it deals double damage to).
 // Panel types (PanelData.Type, 0x800C380 per-panel update; flags table 0x3007924).
-// 0 none, 1 broken, 2 normal, 3 cracked, 4 poison, 5 holy, 6 grass, 7 ice, 8 lava, 9-12 road.
+// 0 none, 1 broken, 2 normal, 3 cracked, 4 poison, 5 holy, 6 grass, 7 ice, 8 volcano (a crater that erupts; name from its look, sheet label unverified), 9-12 road.
 export const PANELS = {
-  types: v(['none', 'broken', 'normal', 'cracked', 'poison', 'holy', 'grass', 'ice', 'lava', 'road-up', 'road-down', 'road-left', 'road-right'], 'rom-verified', 'type byte → behaviour: grass heals wood (0x801A186), ice slide (0x801A3DA), lava eruption (0x800C438), holy halves damage (0x800E3BE)'),
+  types: v(['none', 'broken', 'normal', 'cracked', 'poison', 'holy', 'grass', 'ice', 'volcano', 'road-up', 'road-down', 'road-left', 'road-right'], 'rom-verified', 'type byte → behaviour (graphics for all 13 match the owner\'s panel sheet pixel for pixel): grass heals wood (0x801A186), ice slide (0x801A3DA), volcano eruption (0x800C438), holy halves damage (0x800E3BE)'),
   brokenRepair: v(600, 'rom-verified', '0x800C488: 0x258 frames (0x1E0 in mode 1), blinking for the last 60 (0x800C3F2)'),
   crack: v('a standable panel cracks; a cracked panel with nobody on it breaks; a cracked panel breaks when whoever stood on it steps off', 'rom-verified', 'object_crackPanel 0x800C944, 0x800C402'),
   poisonTicks: v(7, 'rom-verified', '0x801A186: 1 HP every 7 frames (timer 6 → −1); FloatShoe / poison immunity skip it'),
@@ -67,9 +67,9 @@ export const PANELS = {
   iceSlide: v('stepping onto ice keeps you sliding the same way (not aqua, not FloatShoe / AirShoe)', 'rom-verified', '0x801A3DA'),
   iceSlideTicks: v(6, 'unverified', 'frames per panel while sliding'),
   iceFreeze: v(80, 'rom-verified', '0x3007460: an aqua hit on someone standing on ice freezes them (0x50) and the panel turns normal'),
-  lavaCycle: v(140, 'rom-verified', '0x800C438: battle counter 0x8C; columns 1–3 erupt at 140, columns 4–6 at 70'),
-  lavaEruption: v({ warn: 40, burn: 40, damage: 50 }, 'rom-verified', 'object type3 0x07 (0x80C5A58): bubbles 40 frames, flame column 40 frames, 50 damage (sprite 0x10/0x24)'),
-  lavaAqua: v('an aqua attack on lava turns it normal', 'rom-verified', '0x3007746'),
+  volcanoCycle: v(140, 'rom-verified', '0x800C438: battle counter 0x8C; columns 1–3 erupt at 140, columns 4–6 at 70'),
+  volcanoEruption: v({ warn: 40, burn: 40, damage: 50 }, 'rom-verified', 'object type3 0x07 (0x80C5A58): bubbles 40 frames, flame column 40 frames, 50 damage (sprite 0x10/0x24)'),
+  volcanoAqua: v('an aqua attack on volcano turns it normal', 'rom-verified', '0x3007746'),
   roads: v('conveyor panels; revert after 1800 frames', 'rom-verified', '0x800C45C (0x708); movement not modelled yet'),
 };
 

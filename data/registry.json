@@ -3593,5 +3593,437 @@
    "spritePointers": "31CEC",
    "virusStats": "10A478"
   }
+ },
+ "field": {
+  "label": "Battle field panels (BG tiles LZ77 → VRAM 0x6001460, tilemaps byte_86DFA98, palettes 0x86E08F8 + animations 0x800C1DC)",
+  "note": "Tilemap entry for panel animation a (= panel type 0–12), side s (0 red, 1 blue), row r (1–3): ((a·6 + s·3 + r) − 1) × 32 bytes, 5×3 BG entries (0x800C01C). Tile index − tileBase indexes the decompressed tiles. Palette n is BG palette n (0 = palette0, 1–8 = palettes + 32·(n−1)). Palette animations cycle each listed palette through its frames (src, frames) (0x800C192).",
+  "sources": {
+   "bn6f": {
+    "tiles": {
+     "offset": "6DDBA0",
+     "compression": "lz77",
+     "bytes": 15936,
+     "sha256": "7f7651941d7c74c8213bdd1d89ee83d915a04ae898463bbd78c7a3dea2305062"
+    },
+    "tileBase": 163,
+    "tilemap": "6DFA98",
+    "palettes": "6E08F8",
+    "palette0": "6E09F8",
+    "paletteAnims": [
+     {
+      "palette": 2,
+      "frames": [
+       [
+        "6E0918",
+        16
+       ],
+       [
+        "6E04D8",
+        16
+       ],
+       [
+        "6E04F8",
+        16
+       ],
+       [
+        "6E0518",
+        16
+       ],
+       [
+        "6E0538",
+        16
+       ],
+       [
+        "6E0558",
+        16
+       ],
+       [
+        "6E0538",
+        16
+       ],
+       [
+        "6E0518",
+        16
+       ],
+       [
+        "6E04F8",
+        16
+       ],
+       [
+        "6E04D8",
+        16
+       ]
+      ]
+     },
+     {
+      "palette": 6,
+      "frames": [
+       [
+        "6E0998",
+        16
+       ],
+       [
+        "6E06D8",
+        16
+       ],
+       [
+        "6E06F8",
+        16
+       ],
+       [
+        "6E0718",
+        16
+       ],
+       [
+        "6E0738",
+        16
+       ],
+       [
+        "6E0758",
+        16
+       ],
+       [
+        "6E0738",
+        16
+       ],
+       [
+        "6E0718",
+        16
+       ],
+       [
+        "6E06F8",
+        16
+       ],
+       [
+        "6E06D8",
+        16
+       ]
+      ]
+     },
+     {
+      "palette": 3,
+      "frames": [
+       [
+        "6E0938",
+        8
+       ],
+       [
+        "6E0578",
+        8
+       ],
+       [
+        "6E0598",
+        8
+       ],
+       [
+        "6E05B8",
+        8
+       ]
+      ]
+     },
+     {
+      "palette": 7,
+      "frames": [
+       [
+        "6E09B8",
+        8
+       ],
+       [
+        "6E0778",
+        8
+       ],
+       [
+        "6E0798",
+        8
+       ],
+       [
+        "6E07B8",
+        8
+       ]
+      ]
+     },
+     {
+      "palette": 4,
+      "frames": [
+       [
+        "6E0958",
+        10
+       ],
+       [
+        "6E05D8",
+        10
+       ],
+       [
+        "6E05F8",
+        10
+       ],
+       [
+        "6E0618",
+        10
+       ],
+       [
+        "6E0638",
+        10
+       ],
+       [
+        "6E0658",
+        10
+       ],
+       [
+        "6E0678",
+        10
+       ]
+      ]
+     },
+     {
+      "palette": 8,
+      "frames": [
+       [
+        "6E09D8",
+        10
+       ],
+       [
+        "6E07D8",
+        10
+       ],
+       [
+        "6E07F8",
+        10
+       ],
+       [
+        "6E0818",
+        10
+       ],
+       [
+        "6E0838",
+        10
+       ],
+       [
+        "6E0858",
+        10
+       ],
+       [
+        "6E0878",
+        10
+       ]
+      ]
+     }
+    ],
+    "confidence": "rom-verified"
+   },
+   "bn6g": {
+    "tiles": {
+     "offset": "6DBB24",
+     "compression": "lz77",
+     "bytes": 15936,
+     "sha256": "7f7651941d7c74c8213bdd1d89ee83d915a04ae898463bbd78c7a3dea2305062"
+    },
+    "tileBase": 163,
+    "tilemap": "6DDA1C",
+    "palettes": "6DE87C",
+    "palette0": "6DE97C",
+    "paletteAnims": [
+     {
+      "palette": 2,
+      "frames": [
+       [
+        "6DE89C",
+        16
+       ],
+       [
+        "6DE45C",
+        16
+       ],
+       [
+        "6DE47C",
+        16
+       ],
+       [
+        "6DE49C",
+        16
+       ],
+       [
+        "6DE4BC",
+        16
+       ],
+       [
+        "6DE4DC",
+        16
+       ],
+       [
+        "6DE4BC",
+        16
+       ],
+       [
+        "6DE49C",
+        16
+       ],
+       [
+        "6DE47C",
+        16
+       ],
+       [
+        "6DE45C",
+        16
+       ]
+      ]
+     },
+     {
+      "palette": 6,
+      "frames": [
+       [
+        "6DE91C",
+        16
+       ],
+       [
+        "6DE65C",
+        16
+       ],
+       [
+        "6DE67C",
+        16
+       ],
+       [
+        "6DE69C",
+        16
+       ],
+       [
+        "6DE6BC",
+        16
+       ],
+       [
+        "6DE6DC",
+        16
+       ],
+       [
+        "6DE6BC",
+        16
+       ],
+       [
+        "6DE69C",
+        16
+       ],
+       [
+        "6DE67C",
+        16
+       ],
+       [
+        "6DE65C",
+        16
+       ]
+      ]
+     },
+     {
+      "palette": 3,
+      "frames": [
+       [
+        "6DE8BC",
+        8
+       ],
+       [
+        "6DE4FC",
+        8
+       ],
+       [
+        "6DE51C",
+        8
+       ],
+       [
+        "6DE53C",
+        8
+       ]
+      ]
+     },
+     {
+      "palette": 7,
+      "frames": [
+       [
+        "6DE93C",
+        8
+       ],
+       [
+        "6DE6FC",
+        8
+       ],
+       [
+        "6DE71C",
+        8
+       ],
+       [
+        "6DE73C",
+        8
+       ]
+      ]
+     },
+     {
+      "palette": 4,
+      "frames": [
+       [
+        "6DE8DC",
+        10
+       ],
+       [
+        "6DE55C",
+        10
+       ],
+       [
+        "6DE57C",
+        10
+       ],
+       [
+        "6DE59C",
+        10
+       ],
+       [
+        "6DE5BC",
+        10
+       ],
+       [
+        "6DE5DC",
+        10
+       ],
+       [
+        "6DE5FC",
+        10
+       ]
+      ]
+     },
+     {
+      "palette": 8,
+      "frames": [
+       [
+        "6DE95C",
+        10
+       ],
+       [
+        "6DE75C",
+        10
+       ],
+       [
+        "6DE77C",
+        10
+       ],
+       [
+        "6DE79C",
+        10
+       ],
+       [
+        "6DE7BC",
+        10
+       ],
+       [
+        "6DE7DC",
+        10
+       ],
+       [
+        "6DE7FC",
+        10
+       ]
+      ]
+     }
+    ],
+    "confidence": "rom-verified"
+   }
+  }
  }
 }

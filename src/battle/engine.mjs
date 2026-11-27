@@ -269,12 +269,12 @@ function stepHazards(s) {
   const p = s.player;
   s.hazards = s.hazards.filter(h => {
     s.attacker = h.owner !== undefined ? s.enemies.find(e => e.id === h.owner) : null;
-    if (h.kind === 'lava') { // lava eruption (object type3 0x07): bubbles, then a flame column hits whoever stands there
-      if (s.tick >= h.hit && s.tick < h.until && panelType(s, h.x, h.y) === 'lava') {
+    if (h.kind === 'volcano') { // volcano eruption (object type3 0x07): bubbles, then a flame column hits whoever stands there
+      if (s.tick >= h.hit && s.tick < h.until && panelType(s, h.x, h.y) === 'volcano') {
         if (p.x === h.x && p.y === h.y && p.state !== 'vanish' && !h.done.includes('p')) { h.done.push('p'); hitPlayer(s, h.damage, { element: 'none' }); }
         const e = at(s, h.x, h.y); if (e && !h.done.includes(e.id)) { h.done.push(e.id); hitEnemy(s, e, h.damage); }
       }
-      return s.tick < h.until && (s.tick < h.hit || panelType(s, h.x, h.y) === 'lava');
+      return s.tick < h.until && (s.tick < h.hit || panelType(s, h.x, h.y) === 'volcano');
     }
     if (h.kind === 'wave') {
       if (p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
