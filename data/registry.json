@@ -1927,6 +1927,72 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "colonel": {
+      "label": "Colonel (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "2E0114",
+          "compression": "lz77",
+          "bytes": 39612,
+          "sha256": "da3899fc9e8bdfbe6001aacf033c4c5ea62c884adc98335cabb407e85988e1b8",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "2E0114",
+          "compression": "lz77",
+          "bytes": 39612,
+          "sha256": "da3899fc9e8bdfbe6001aacf033c4c5ea62c884adc98335cabb407e85988e1b8",
+          "confidence": "rom-verified"
+        }
+      },
+      "note": "LZ77-compressed, 33 sequences: body 0-12, cape layers 13-29 (not drawn), missile 30-32.",
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "slash": {
+          "seq": 5,
+          "confidence": "visual-candidate"
+        },
+        "cannon": {
+          "seq": 7,
+          "confidence": "visual-candidate"
+        },
+        "fire": {
+          "seq": 8,
+          "confidence": "visual-candidate"
+        },
+        "thrust": {
+          "seq": 11,
+          "confidence": "visual-candidate"
+        },
+        "raise": {
+          "seq": 12,
+          "confidence": "visual-candidate"
+        },
+        "launch": {
+          "seq": 30,
+          "confidence": "visual-candidate"
+        },
+        "missile": {
+          "seq": 32,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {

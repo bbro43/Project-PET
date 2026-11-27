@@ -783,3 +783,44 @@ test('ElementMan fire: five bursts on MegaMan\'s panel', () => {
   for (let i = 0; i < 200 && e.state === 'fire'; i++) { step(s, {}); for (const h of s.hazards) if (h.kind === 'estrike') strikes.add(h); }
   assert.equal(strikes.size, 5);
 });
+
+test('Colonel names and HP from the ROM tables', () => {
+  const vs = naviVariants('Colonel');
+  assert.deepEqual(vs.slice(0, 3).map(v => [v.name, v.hp]), [['Colonel', 1200], ['ColonelEX', 1600], ['ColonelSP', 2000]]);
+  assert.equal(start('Colonel').enemies[0].sprite, 'colonel');
+});
+
+test('Colonel Screen Divide: MegaMan in the top-left corner gets the diagonal cut', () => {
+  const s = start('Colonel'), e = s.enemies[0];
+  s.player.x = 0; s.player.y = 0; s.player.invuln = 1e9;
+  for (let i = 0; i < 2000 && e.state !== 'divide'; i++) step(s, {});
+  assert.equal(e.state, 'divide');
+  assert.equal(e.cut, 1);
+  run(s, 1);
+  assert.deepEqual(e.highlight[0], [[0, 0], [1, 1], [2, 2]]);
+  s.player.invuln = 0;
+  run(s, NAVI_AI.Colonel.divideMark.value[0]);
+  assert.equal(s.player.hp, 20, 'base cut damage 80');
+});
+
+test('Colonel EX follows a cut with a second (cross) cut', () => {
+  const s = start('Colonel', 1), e = s.enemies[0];
+  s.player.x = 1; s.player.y = 1; s.player.invuln = 1e9;
+  for (let i = 0; i < 2000 && e.state !== 'divide'; i++) step(s, {});
+  for (let i = 0; i < 200 && e.cut !== 4; i++) step(s, {});
+  assert.equal(e.cut, 4);
+});
+
+test('Colonel cannon: missiles land on MegaMan\'s panel', () => {
+  const { s, e } = findState('Colonel', 0, 'cannon', s => { s.player.invuln = 1e9; s.player.x = 0; s.player.y = 1; });
+  const m = new Set();
+  for (let i = 0; i < 150 && e.state === 'cannon'; i++) { step(s, {}); for (const h of s.hazards) if (h.kind === 'cmissile') m.add(h); }
+  assert.equal(m.size, NAVI_AI.Colonel.cannonCount.value[0]);
+});
+
+test('Colonel finisher unlocks when MegaMan\'s HP is at or below its damage', () => {
+  const s = start('Colonel'), e = s.enemies[0];
+  s.player.hp = 150; s.player.invuln = 1e9; s.player.x = 0; s.player.y = 1;
+  for (let i = 0; i < 4000 && e.state !== 'finisher'; i++) step(s, {});
+  assert.equal(e.state, 'finisher');
+});

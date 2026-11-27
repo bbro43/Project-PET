@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'BlastMan', 'DiveMan', 'CircusMan', 'JudgeMan', 'ElementMan', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', BlastMan: 'blastman', DiveMan: 'diveman', CircusMan: 'circusman', JudgeMan: 'judgeman', ElementMan: 'elementman', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'BlastMan', 'DiveMan', 'CircusMan', 'JudgeMan', 'ElementMan', 'Colonel', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', BlastMan: 'blastman', DiveMan: 'diveman', CircusMan: 'circusman', JudgeMan: 'judgeman', ElementMan: 'elementman', Colonel: 'colonel', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -19,7 +19,7 @@ export function createNavi(navi, variant, x, y, id) {
     id, kind: 'navi', family: navi, variant, name: st.name, sprite: SPRITE[navi], palette: 0,
     x, y, drawX: x, drawY: y, homeX: x, homeY: y, hp: st.hp, maxHp: st.hp, element: st.element,
     state: 'idle', stateT: 0, anim: 'idle', animT: 0, think: 40, flash: 0,
-    mem: { c4: 0, c5: 0, c6: 0, c7: 0, toggle: 0, special: 0 }, plan: null, guard: false, guardHit: false,
+    mem: { c4: 0, c5: 0, c6: 0, c7: 0, c7x: 0, toggle: 0, special: 0 }, plan: null, guard: false, guardHit: false,
   };
 }
 
@@ -1386,6 +1386,97 @@ function elementman(e, api) {
   function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
 }
 
+// ======================= Colonel =======================
+// Decision 0x8101360: 2 moves; Screen Divide when MegaMan stands on a corner or the centre; cannon / lance; finisher when MegaMan is low.
+function colonel(e, api) {
+  const P = NAVI_AI.Colonel, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const [VAN, APP] = P.warpTicks.value;
+  const wait = t => { go(e, 'idle', 'idle'); e.think = Math.max(1, t); };
+  const free = (x, y) => x >= 3 && x <= 5 && y >= 0 && y <= 2 && (!api.at(x, y) || api.at(x, y) === e);
+  const front = () => { const x = [3, 4, 5].find(x => free(x, p.y)); return x !== undefined ? [x, p.y] : [e.x, e.y]; };
+  switch (e.state) {
+    case 'idle':
+      if (--e.think > 0) return;
+      return decide();
+    case 'vanish':
+      if (e.stateT >= VAN) { [e.x, e.y] = e.dest; e.drawX = e.x; e.drawY = e.y; go(e, 'appear', 'appear'); }
+      return;
+    case 'appear':
+      if (e.stateT >= APP + 8) { const a = e.after; e.after = null; if (a) return a(); wait(pv(P.moveWait, v)); }
+      return;
+    case 'divide': { // 0xA: the cut is lit, then he slashes it
+      const [mark0, mark1] = P.divideMark.value, follow = e.cut === 4, mark = follow ? mark1 : mark0;
+      const cells = P.divideShapes.value[e.cut];
+      if (e.stateT === 1) e.highlight = [cells];
+      if (e.stateT === mark) {
+        e.highlight = null; setAnim(e, 'slash'); s.effects.push({ kind: 'shake', t: 0 });
+        api.hitPlayerCells(cells, follow ? pv(P.divideFollowDamage, v) : pv(P.divideDamage, v));
+        for (const [x, y] of cells) s.effects.push({ kind: 'spark', x, y, t: 0 });
+      }
+      if (e.stateT >= mark + 16) {
+        if (!follow && v > 0) { e.cut = 4; return go(e, 'divide', 'raise'); } // EX and up: second cut (state 8)
+        wait(P.divideWait.value[follow ? 1 : 0]);
+      }
+      return;
+    }
+    case 'cannon': { // 0xB: missiles onto MegaMan's panel
+      const gap = pv(P.cannonGap, v), n = pv(P.cannonCount, v);
+      if (e.stateT === 12) setAnim(e, 'fire');
+      const t = e.stateT - 12;
+      if (t >= 0 && t % gap === 0 && t / gap < n) s.hazards.push({ kind: 'cmissile', x: p.x, y: p.y, start: s.tick, land: s.tick + P.cannonFall.value, damage: pv(P.cannonDamage, v), owner: e.id });
+      if (t >= gap * n + P.cannonFall.value) wait(pv(P.cannonWait, v));
+      return;
+    }
+    case 'lance': { // 0xC: saber thrust over the 2 panels ahead
+      const cells = [[e.x - 1, e.y], [e.x - 2, e.y]].filter(([x]) => x >= 0);
+      if (e.stateT === 1) e.highlight = [cells];
+      if (e.stateT === 20) { e.highlight = null; setAnim(e, 'thrust'); api.hitPlayerCells(cells, pv(P.lanceDamage, v)); }
+      if (e.stateT >= 40) {
+        if (--e.lances > 0) return warp(front(), () => go(e, 'lance', 'idle'));
+        if (e.cannonAfter) { e.cannonAfter = false; return go(e, 'cannon', 'cannon'); }
+        wait(pv(P.lanceWait, v));
+      }
+      return;
+    }
+    case 'finisher': { // 0xD: sword raised, MegaMan's row and column lit, then the big cut
+      const mark = pv(P.finisherMark, v);
+      const cells = [...[0, 1, 2].map(x => [x, e.fy]), ...[0, 1, 2].filter(y => y !== e.fy).map(y => [e.fx, y])];
+      if (e.stateT === 1) e.highlight = [cells];
+      if (e.stateT === mark) {
+        e.highlight = null; setAnim(e, 'slash'); s.effects.push({ kind: 'shake', t: 0 });
+        api.hitPlayerCells(cells, pv(P.finisherDamage, v));
+        for (const [x, y] of cells) s.effects.push({ kind: 'spark', x, y, t: 0 });
+      }
+      if (e.stateT >= mark + 20) wait(pv(P.finisherWait, v));
+      return;
+    }
+  }
+
+  function decide() {
+    if (m.c4 < 2 && !m.ready) { m.c4++; return warp(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], null); }
+    m.ready = true;
+    if (p.hp <= pv(P.finisherDamage, v)) { // 0x81015E4
+      if (m.c5 >= 2) { m.c5 = 0; e.fx = p.x; e.fy = p.y; return go(e, 'finisher', 'raise'); }
+      m.c5++;
+    }
+    const spot = P.divideSpots.value.find(([x, y]) => p.x === x && p.y === y);
+    if (spot) {
+      if (m.c6 >= 1) { m.c6 = 0; return lance(); }
+      m.c6 += 1 + (api.rng() < 0.5 ? 0 : 1);
+      e.cut = spot[2];
+      return go(e, 'divide', 'raise');
+    }
+    if (m.c7x < 3) { m.c7x++; return warp(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], null); }
+    m.c7x = 0;
+    if (e.hp < e.maxHp / 2) { e.cannonAfter = true; return lance(); }
+    const was = m.c7; m.c7 ^= 1;
+    if (was) return go(e, 'cannon', 'cannon');
+    return lance();
+  }
+  function lance() { e.lances = pv(P.lanceCount, v); return warp(front(), () => go(e, 'lance', 'idle')); }
+  function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
+}
+
 const AREAS = {
   wide: [[-1, -1], [-1, 0], [-1, 1]],
   long: [[-1, 0], [-2, 0]],
@@ -1501,7 +1592,7 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, BlastMan: blastman, DiveMan: diveman, CircusMan: circusman, JudgeMan: judgeman, ElementMan: elementman, ProtoMan: protoman };
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, BlastMan: blastman, DiveMan: diveman, CircusMan: circusman, JudgeMan: judgeman, ElementMan: elementman, Colonel: colonel, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;

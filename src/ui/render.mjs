@@ -268,6 +268,13 @@ export function render(g, s, bank) {
     g.globalAlpha = 1;
   }
 
+  // Colonel's missiles
+  for (const h of s.hazards) if (h.kind === 'cmissile') {
+    const [ax, ay] = anchor(h.x, h.y), k = Math.min(1, (s.tick - h.start) / (h.land - h.start));
+    g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(ax, ay - 2, 4 + 6 * k, 3, 0, 0, 7); g.fill();
+    sprite(g, bank, 'colonel', 'missile', 0, ax, ay - (1 - k) * 110, '#f84', 0, false);
+  }
+
   // Hazards under actors.
   const wave = bank?.get('shockwave');
   for (const h of s.hazards) {

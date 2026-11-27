@@ -482,6 +482,131 @@ export default {
      "element": "none"
     }
    ]
+  },
+  "Colonel": {
+   "ai": 18,
+   "variants": [
+    {
+     "name": "Colonel",
+     "hp": 1200,
+     "element": "none"
+    },
+    {
+     "name": "ColonelEX",
+     "hp": 1600,
+     "element": "none"
+    },
+    {
+     "name": "ColonelSP",
+     "hp": 2000,
+     "element": "none"
+    },
+    {
+     "name": "ColonelRV",
+     "hp": 2600,
+     "element": "none"
+    },
+    {
+     "name": "ColonelBX",
+     "hp": 2600,
+     "element": "none"
+    }
+   ]
+  },
+  "Bass": {
+   "ai": 19,
+   "variants": [
+    {
+     "name": "Bass",
+     "hp": 1800,
+     "element": "none"
+    },
+    {
+     "name": "BassBX",
+     "hp": 3400,
+     "element": "none"
+    },
+    {
+     "name": "BassSP",
+     "hp": 2700,
+     "element": "none"
+    },
+    {
+     "name": "BassSP",
+     "hp": 2700,
+     "element": "none"
+    },
+    {
+     "name": "BassBX",
+     "hp": 2700,
+     "element": "none"
+    },
+    {
+     "name": "BassXX",
+     "hp": 2700,
+     "element": "none"
+    }
+   ]
+  },
+  "Gregar": {
+   "ai": 20,
+   "variants": [
+    {
+     "name": "Gregar",
+     "hp": 2500,
+     "element": "none"
+    },
+    {
+     "name": "GregarEX",
+     "hp": 4000,
+     "element": "none"
+    },
+    {
+     "name": "GregarSP",
+     "hp": 4000,
+     "element": "none"
+    },
+    {
+     "name": "GregarRV",
+     "hp": 4000,
+     "element": "none"
+    },
+    {
+     "name": "GregarBX",
+     "hp": 4000,
+     "element": "none"
+    }
+   ]
+  },
+  "Falzar": {
+   "ai": 21,
+   "variants": [
+    {
+     "name": "Falzar",
+     "hp": 2300,
+     "element": "none"
+    },
+    {
+     "name": "FalzarEX",
+     "hp": 3200,
+     "element": "none"
+    },
+    {
+     "name": "FalzarSP",
+     "hp": 3200,
+     "element": "none"
+    },
+    {
+     "name": "FalzarRV",
+     "hp": 3200,
+     "element": "none"
+    },
+    {
+     "name": "FalzarBX",
+     "hp": 3200,
+     "element": "none"
+    }
+   ]
   }
  },
  "confidence": "rom-verified (stats); names from ROM text; AI not decoded",
