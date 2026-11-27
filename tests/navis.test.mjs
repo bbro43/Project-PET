@@ -404,3 +404,50 @@ test('SpoutMan sprinkler: jumps into MegaMan\'s area and sprays the panels aroun
   for (let i = 0; i < 80 && s.player.hp === 100; i++) step(s, {});
   assert.equal(s.player.hp, 80);
 });
+
+test('TomahawkMan names and HP from the ROM tables', () => {
+  const vs = naviVariants('TomahawkMan');
+  assert.equal(vs[0].name, 'TmhkMan', 'ROM abbreviation');
+  assert.equal(start('TomahawkMan').enemies[0].sprite, 'tomahawkman');
+});
+
+test('TomahawkMan throws the axe onto MegaMan\'s column when MegaMan is at the back', () => {
+  const { s, e } = findState('TomahawkMan', 0, 'throw', s => { s.player.invuln = 1e9; s.player.x = 0; });
+  s.player.invuln = 0;
+  run(s, 2);
+  assert.deepEqual(e.highlight[0].map(c => c[0]), [0, 0, 0]);
+  s.player.y = (s.player.y + 1) % 3; // anywhere in the column
+  run(s, NAVI_AI.TomahawkMan.throwMark.value + NAVI_AI.TomahawkMan.throwFlight.value);
+  assert.equal(s.player.hp, 60);
+});
+
+test('TomahawkMan swings in front when MegaMan is close: 2 columns x 3 rows', () => {
+  const { s, e } = findState('TomahawkMan', 0, 'swing', s => { s.player.invuln = 1e9; s.player.x = 2; });
+  assert.equal(e.x, 3);
+  s.player.invuln = 0; s.player.x = 1; s.player.y = Math.min(2, e.y + 1);
+  const P = NAVI_AI.TomahawkMan;
+  run(s, P.swingWindup.value + P.swingHit.value - e.stateT - 1);
+  assert.equal(s.player.hp, 100);
+  run(s, 1);
+  assert.equal(s.player.hp, 60);
+});
+
+test('TomahawkMan row chop: wave reaches each panel 5 frames after the last', () => {
+  const { s, e } = findState('TomahawkMan', 0, 'chop', s => { s.player.invuln = 1e9; });
+  const P = NAVI_AI.TomahawkMan;
+  run(s, P.chopRaise.value + P.chopHit.value - e.stateT);
+  const waves = s.hazards.filter(h => h.kind === 'axewave').sort((a, b) => b.x - a.x);
+  assert.equal(waves.length, e.x);
+  for (let i = 1; i < waves.length; i++) assert.equal(waves[i].start - waves[i - 1].start, P.chopStep.value);
+  s.player.invuln = 0; s.player.x = 0; s.player.y = e.y;
+  run(s, P.chopStep.value * (e.x - 1) + 2);
+  assert.equal(s.player.hp, 20, 'base chop damage 80');
+});
+
+test('TomahawkMan moves only twice between attacks below half HP', () => {
+  const s = start('TomahawkMan'), e = s.enemies[0];
+  s.player.invuln = 1e9; e.hp = Math.floor(e.maxHp / 2) - 1;
+  let moves = 0;
+  for (let i = 0; i < 3000 && !['throw', 'swing', 'chop'].includes(e.state); i++) { const was = e.state; step(s, {}); if (was === 'idle' && e.state === 'vanish' && !e.after) moves++; }
+  assert.equal(moves, 2);
+});

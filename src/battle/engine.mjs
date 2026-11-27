@@ -250,6 +250,16 @@ function stepHazards(s) {
       if (!h.locked && s.tick >= h.until) h.locked = true;
       return true;
     }
+    if (h.kind === 'axe') { // TomahawkMan's thrown axe: lands on the marked column
+      if (s.tick < h.land) return true;
+      if (h.cells.some(([x, y]) => p.x === x && p.y === y) && p.state !== 'vanish') hitPlayer(s, h.damage);
+      for (const [x, y] of h.cells) s.effects.push({ kind: 'spark', x, y, t: 0 });
+      return false;
+    }
+    if (h.kind === 'axewave') {
+      if (s.tick >= h.start && p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      return s.tick < h.until;
+    }
     if (h.kind === 'lob') { // SpoutMan water bomb: lands on the panel MegaMan stood on
       if (s.tick < h.land) return true;
       if (p.x === h.tx && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);

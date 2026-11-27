@@ -150,6 +150,23 @@ export function render(g, s, bank) {
     }
   }
 
+  // TomahawkMan: thrown axe and slash wave
+  const axe = bank?.get('tomahawk'), awave = bank?.get('axewave');
+  for (const h of s.hazards) {
+    if (h.kind === 'axe') {
+      const k = Math.min(1, (s.tick - h.start) / (h.land - h.start)), tgt = h.cells[1] || h.cells[0];
+      const [x0, y0] = anchor(h.x0, h.y0), [x1, y1] = anchor(tgt[0], tgt[1]);
+      const x = x0 + (x1 - x0) * k, y = y0 + (y1 - y0) * k - 20 - Math.sin(Math.PI * k) * 36;
+      if (axe) { const f = frameAt(axe.spin, s.tick); g.drawImage(f.image, Math.round(x - f.originX), Math.round(y - f.originY)); }
+      else { g.fillStyle = '#ccd'; g.beginPath(); g.arc(x, y, 7, 0, 7); g.fill(); }
+    }
+    if (h.kind === 'axewave' && s.tick >= h.start) {
+      const [ax, ay] = anchor(h.x, h.y), t = s.tick - h.start;
+      if (awave) { const f = frameAt(awave.wave, t); g.save(); g.translate(Math.round(ax), 0); g.scale(-1, 1); g.drawImage(f.image, -f.originX, Math.round(ay - 14 - f.originY)); g.restore(); }
+      else { g.strokeStyle = '#9df'; g.lineWidth = 3; g.beginPath(); g.arc(ax + 6, ay - 14, 12, 2, 4.3); g.stroke(); }
+    }
+  }
+
   // Hazards under actors.
   const wave = bank?.get('shockwave');
   for (const h of s.hazards) {

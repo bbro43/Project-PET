@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -638,6 +638,80 @@ function spoutman(e, api) {
   }
 }
 
+// ======================= TomahawkMan =======================
+// Decision 0x80F8448: moves (4, or 2 below half HP), then throw 0xA / swing 0xB by MegaMan's distance, every few attacks the row chop 0xC.
+function tomahawkman(e, api) {
+  const P = NAVI_AI.TomahawkMan, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const [VAN, APP] = P.warpTicks.value;
+  const wait = t => { go(e, 'idle', 'rearm'); e.think = Math.max(1, t); };
+  const free = (x, y) => x >= 3 && x <= 5 && y >= 0 && y <= 2 && (!api.at(x, y) || api.at(x, y) === e);
+  switch (e.state) {
+    case 'idle':
+      if (e.anim === 'rearm' && e.animT > 12) setAnim(e, 'idle');
+      if (--e.think > 0) return;
+      return decide();
+    case 'vanish':
+      if (e.stateT >= VAN) { [e.x, e.y] = e.dest; e.drawX = e.x; e.drawY = e.y; go(e, 'appear', 'appear'); }
+      return;
+    case 'appear':
+      if (e.stateT >= APP + 8) { const a = e.after; e.after = null; if (a) return a(); wait(pv(P.moveWait, v)); }
+      return;
+    // ---- 0xA: mark MegaMan's column, then throw the axe onto it
+    case 'throw':
+      if (e.stateT === 1) { e.mark = [0, 1, 2].map(y => [p.x, y]); e.highlight = [e.mark]; }
+      if (e.stateT === P.throwMark.value) {
+        e.highlight = null; setAnim(e, 'throw');
+        s.hazards.push({ kind: 'axe', x0: e.x, y0: e.y, cells: e.mark, start: s.tick, land: s.tick + P.throwFlight.value, damage: pv(P.throwDamage, v), owner: e.id });
+      }
+      if (e.stateT >= P.throwMark.value + P.throwFlight.value + 6) wait(pv(P.throwWait, v));
+      return;
+    // ---- 0xB: wind up with the area lit, then a wide swing in front
+    case 'swing': {
+      const cells = P.swingShape.value.map(([dx, dy]) => [e.x + dx, e.y + dy]).filter(([x, y]) => y >= 0 && y <= 2 && x >= 0);
+      if (e.stateT === 1) e.highlight = [cells];
+      if (e.stateT === P.swingWindup.value) { e.highlight = null; setAnim(e, 'swing'); }
+      if (e.stateT === P.swingWindup.value + P.swingHit.value) {
+        api.hitPlayerCells(cells, pv(P.swingDamage, v));
+        s.effects.push({ kind: 'slash', x: e.x, y: e.y, area: 'wide', t: 0 });
+      }
+      if (e.stateT >= P.swingWindup.value + P.swingHit.value + 10) wait(pv(P.swingWait, v));
+      return;
+    }
+    // ---- 0xC: raise the axe, chop, a wave runs down his row panel by panel
+    case 'chop':
+      if (e.stateT === P.chopRaise.value) setAnim(e, 'chop');
+      if (e.stateT === P.chopRaise.value + P.chopHit.value) {
+        s.effects.push({ kind: 'shake', t: 0 });
+        for (let k = 1; e.x - k >= 0; k++) {
+          const at = s.tick + P.chopStep.value * (k - 1);
+          s.hazards.push({ kind: 'axewave', x: e.x - k, y: e.y, start: at, until: at + 8, damage: pv(P.chopDamage, v), owner: e.id });
+        }
+      }
+      if (e.stateT >= P.chopRaise.value + P.chopHit.value + 30) wait(pv(P.chopWait, v));
+      return;
+  }
+
+  function decide() {
+    const limit = e.hp < e.maxHp / 2 ? P.moveCount.value.lowHp : P.moveCount.value.normal;
+    if (m.c4 < limit) { m.c4++; return warp(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], null); }
+    m.c4 = 0;
+    if (m.c5 < pv(P.attackCount, v)) {
+      m.c5++;
+      const dist = 3 - p.x; // 0x80F8610: MegaMan's distance from the border in his row
+      if (dist < 3) {
+        const spot = free(3, p.y) ? [3, p.y] : (pick([0, 1, 2].filter(y => free(3, y)).map(y => [3, y]), api) || [e.x, e.y]);
+        return warp(spot, () => go(e, 'swing', 'windup'));
+      }
+      const row = [3, 4, 5].filter(x => free(x, p.y)).map(x => [x, p.y]);
+      return warp(pick(row, api) || [e.x, e.y], () => go(e, 'throw', 'rearm'));
+    }
+    m.c5 = 0;
+    const row = [3, 4, 5].filter(x => free(x, p.y) && !(x === e.x && p.y === e.y)).map(x => [x, p.y]);
+    return warp(pick(row, api) || [e.x, e.y], () => go(e, 'chop', 'raise'));
+  }
+  function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
+}
+
 const AREAS = {
   wide: [[-1, -1], [-1, 0], [-1, 1]],
   long: [[-1, 0], [-2, 0]],
@@ -753,7 +827,7 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, ProtoMan: protoman };
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;

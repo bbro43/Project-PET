@@ -1127,6 +1127,122 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "tomahawkman": {
+      "label": "TomahawkMan (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "29D818",
+          "compression": "none",
+          "bytes": 33495,
+          "sha256": "35cf0410718924785dd2196e7e3d14fe4c4d3a5b4b856a0c8c024b2b64c5e765",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "29D818",
+          "compression": "none",
+          "bytes": 33495,
+          "sha256": "35cf0410718924785dd2196e7e3d14fe4c4d3a5b4b856a0c8c024b2b64c5e765",
+          "confidence": "rom-verified"
+        }
+      },
+      "note": "AI animation ids 7, 0xC, 0xF-0x12 map to sequences directly.",
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "rearm": {
+          "seq": 7,
+          "confidence": "visual-candidate"
+        },
+        "throw": {
+          "seq": 12,
+          "confidence": "visual-candidate"
+        },
+        "windup": {
+          "seq": 15,
+          "confidence": "visual-candidate"
+        },
+        "swing": {
+          "seq": 16,
+          "confidence": "visual-candidate"
+        },
+        "raise": {
+          "seq": 17,
+          "confidence": "visual-candidate"
+        },
+        "chop": {
+          "seq": 18,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "tomahawk": {
+      "label": "TomahawkMan thrown axe (object type3 0x3A, sprite 0x10/0x2B)",
+      "sources": {
+        "bn6f": {
+          "offset": "376364",
+          "compression": "none",
+          "bytes": 1726,
+          "sha256": "762f416ba563c9eeed30d791ad63300495cc2656eb2246a57faefe8b981f1e79",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "3758DC",
+          "compression": "none",
+          "bytes": 1726,
+          "sha256": "762f416ba563c9eeed30d791ad63300495cc2656eb2246a57faefe8b981f1e79",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "spin": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "axewave": {
+      "label": "TomahawkMan slash wave (sprite 0x10/0x37)",
+      "sources": {
+        "bn6f": {
+          "offset": "3805D4",
+          "compression": "none",
+          "bytes": 3435,
+          "sha256": "86bcf607dfb077e4c452bedd1c99967881e42d61df00ce572fb0fbe18ea64635",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "37FB4C",
+          "compression": "none",
+          "bytes": 3435,
+          "sha256": "86bcf607dfb077e4c452bedd1c99967881e42d61df00ce572fb0fbe18ea64635",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "small": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "wave": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {
