@@ -156,11 +156,12 @@ function frame(now) {
   while (acc >= 1000 / 60) {
     acc -= 1000 / 60;
     const wasCustom = state.phase === 'custom';
+    if (wasCustom && romCustom()) { for (const k of ['up', 'down', 'left', 'right', 'a', 'b', 'r']) if (pressed.has(k)) customInput(k); pressed.clear(); }
     step(state, state.phase === 'custom' ? {} : inputForTick());
     if (!wasCustom && state.phase === 'custom') showCustom();
   }
   render(screen, state, bank);
-  if (state.phase === 'custom' && bank?.custom && bank?.chips) drawCustom(); // cursor blink
+  if (state.phase === 'custom' && romCustom()) drawCustom(screen);
   raf = requestAnimationFrame(frame);
 }
 
@@ -186,63 +187,87 @@ function showInfo(c) {
   $('#chip-stats').textContent = parts.join(' · ');
   $('#chip-note').textContent = chipBehaviour(c.name) ? '' : 'Effect not in yet';
 }
-// With a ROM: the game's own custom window, drawn on a canvas (frame, chip picture, element, damage,
-// 10 slots with icons and code strips, selected column). Tap a slot to pick it, tap OK to confirm.
+// With a ROM: the game's own custom window, drawn over the left half of the battle screen like the game
+// (frame, chip picture, code letter, element, damage, 10 slots, selected column, OK).
+// Control: D-pad moves the cursor, A picks (or confirms on OK), B takes the last chip back, R = Add.
+// Tapping works too: tap a chip to look at it, tap it again to pick it; tap OK.
 const CLASS = { standard: 0, mega: 1, giga: 2 };
 const CODE_INDEX = c => c === '*' ? 26 : c.charCodeAt(0) - 65;
 const ELEMENT_INDEX = { fire: 0, aqua: 1, elec: 2, wood: 3, plus: 4, sword: 5, cursor: 6, obstacle: 7, wind: 8, break: 9, none: 10 };
-function drawCustom() {
-  const cu = bank.custom, L = cu.layout, g = $('#cust').getContext('2d');
-  const focusChip = state.hand[Math.min(focus, state.hand.length - 1)], d = focusChip && CHIP_DATA[focusChip.name];
+const romCustom = () => !!(bank?.custom && bank?.chips);
+const slotXY = i => { const S = bank.custom.layout.slots; return [S.icon[0] + (i % S.perRow) * S.dx, S.icon[1] + (i / S.perRow | 0) * S.dy]; };
+function drawCustom(g) {
+  const cu = bank.custom, L = cu.layout, S = L.slots;
+  const shown = focus === 'ok' ? null : state.hand[Math.min(focus, state.hand.length - 1)], d = shown && CHIP_DATA[shown.name];
   const cls = Math.min(3, CLASS[d?.class] ?? 0);
-  g.imageSmoothingEnabled = false;
+  g.save(); g.imageSmoothingEnabled = false; g.setTransform(1, 0, 0, 1, 0, 0);
   g.fillStyle = '#e8f0f8'; g.fillRect(0, 0, 120, 160);
-  g.fillStyle = '#282828'; g.fillRect(7, 8, 74, 80); g.fillRect(93, 23, 22, 82); // windows behind the frame
+  g.fillStyle = '#282828'; g.fillRect(7, 8, 74, 80); g.fillRect(93, 23, 22, 82);
   const box = (x, y) => { g.fillStyle = '#98a8b8'; g.fillRect(x, y, 16, 16); g.fillStyle = '#585868'; g.fillRect(x + 1, y + 1, 14, 14); g.fillStyle = '#282828'; g.fillRect(x + 2, y + 2, 12, 12); };
-  const S = L.slots;
-  for (let i = 0; i < S.count; i++) {
-    const x = S.icon[0] + (i % S.perRow) * S.dx, y = S.icon[1] + (i / S.perRow | 0) * S.dy;
-    if (i >= state.hand.length) continue;
-    box(x, y);
-  }
+  for (let i = 0; i < Math.min(S.count, state.hand.length); i++) box(...slotXY(i));
   g.drawImage(cu.frame(cls), 0, 0);
   if (d) {
-    const pic = bank.chips?.picture(d.id); if (pic) g.drawImage(pic, L.picture[0], L.picture[1]);
-    g.fillStyle = '#fff'; g.font = '8px monospace'; g.textBaseline = 'top'; g.fillText(focusChip.name, L.name[0], L.name[1] + 4);
+    const pic = bank.chips.picture(d.id); if (pic) g.drawImage(pic, L.picture[0], L.picture[1]);
+    g.font = 'bold 11px "Courier New", monospace'; g.textBaseline = 'top'; g.textAlign = 'left';
+    const w = g.measureText(shown.name).width, sx = Math.min(1, 62 / w);
+    g.save(); g.translate(L.name[0] + 1, L.name[1] + 3); g.scale(sx, 1);
+    g.fillStyle = '#404040'; g.fillText(shown.name, 1, 1); g.fillStyle = '#f8f8f8'; g.fillText(shown.name, 0, 0); g.restore();
+    g.drawImage(cu.letter(CODE_INDEX(shown.code), cls), L.code[0], L.code[1]);
     g.drawImage(cu.element(ELEMENT_INDEX[d.icon] ?? 10, cls), L.element[0], L.element[1]);
-    const show = d.damage && chipBehaviour(focusChip.name)?.kind !== 'busterup' ? String(d.damage).slice(-L.damage[2]) : '';
-    for (let k = 0; k < show.length; k++) g.drawImage(cu.digit(+show[k], cls), L.damage[0] + (L.damage[2] - show.length + k) * 8, L.damage[1]);
+    const dmg = d.damage && chipBehaviour(shown.name)?.kind !== 'busterup' ? String(d.damage).slice(-L.damage[2]) : '';
+    for (let k = 0; k < dmg.length; k++) g.drawImage(cu.digit(+dmg[k], cls), L.damage[0] + (L.damage[2] - dmg.length + k) * 8, L.damage[1]);
   }
   state.hand.forEach((c, i) => {
-    const x = S.icon[0] + (i % S.perRow) * S.dx, y = S.icon[1] + (i / S.perRow | 0) * S.dy, cd = CHIP_DATA[c.name];
-    const icon = bank.chips?.icon(cd?.id); if (icon) g.drawImage(icon, x, y);
-    g.drawImage(cu.code(CODE_INDEX(c.code), 0), S.code[0] + (i % S.perRow) * S.dx, S.code[1] + (i / S.perRow | 0) * S.dy);
-    const picked = state.picked.includes(i);
-    if (picked || !canPick(state, i)) { g.fillStyle = picked ? 'rgba(20,20,20,.55)' : 'rgba(40,40,40,.45)'; g.fillRect(x, y, 16, 24); }
-    if (i === focus) { g.strokeStyle = (performance.now() >> 7) & 1 ? '#f8f028' : '#f8a828'; g.lineWidth = 1; g.strokeRect(x - 0.5, y - 0.5, 17, 25); }
+    if (i >= S.count) return;
+    const [x, y] = slotXY(i), icon = bank.chips.icon(CHIP_DATA[c.name]?.id);
+    if (icon) g.drawImage(icon, x, y);
+    g.drawImage(cu.code(CODE_INDEX(c.code), 0), x, y + (S.code[1] - S.icon[1]));
+    if (state.picked.includes(i)) { g.fillStyle = 'rgba(20,20,20,.65)'; g.fillRect(x, y, 16, 24); }
+    else if (!canPick(state, i)) { g.fillStyle = 'rgba(40,40,40,.4)'; g.fillRect(x, y, 16, 24); }
   });
-  state.picked.forEach((hi, k) => { const icon = bank.chips?.icon(CHIP_DATA[state.hand[hi].name]?.id); if (icon) g.drawImage(icon, L.selected[0], L.selected[1] + k * L.selected[2]); });
+  state.picked.forEach((hi, k) => { const icon = bank.chips.icon(CHIP_DATA[state.hand[hi].name]?.id); if (icon) g.drawImage(icon, L.selected[0], L.selected[1] + k * L.selected[2]); });
+  // cursor: corner brackets (app-drawn)
+  const [cx, cy, cw, ch] = focus === 'ok' ? L.ok : [...slotXY(focus), 16, 24];
+  const blink = (performance.now() >> 8) & 1, k = 4;
+  g.fillStyle = blink ? '#f84020' : '#f8a828';
+  for (const [px, py, sx2, sy2] of [[cx - 2, cy - 2, 1, 1], [cx + cw + 1, cy - 2, -1, 1], [cx - 2, cy + ch + 1, 1, -1], [cx + cw + 1, cy + ch + 1, -1, -1]]) {
+    g.fillRect(Math.min(px, px + sx2 * k), py - (sy2 < 0 ? 1 : 0), k + 1, 2);
+    g.fillRect(px - (sx2 < 0 ? 1 : 0), Math.min(py, py + sy2 * k), 2, k + 1);
+  }
+  g.restore();
+}
+// D-pad / A / B / R on the custom screen
+function customInput(k) {
+  const n = Math.min(state.hand.length, bank.custom.layout.slots.count), per = bank.custom.layout.slots.perRow;
+  if (k === 'a') { if (focus === 'ok') { focus = 0; confirmCustom(state); } else pick(state, focus); }
+  else if (k === 'b') unpick(state);
+  else if (k === 'r') { focus = 0; addCustom(state); }
+  else if (focus === 'ok') { if (k === 'left') focus = Math.max(0, Math.min(n - 1, per - 1)); }
+  else {
+    const row = focus / per | 0, col = focus % per;
+    if (k === 'right') focus = col === per - 1 || focus + 1 >= n ? 'ok' : focus + 1;
+    else if (k === 'left') focus = col > 0 ? focus - 1 : focus;
+    else if (k === 'down' && focus + per < n) focus += per;
+    else if (k === 'down' && row === 0 && n > per) focus = n - 1;
+    else if (k === 'up' && row > 0) focus -= per;
+  }
+  showCustom();
 }
 function custHit(ev) {
-  const r = $('#cust').getBoundingClientRect(), x = (ev.clientX - r.left) * 120 / r.width, y = (ev.clientY - r.top) * 160 / r.height;
-  const L = bank.custom.layout, S = L.slots, [ox, oy, ow, oh] = L.ok;
-  if (x >= ox && x < ox + ow && y >= oy && y < oy + oh) { focus = 0; confirmCustom(state); showCustom(); return; }
-  for (let i = 0; i < state.hand.length; i++) {
-    const sx = S.icon[0] + (i % S.perRow) * S.dx, sy = S.icon[1] + (i / S.perRow | 0) * S.dy;
+  if (state?.phase !== 'custom' || !romCustom()) return;
+  const r = $('#screen').getBoundingClientRect(), x = (ev.clientX - r.left) * 240 / r.width, y = (ev.clientY - r.top) * 160 / r.height;
+  const [ox, oy, ow, oh] = bank.custom.layout.ok;
+  if (x >= ox && x < ox + ow && y >= oy && y < oy + oh) { if (focus === 'ok') { focus = 0; confirmCustom(state); } else focus = 'ok'; showCustom(); return; }
+  for (let i = 0; i < Math.min(state.hand.length, bank.custom.layout.slots.count); i++) {
+    const [sx, sy] = slotXY(i);
     if (x >= sx && x < sx + 16 && y >= sy && y < sy + 24) { if (focus === i) pick(state, i); focus = i; showCustom(); return; }
   }
 }
-$('#cust').addEventListener('click', custHit);
+$('#screen').addEventListener('click', custHit);
 function showCustom() {
   $('#custom').hidden = state.phase !== 'custom';
   if (state.phase !== 'custom') return;
-  const rom = !!(bank?.custom && bank?.chips);
-  $('#cust').hidden = !rom; $('#hand').hidden = rom; $('#chip-info').hidden = rom;
-  if (rom) {
-    drawCustom();
-    $('#queue').textContent = state.picked.length ? 'Selected: ' + state.picked.map(i => `${state.hand[i].name} ${state.hand[i].code}`).join(', ') : 'Tap a chip to see it, tap again to pick. OK to fight, Add for 5 more next turn.';
-    return;
-  }
+  if (romCustom()) { $('#custom').hidden = true; if (focus !== 'ok') focus = Math.max(0, Math.min(focus, state.hand.length - 1)); return; } // drawn on the battle screen each frame
   $('#hand').replaceChildren(...state.hand.map((c, i) => {
     const b = document.createElement('button');
     const icon = bank?.chips?.icon(CHIP_DATA[c.name]?.id);
@@ -276,7 +301,7 @@ const KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 
 addEventListener('keydown', e => {
   if (!state || !KEYS[e.key]) return;
   e.preventDefault();
-  if (state.phase === 'custom' && (e.key === 'Enter' || KEYS[e.key] === 'a')) return;
+  if (state.phase === 'custom' && !romCustom() && (e.key === 'Enter' || KEYS[e.key] === 'a')) return;
   if (!e.repeat) press(KEYS[e.key]);
 });
 addEventListener('keyup', e => { if (KEYS[e.key]) lift(KEYS[e.key]); });

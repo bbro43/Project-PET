@@ -559,10 +559,12 @@ export function render(g, s, bank) {
   g.strokeStyle = '#a8c8f0'; g.lineWidth = 1; g.strokeRect(2.5, 2.5, 33, 12);
   text(g, String(p.hp), 33, 12, p.hp <= p.maxHp / 4 ? '#ff8080' : '#fff', 'right');
   const full = s.gauge >= val('customGaugeTicks');
-  g.fillStyle = '#183058'; g.fillRect(56, 4, 128, 8);
-  g.fillStyle = full ? ((s.tick >> 3) & 1 ? '#ffe070' : '#ff9040') : '#60b0ff';
-  g.fillRect(57, 5, 126 * s.gauge / val('customGaugeTicks'), 6);
-  text(g, full ? 'CUSTOM  L/R' : 'CUSTOM', 120, 22, '#cfe4ff', 'center');
+  if (s.phase !== 'custom') { // the game hides the gauge while the custom window is open
+    g.fillStyle = '#183058'; g.fillRect(56, 4, 128, 8);
+    g.fillStyle = full ? ((s.tick >> 3) & 1 ? '#ffe070' : '#ff9040') : '#60b0ff';
+    g.fillRect(57, 5, 126 * s.gauge / val('customGaugeTicks'), 6);
+    text(g, full ? 'CUSTOM  L/R' : 'CUSTOM', 120, 22, '#cfe4ff', 'center');
+  }
   if (p.charge > 0) {
     g.fillStyle = p.charge >= val('chargeTime') ? ((s.tick >> 2) & 1 ? '#ff60c0' : '#60ffff') : '#3aa0ff';
     const [ax, ay] = anchor(p.x, p.y);

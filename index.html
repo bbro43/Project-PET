@@ -56,8 +56,6 @@ button.held { background: #3b5f99; }
 #hand button canvas { width: 32px; height: 32px; image-rendering: pixelated; }
 #hand button.picked { background: #2f6d3c; border-color: #8be09b; }
 #hand b { font-size: .95rem; }
-#cust { display: block; width: min(72vw, 300px); aspect-ratio: 3 / 4; margin: .3rem auto; image-rendering: pixelated; touch-action: manipulation; }
-#cust[hidden], #hand[hidden], #chip-info[hidden] { display: none; }
 #chip-info { display: flex; gap: .6rem; align-items: center; min-height: 100px; }
 #chip-info canvas { width: 112px; height: 96px; image-rendering: pixelated; border: 2px solid #5aa0ff; border-radius: 4px; background: #000; flex: none; }
 #chip-info .name { font-weight: bold; font-size: 1.05rem; }
@@ -138,7 +136,6 @@ button.held { background: #3b5f99; }
   <div id="custom" hidden>
     <div class="panel">
       <div class="row" style="justify-content:space-between"><b>CUSTOM</b><span class="muted">Same code or same name</span></div>
-      <canvas id="cust" width="120" height="160" hidden></canvas>
       <div id="chip-info"><canvas id="chip-pic" width="56" height="48"></canvas><div><div class="name" id="chip-name"></div><div id="chip-stats"></div><div class="muted" id="chip-note"></div></div></div>
       <div id="hand"></div>
       <div id="queue"></div>

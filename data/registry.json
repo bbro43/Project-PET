@@ -4045,7 +4045,7 @@
   }
  },
  "customscreen": {
-  "label": "Custom screen: frame tiles (tile 0 at tiles), tilemap byte_86E625C (byte_86E64B4 with CrossSelect), palettes byte_86E587C (4, by chip class), code strips dword_86E591C, damage digits dword_86E411C, element icons dword_86E3598 + colour sets byte_86E3B18",
+  "label": "Custom screen: frame tiles (tile 0 at tiles), tilemap byte_86E625C (byte_86E64B4 with CrossSelect), palettes byte_86E587C (4, by chip class), code strips dword_86E591C, damage digits dword_86E411C, element icons dword_86E3598 + colour sets byte_86E3B18, code letters dword_86E2E98 (8×16, at tile (2,9))",
   "note": "Layout from the tile rects in byte_8027B2C (0x80268AC): name 8×2 tiles at (2,1), picture 7×6 at (2,3), element 2×2 at (3,9), damage 3×2 at (6,9), 10 slots (icon 2×2 + code 2×1) from (1,13) every 2 tiles across and 3 down, selected column 2×10 at (12,3). Frame pixel-checked against the owner's screenshot (0 differing pixels outside the layers the game draws later).",
   "sources": {
    "bn6f": {
@@ -4104,9 +4104,14 @@
       112,
       32,
       22
+     ],
+     "code": [
+      16,
+      72
      ]
     },
-    "confidence": "rom-verified"
+    "confidence": "rom-verified",
+    "letters": "6E2E98"
    },
    "bn6g": {
     "tiles": "6DFC9C",
@@ -4164,9 +4169,14 @@
       112,
       32,
       22
+     ],
+     "code": [
+      16,
+      72
      ]
     },
-    "confidence": "rom-verified"
+    "confidence": "rom-verified",
+    "letters": "6E0E1C"
    }
   }
  }

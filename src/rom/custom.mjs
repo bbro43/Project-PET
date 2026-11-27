@@ -36,6 +36,7 @@ export function decodeCustom(rom, src) {
   return {
     frame,
     code: (k, cls = 0) => stack(hex(src.codes) + 0x40 * k, 2, 1, pals[cls]),          // 16×8 strip, k = 0..25 A–Z, 26 *, 27 empty
+    letter: (k, cls = 0) => stack(hex(src.letters) + 0x40 * k, 1, 2, pals[cls], true), // 8×16 code letter under the picture
     digit: (d, cls = 0) => stack(hex(src.digits) + 0x40 * d, 1, 2, pals[cls], true),   // 8×16
     element: (e, cls = 0) => {                                                         // 16×16, colours 10–15 per element
       const pal = pals[cls].slice(); readPalette(rom, hex(src.elementPalettes) + 12 * e, 6).forEach((c, i) => { pal[10 + i] = c; });
@@ -53,6 +54,7 @@ export function buildCustom(rom, src) {
     layout: d.layout,
     frame: cls => get('f' + cls, () => d.frame(cls)),
     code: (k, cls) => get(`c${k}.${cls}`, () => d.code(k, cls)),
+    letter: (k, cls) => get(`l${k}.${cls}`, () => d.letter(k, cls)),
     digit: (n, cls) => get(`d${n}.${cls}`, () => d.digit(n, cls)),
     element: (e, cls) => get(`e${e}.${cls}`, () => d.element(e, cls)),
   };
