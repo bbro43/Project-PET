@@ -3176,6 +3176,244 @@
      "confidence": "visual-candidate"
     }
    }
+  },
+  "fighterplane": {
+   "label": "FighterPlane (BN6 virus, AI 24)",
+   "sources": {
+    "bn6f": {
+     "offset": "25C9AC",
+     "compression": "none",
+     "bytes": 5639,
+     "sha256": "3e564e0dd80a4b5d0548695308d5d095042d048f54deaac81ad6a629ffee4109",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "25C9AC",
+     "compression": "none",
+     "bytes": 5639,
+     "sha256": "3e564e0dd80a4b5d0548695308d5d095042d048f54deaac81ad6a629ffee4109",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "bank": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "bomb": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "return": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "darkmech": {
+   "label": "DarkMech (BN6 virus, AI 25)",
+   "sources": {
+    "bn6f": {
+     "offset": "25DFB4",
+     "compression": "lz77",
+     "bytes": 9992,
+     "sha256": "271e54003a6237d5eb943b4dd8a6ad676e3a91579db2f4deb1bce573ca1bc5f4",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "25DFB4",
+     "compression": "lz77",
+     "bytes": 9992,
+     "sha256": "271e54003a6237d5eb943b4dd8a6ad676e3a91579db2f4deb1bce573ca1bc5f4",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "ready": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "slash": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "throw": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "sword": {
+     "seq": 6,
+     "confidence": "visual-candidate"
+    },
+    "guard": {
+     "seq": 12,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "snakearm": {
+   "label": "SnakeArm (BN6 virus, AI 26)",
+   "sources": {
+    "bn6f": {
+     "offset": "25F2C8",
+     "compression": "none",
+     "bytes": 7357,
+     "sha256": "300a0eb10677bae46bf3ad64edc422f55d156e7ac537d3f59d92b1831d2d4e9f",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "25F2C8",
+     "compression": "none",
+     "bytes": 7357,
+     "sha256": "300a0eb10677bae46bf3ad64edc422f55d156e7ac537d3f59d92b1831d2d4e9f",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "reach": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "grab": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "arm": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "fist": {
+     "seq": 9,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "armadillo": {
+   "label": "Armadillo (BN6 virus, AI 27)",
+   "sources": {
+    "bn6f": {
+     "offset": "260F88",
+     "compression": "none",
+     "bytes": 7520,
+     "sha256": "1c2f1d93007c50115d2c393f0e24a11adaf07eab34d81aa949c6ff333daaa49a",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "260F88",
+     "compression": "none",
+     "bytes": 7520,
+     "sha256": "1c2f1d93007c50115d2c393f0e24a11adaf07eab34d81aa949c6ff333daaa49a",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "walk": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "curl": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "roll": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "cragger": {
+   "label": "Cragger (BN6 virus, AI 28)",
+   "sources": {
+    "bn6f": {
+     "offset": "262CEC",
+     "compression": "lz77",
+     "bytes": 3852,
+     "sha256": "15ae586f1cb6e51f850a31a30aa268c0b1c927e8f4d3e5cc52d5970dba6cc3bb",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "262CEC",
+     "compression": "lz77",
+     "bytes": 3852,
+     "sha256": "15ae586f1cb6e51f850a31a30aa268c0b1c927e8f4d3e5cc52d5970dba6cc3bb",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "lift": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "hold": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "throw": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "nightmare": {
+   "label": "Nightmare (BN6 virus, AI 29)",
+   "sources": {
+    "bn6f": {
+     "offset": "263484",
+     "compression": "lz77",
+     "bytes": 12004,
+     "sha256": "d499ff2958e040ce8baa0f409454baa27a2a67a4966cc721bb0112dd16fc0837",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "263484",
+     "compression": "lz77",
+     "bytes": 12004,
+     "sha256": "d499ff2958e040ce8baa0f409454baa27a2a67a4966cc721bb0112dd16fc0837",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "hidden": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "idle": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "slash": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "fade": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    }
+   }
   }
  },
  "tables": {

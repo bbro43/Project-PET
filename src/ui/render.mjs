@@ -259,7 +259,8 @@ export function render(g, s, bank) {
       sprite(g, bank, 'circusman', 'handr', 0, ax, ay - 30 * (1 - k), '#fff', 0, true);
     }
     if (h.kind === 'hoop') { const [ax, ay] = anchor(h.x, h.y); sprite(g, bank, 'circusman', 'hoop', s.tick - h.start, ax, ay, '#f84', 0, true); }
-    if (h.kind === 'bee') { const [ax, ay] = anchor(h.fx, h.fy); g.fillStyle = '#ffd030'; g.beginPath(); g.ellipse(ax, ay - 22, 5, 4, 0, 0, 7); g.fill(); g.fillStyle = '#222'; g.fillRect(ax - 1, ay - 26, 2, 8); }
+    if (h.kind === 'bee' && h.look === 'fist') { const [ax, ay] = anchor(h.fx, h.fy); sprite(g, bank, 'snakearm', 'fist', s.tick, ax, ay, (g, x, y) => { g.fillStyle = '#e0b040'; g.beginPath(); g.arc(x, y - 12, 7, 0, 7); g.fill(); }, 0, true); }
+    else if (h.kind === 'bee') { const [ax, ay] = anchor(h.fx, h.fy); g.fillStyle = '#ffd030'; g.beginPath(); g.ellipse(ax, ay - 22, 5, 4, 0, 0, 7); g.fill(); g.fillStyle = '#222'; g.fillRect(ax - 1, ay - 26, 2, 8); }
     if (h.kind === 'bolt') { const [ax, ay] = anchor(h.fx, h.y), own = bank?.get(h.sprite)?.[h.seq]; sprite(g, own ? bank : null, h.sprite, h.seq, s.tick, ax, ay, h.seq === 'bubble' ? (g, x, y) => { g.strokeStyle = '#bff'; g.lineWidth = 2; g.beginPath(); g.arc(x, y - 14, 7, 0, 7); g.stroke(); } : (g, x, y) => { g.fillStyle = '#cde'; g.fillRect(x - 8, y - 12, 16, 6); }, 0, true); }
     if (h.kind === 'portal' && s.tick >= h.start) {
       const [ax, ay] = anchor(h.x, h.y), lunge = s.tick >= h.hit;

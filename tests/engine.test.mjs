@@ -330,3 +330,26 @@ test('PulseBulb is guarded while closed', () => {
   run(s, {}, 2);
   assert.ok(s.enemies[0].guard);
 });
+
+for (const fam of ['FighterPlane', 'DarkMech', 'SnakeArm', 'Armadillo', 'Cragger', 'Nightmare']) {
+  test(`${fam} attacks MegaMan within 30 seconds`, () => {
+    for (let v = 0; v < 6; v++) {
+      const s = start({ seed: 110 + v, enemies: formation(fam, v, 1) });
+      let hit = false;
+      for (let i = 0; i < 1800 && !hit; i++) {
+        s.player.hp = 1000; s.player.invuln = 0;
+        const e = s.enemies[0]; if (e && i % 60 === 0) { s.player.y = e.y; s.player.x = 2; }
+        step(s, {}); hit = s.events.some(ev => ev.type === 'playerHit');
+      }
+      assert.ok(hit, `${fam} version ${v}`);
+    }
+  });
+}
+
+test('FighterPlane bombs all nine panels of MegaMan\'s area in a snake', () => {
+  const s = start({ seed: 120, enemies: formation('FighterPlane', 0, 1) });
+  s.player.invuln = 1e9;
+  const seen = [];
+  for (let i = 0; i < 2000 && seen.length < 9; i++) { step(s, {}); for (const f of s.effects) if (f.kind === 'blast' && f.t === 1) seen.push(`${f.x},${f.y}`); }
+  assert.deepEqual(seen, ['2,0', '2,1', '2,2', '1,2', '1,1', '1,0', '0,0', '0,1', '0,2']);
+});
