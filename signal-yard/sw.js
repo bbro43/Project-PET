@@ -1,4 +1,4 @@
-const version = 'signal-yard-v1';
+const version = 'signal-yard-v2';
 const scope = self.registration.scope;
 const prefix = 'signal-yard:' + scope + ':';
 const cacheName = prefix + version;
