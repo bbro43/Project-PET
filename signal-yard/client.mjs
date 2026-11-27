@@ -126,3 +126,33 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+
+const installButton = document.querySelector('#install-app');
+let installRequest;
+
+window.addEventListener('beforeinstallprompt', event => {
+  event.preventDefault();
+  installRequest = event;
+  installButton.hidden = false;
+});
+installButton.addEventListener('click', async () => {
+  if (!installRequest) return;
+  const request = installRequest;
+  installRequest = undefined;
+  installButton.hidden = true;
+  try {
+    await request.prompt();
+  } catch {
+    // Installation remains available from the browser menu where supported.
+  }
+});
+window.addEventListener('appinstalled', () => {
+  installRequest = undefined;
+  installButton.hidden = true;
+});
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(error => {
+    console.warn('Signal Yard offline setup failed', error);
+  });
+}

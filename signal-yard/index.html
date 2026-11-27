@@ -2,6 +2,8 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#15131c">
+<link rel="manifest" href="./manifest.webmanifest">
 <title>Signal Yard</title>
 <style>
 * { box-sizing: border-box }
@@ -19,11 +21,13 @@ small { color: #d4c7df; }
 @media(max-height: 430px) and (orientation: landscape) {
   body { padding: .4rem; }
   h1 { display: none; }
+
   canvas { margin-top: .3rem; max-height: calc(100dvh - 145px); }
 }
 </style>
 <main>
   <h1>Signal Yard</h1>
+  <button type="button" id="install-app" hidden>Install app</button>
   <form>
     <label>Pilot <select id="pilot"><option value="relay">Relay</option><option value="coil">Coil</option></select></label>
     <label>Mode <select id="mode"><option value="duel">CPU Duel</option><option value="formation">Sentry Formation</option><option value="survival">Survival</option></select></label>
