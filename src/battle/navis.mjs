@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -712,6 +712,102 @@ function tomahawkman(e, api) {
   function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
 }
 
+// ======================= TenguMan =======================
+// Decision 0x80F9000: moves, then nose spear 0xA / tornadoes 0xB, then the dash 0xC.
+function tenguman(e, api) {
+  const P = NAVI_AI.TenguMan, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const [VAN, APP] = P.warpTicks.value;
+  const wait = t => { go(e, 'idle', 'idle'); e.think = Math.max(1, t); };
+  const free = (x, y) => x >= 3 && x <= 5 && y >= 0 && y <= 2 && (!api.at(x, y) || api.at(x, y) === e);
+  const low = e.hp < e.maxHp / 2;
+  switch (e.state) {
+    case 'idle':
+      if (--e.think > 0) return;
+      return decide();
+    case 'vanish':
+      if (e.stateT >= VAN) { [e.x, e.y] = e.dest; e.drawX = e.x; e.drawY = e.y; go(e, 'appear', 'appear'); }
+      return;
+    case 'appear':
+      if (e.stateT >= APP + 8) { const a = e.after; e.after = null; if (a) return a(); wait(e.moveWait); }
+      return;
+    // ---- 0xA: brace with 3 panels lit, then the nose shoots out over them
+    case 'nose': {
+      const brace = pv(P.noseBrace, v), cells = [1, 2, 3].map(k => [e.x - k, e.y]).filter(([x]) => x >= 0);
+      if (e.stateT === 1) e.highlight = [cells];
+      if (e.stateT === brace) { e.highlight = null; setAnim(e, 'nose'); }
+      if (e.stateT === brace + P.noseHit.value) api.hitPlayerCells(cells, pv(P.noseDamage, v));
+      if (e.stateT >= brace + 20) wait(pv(P.noseWait, v));
+      return;
+    }
+    // ---- 0xB: fan wind-up, then three tornadoes in MegaMan's area
+    case 'fan': {
+      const wind = pv(P.tornadoWindup, v);
+      if (e.stateT === wind) {
+        setAnim(e, 'fan');
+        for (const [gx, gy, kind] of P.tornadoPatterns.value[e.pattern]) {
+          const [dx, dy] = P.tornadoDrift.value[kind];
+          s.hazards.push({ kind: 'tornado', fx: gx - 1, fy: gy - 1, dx, dy, start: s.tick, until: s.tick + P.tornadoLife.value, step: P.tornadoStep.value, damage: pv(P.tornadoDamage, v), owner: e.id });
+        }
+      }
+      if (e.stateT >= wind + 12) wait(pv(P.moveWait.value.normal, v));
+      return;
+    }
+    // ---- 0xC: arms up, vanish, path lights up, then he flies across it
+    case 'arms':
+      if (e.stateT >= pv(P.dashArms, v)) { e.path = p.y; e.dest = [6, p.y]; go(e, 'dashvanish', 'vanish'); }
+      return;
+    case 'dashvanish':
+      if (e.stateT >= VAN) {
+        e.x = 6; e.y = e.path; e.fx = 6; e.drawX = 6; e.drawY = e.y; e.airborne = true;
+        e.highlight = [[0, 1, 2, 3, 4, 5].map(x => [x, e.path])];
+        go(e, 'dashmark', 'dash');
+      }
+      return;
+    case 'dashmark':
+      if (e.stateT >= P.dashMark.value) { e.highlight = null; go(e, 'dashfly', 'dash'); }
+      return;
+    case 'dashfly': {
+      e.fx = 6 - 8 * e.stateT / P.dashTravel.value; e.drawX = e.fx; e.x = Math.round(e.fx);
+      e.airborne = e.x < 0 || e.x > 5;
+      if (e.x >= 0 && e.x <= 5) api.hitPlayerCells([[e.x, e.y]], pv(P.dashDamage, v));
+      if (e.stateT >= P.dashTravel.value) {
+        e.airborne = false;
+        const home = free(e.homeX, e.homeY) ? [e.homeX, e.homeY] : (pick(freeEnemyPanels(e, api), api) || [5, 1]);
+        [e.x, e.y] = home; e.drawX = e.x; e.drawY = e.y; e.moveWait = pv(P.moveWait.value.normal, v); go(e, 'appear', 'appear');
+      }
+      return;
+    }
+  }
+
+  function decide() {
+    if (m.c4 < (low ? P.moveCount.value.lowHp : P.moveCount.value.normal)) {
+      if (rnd16(api) < 14) m.c4++;
+      // 0x80F90BA: a chained move follows with a 1-frame pause
+      if (m.c7 >= 1) { m.c7 = 0; e.moveWait = P.moveWait.value.chained; }
+      else { if (rnd16(api) <= 8) m.c7++; e.moveWait = pv(P.moveWait.value.normal, v); }
+      return warp(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], null);
+    }
+    m.c4 = 0;
+    if (m.c5 < (low ? P.attackCount.value.lowHp : P.attackCount.value.normal)) {
+      m.c5++;
+      if (m.c6 < 1) {
+        if (rnd16(api) < 14) m.c6++;
+        const front = [3, 4, 5].find(x => free(x, p.y)); // 0x80F9980: closest panel in MegaMan's row
+        return warp(front !== undefined ? [front, p.y] : [e.x, e.y], () => go(e, 'nose', 'brace'));
+      }
+      m.c6 = 0;
+      let n = Math.floor(api.rng() * 4); if (n === m.last) n = (n + 1) & 3; m.last = n;
+      e.pattern = n + (v > 0 ? 4 : 0);
+      const col = [0, 1, 2].filter(y => free(5, y)).map(y => [5, y]); // 0x80F9992: back column
+      return warp(pick(col, api) || [e.x, e.y], () => go(e, 'fan', 'fanup'));
+    }
+    m.c5 = 0;
+    e.homeX = e.x; e.homeY = e.y;
+    go(e, 'arms', 'armsup');
+  }
+  function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
+}
+
 const AREAS = {
   wide: [[-1, -1], [-1, 0], [-1, 1]],
   long: [[-1, 0], [-2, 0]],
@@ -827,7 +923,7 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, ProtoMan: protoman };
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;

@@ -1243,6 +1243,93 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "tenguman": {
+      "label": "TenguMan (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "2A5AF0",
+          "compression": "none",
+          "bytes": 43935,
+          "sha256": "7660ca1825769128c224b5163e9cb128cfe397df8564b9ae96a02a619169b2b9",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "2A5AF0",
+          "compression": "none",
+          "bytes": 43935,
+          "sha256": "7660ca1825769128c224b5163e9cb128cfe397df8564b9ae96a02a619169b2b9",
+          "confidence": "rom-verified"
+        }
+      },
+      "note": "AI animation ids 0xF-0x16 map to sequences directly; 0x12-0x14 are the flying dash poses.",
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "fanup": {
+          "seq": 15,
+          "confidence": "visual-candidate"
+        },
+        "fan": {
+          "seq": 16,
+          "confidence": "visual-candidate"
+        },
+        "armsup": {
+          "seq": 17,
+          "confidence": "visual-candidate"
+        },
+        "dash": {
+          "seq": 18,
+          "confidence": "visual-candidate"
+        },
+        "brace": {
+          "seq": 21,
+          "confidence": "visual-candidate"
+        },
+        "nose": {
+          "seq": 22,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "tornado": {
+      "label": "TenguMan tornado (object type3 0x47, sprite 0x10/0x42)",
+      "sources": {
+        "bn6f": {
+          "offset": "387244",
+          "compression": "none",
+          "bytes": 3078,
+          "sha256": "de58227906ba0ae5b9047c6161743f2579bc43fa1e66f97be910861d2eaa8ccf",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "3867BC",
+          "compression": "none",
+          "bytes": 3078,
+          "sha256": "de58227906ba0ae5b9047c6161743f2579bc43fa1e66f97be910861d2eaa8ccf",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "spin": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {

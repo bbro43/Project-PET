@@ -167,6 +167,14 @@ export function render(g, s, bank) {
     }
   }
 
+  // TenguMan tornadoes
+  const torn = bank?.get('tornado');
+  for (const h of s.hazards) if (h.kind === 'tornado' && h.x !== undefined) {
+    const [ax, ay] = anchor(h.x, h.y);
+    if (torn) { const f = frameAt(torn.spin, s.tick - h.start); g.drawImage(f.image, Math.round(ax - f.originX), Math.round(ay - f.originY)); }
+    else { g.strokeStyle = '#aff'; g.lineWidth = 2; for (let i = 0; i < 4; i++) { g.beginPath(); g.ellipse(ax, ay - 6 - i * 8, 4 + i * 3, 3, 0, 0, 7); g.stroke(); } }
+  }
+
   // Hazards under actors.
   const wave = bank?.get('shockwave');
   for (const h of s.hazards) {

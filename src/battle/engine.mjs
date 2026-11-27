@@ -250,6 +250,14 @@ function stepHazards(s) {
       if (!h.locked && s.tick >= h.until) h.locked = true;
       return true;
     }
+    if (h.kind === 'tornado') { // TenguMan's tornadoes drift a panel at a time
+      if (s.tick >= h.until || !s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
+      const k = Math.floor((s.tick - h.start) / h.step);
+      h.x = Math.round(h.fx + h.dx * k); h.y = Math.round(h.fy + h.dy * k);
+      if (h.x < 0 || h.x > 5 || h.y < 0 || h.y > 2) return false;
+      if (p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      return true;
+    }
     if (h.kind === 'axe') { // TomahawkMan's thrown axe: lands on the marked column
       if (s.tick < h.land) return true;
       if (h.cells.some(([x, y]) => p.x === x && p.y === y) && p.state !== 'vanish') hitPlayer(s, h.damage);

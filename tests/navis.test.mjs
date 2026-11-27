@@ -451,3 +451,49 @@ test('TomahawkMan moves only twice between attacks below half HP', () => {
   for (let i = 0; i < 3000 && !['throw', 'swing', 'chop'].includes(e.state); i++) { const was = e.state; step(s, {}); if (was === 'idle' && e.state === 'vanish' && !e.after) moves++; }
   assert.equal(moves, 2);
 });
+
+test('TenguMan names and HP from the ROM tables', () => {
+  const vs = naviVariants('TenguMan');
+  assert.equal(vs[0].name, 'TenguMan');
+  assert.equal(start('TenguMan').enemies[0].sprite, 'tenguman');
+});
+
+test('TenguMan nose spear: 3 panels ahead lit during the brace, then hit for 30', () => {
+  const { s, e } = findState('TenguMan', 0, 'nose', s => { s.player.invuln = 1e9; });
+  s.player.invuln = 0; s.player.x = e.x - 3; s.player.y = e.y;
+  run(s, 2);
+  assert.equal(e.highlight[0].length, 3);
+  const P = NAVI_AI.TenguMan;
+  run(s, P.noseBrace.value[0] + P.noseHit.value - e.stateT - 1);
+  assert.equal(s.player.hp, 100);
+  run(s, 1);
+  assert.equal(s.player.hp, 70);
+});
+
+test('TenguMan tornadoes: three in MegaMan\'s area from a ROM pattern', () => {
+  const { s, e } = findState('TenguMan', 0, 'fan', s => { s.player.invuln = 1e9; });
+  run(s, NAVI_AI.TenguMan.tornadoWindup.value[0] - e.stateT + 1);
+  const t = s.hazards.filter(h => h.kind === 'tornado');
+  assert.equal(t.length, 3);
+  assert.ok(t.every(h => h.x <= 2), 'all in MegaMan\'s area');
+  assert.ok(e.pattern < 4, 'base version uses patterns 0-3');
+});
+
+test('TenguMan dash: path lights up, then he flies down MegaMan\'s row for 60', () => {
+  const { s, e } = findState('TenguMan', 0, 'dashmark', s => { s.player.invuln = 1e9; });
+  assert.equal(e.highlight[0].length, 6);
+  assert.equal(e.y, s.player.y);
+  s.player.invuln = 0;
+  for (let i = 0; i < 80 && s.player.hp === 100; i++) step(s, {});
+  assert.equal(s.player.hp, 40);
+});
+
+test('TenguMan cannot be hit while flying off the field and comes back to his panel', () => {
+  const { s, e } = findState('TenguMan', 0, 'dashvanish', s => { s.player.invuln = 1e9; });
+  const home = [e.homeX, e.homeY];
+  run(s, 4);
+  assert.ok(e.airborne);
+  for (let i = 0; i < 200 && e.state !== 'idle'; i++) step(s, {});
+  assert.deepEqual([e.x, e.y], home);
+  assert.ok(!e.airborne);
+});
