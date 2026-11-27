@@ -40,6 +40,10 @@ const placeholderEnemyNavi = (g, x, y) => {
   g.fillStyle = '#c04040'; g.fillRect(x - 8, y - 36, 16, 32);
   g.fillStyle = '#ffd0d0'; g.fillRect(x - 5, y - 32, 10, 8);
 };
+const placeholderBeast = (g, x, y) => {
+  g.fillStyle = '#2a7070'; g.fillRect(x - 40, y - 50, 80, 46);
+  g.fillStyle = '#f0a030'; g.fillRect(x - 30, y - 58, 40, 12);
+};
 const placeholderCoil = (g, x, y) => {
   g.fillStyle = '#9aa'; g.fillRect(x - 4, y - 24, 8, 22); g.fillStyle = '#e44'; g.fillRect(x - 3, y - 27, 6, 4);
 };
@@ -243,6 +247,10 @@ export function render(g, s, bank) {
       sprite(g, bank, 'circusman', 'handr', 0, ax, ay - 30 * (1 - k), '#fff', 0, true);
     }
     if (h.kind === 'hoop') { const [ax, ay] = anchor(h.x, h.y); sprite(g, bank, 'circusman', 'hoop', s.tick - h.start, ax, ay, '#f84', 0, true); }
+    if (h.kind === 'shock' && h.x !== undefined) {
+      const [ax, ay] = anchor(h.x, h.y);
+      g.fillStyle = '#c8a060'; g.beginPath(); g.moveTo(ax - 14, ay); g.lineTo(ax - 6, ay - 14); g.lineTo(ax, ay - 6); g.lineTo(ax + 6, ay - 16); g.lineTo(ax + 14, ay); g.fill();
+    }
     if (h.kind === 'lion' && h.x !== undefined) {
       const f = ((s.tick - h.start) % h.step) / h.step, [ax, ay] = anchor(h.x - f, h.y);
       sprite(g, bank, 'circusman', 'lion', s.tick - h.start, ax, ay, '#da4', 0, true);
@@ -261,7 +269,7 @@ export function render(g, s, bank) {
     if (s.tick < h.hit) { g.fillStyle = 'rgba(255,240,120,.45)'; g.fillRect(ax - PANEL_W / 2 + 2, ay - 14, PANEL_W - 4, 16); continue; }
     const t = s.tick - h.hit;
     if (h.elem === 'none') { sprite(g, bank, 'elementman', 'tower', t, ax, ay, '#a7d', 0, false); continue; }
-    const col = { fire: '#ff7030', aqua: '#80d8ff', elec: '#fff060', wood: '#70e060', dark: '#b060ff' }[h.elem];
+    const col = { fire: '#ff7030', aqua: '#80d8ff', elec: '#fff060', wood: '#70e060', dark: '#b060ff', beast: '#ff9a30' }[h.elem];
     g.fillStyle = col; g.globalAlpha = 1 - t / 12;
     if (h.elem === 'elec') g.fillRect(ax - PANEL_W / 2, ay - 18, PANEL_W, 6);
     else { g.beginPath(); g.moveTo(ax - 10, ay); g.lineTo(ax, ay - 26 - t); g.lineTo(ax + 10, ay); g.fill(); }
@@ -302,7 +310,7 @@ export function render(g, s, bank) {
     if (e.hp <= 0 || e.hidden) continue;
     const [ax, ay0] = anchor(e.drawX ?? e.x, e.drawY ?? e.y);
     const ay = ay0 - (e.z || 0);
-    const fallback = e.kind === 'navi' ? placeholderEnemyNavi : e.kind === 'coil' ? placeholderCoil : placeholderVirus;
+    const fallback = e.big ? placeholderBeast : e.kind === 'navi' ? placeholderEnemyNavi : e.kind === 'coil' ? placeholderCoil : placeholderVirus;
     if (e.z > 0) { g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(ax, ay0 - 2, 10, 4, 0, 0, 7); g.fill(); }
     draw.push({ y: e.drawY ?? e.y, fn: () => {
       sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, fallback, e.palette, e.kind === 'navi');

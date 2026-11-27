@@ -99,7 +99,9 @@ function openCustom(s) {
 }
 
 // ---------- combat helpers ----------
-const at = (s, x, y) => s.enemies.find(e => e.hp > 0 && !e.airborne && e.x === x && e.y === y);
+// Big bosses (the Cybeasts) fill several panels: e.cells lists the ones they can be hit on.
+const covers = (e, x, y) => e.cells ? e.cells.some(c => c[0] === x && c[1] === y) : e.x === x && e.y === y;
+const at = (s, x, y) => s.enemies.find(e => e.hp > 0 && !e.airborne && covers(e, x, y));
 
 export function elementMultiplier(attack, defend) {
   return attack && WEAKNESS[attack] === defend ? 2 : 1;
@@ -135,7 +137,8 @@ function hitPlayer(s, damage) {
 }
 
 const setAnim = (a, anim) => { a.anim = anim; a.animT = 0; };
-const rowTarget = (s, x, y) => s.enemies.filter(e => e.hp > 0 && e.y === y && e.x > x).sort((a, b) => a.x - b.x)[0];
+const frontX = (e, y) => e.cells ? Math.min(...e.cells.filter(c => c[1] === y).map(c => c[0])) : e.x;
+const rowTarget = (s, x, y) => s.enemies.filter(e => e.hp > 0 && !e.airborne && (e.cells ? e.cells.some(c => c[1] === y) : e.y === y) && frontX(e, y) > x).sort((a, b) => frontX(a, y) - frontX(b, y))[0];
 
 function useChip(s, chip) {
   const p = s.player, def = CHIPS[chip.name];
@@ -266,6 +269,13 @@ function stepHazards(s) {
     if (h.kind === 'estrike') { // ElementMan: a lit panel, then an elemental strike on it
       if (s.tick === h.hit && p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
       return s.tick < h.hit + 12;
+    }
+    if (h.kind === 'shock') { // Gregar's landing: a ground shock running down MegaMan's row
+      const k = Math.floor((s.tick - h.start) / h.step);
+      if (k < 0) return true;
+      h.x = h.x0 - k;
+      if (h.x === p.x && h.y === p.y && p.state !== 'vanish' && !h.hit) { h.hit = true; hitPlayer(s, h.damage); }
+      return h.x >= 0;
     }
     if (h.kind === 'hoop') return s.tick < h.until && s.enemies.some(e => e.id === h.owner && e.hp > 0);
     if (h.kind === 'lion') { // CircusMan's lion runs down the row through the hoop

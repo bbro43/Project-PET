@@ -853,3 +853,40 @@ test('Bass Shooting Buster: the first shot targets MegaMan\'s panel, 8 shots at 
   for (let i = 0; i < 120 && e.state === 'rapid'; i++) { step(s, {}); for (const h of s.hazards) if (h.kind === 'estrike') shots.add(h); }
   assert.equal(shots.size, 8);
 });
+
+test('Gregar: HP from the spawn hook, fills the enemy area and is hit from any row', () => {
+  assert.deepEqual(naviVariants('Gregar').slice(0, 4).map(v => [v.name, v.hp]), [['Gregar', 2500], ['GregarEX', 3000], ['GregarSP', 4000], ['GregarRV', 5000]]);
+  const s = start('Gregar'), e = s.enemies[0];
+  assert.equal(e.sprite, 'gregar');
+  assert.equal(e.cells.length, 9);
+  for (const y of [0, 2]) { s.player.y = y; const hp = e.hp; step(s, { a: true }); run(s, 12); assert.ok(e.hp < hp, 'buster from row ' + y); }
+});
+
+test('Gregar leaps twice, then claw attacks', () => {
+  const s = start('Gregar'), e = s.enemies[0]; s.player.invuln = 1e9;
+  const seen = [];
+  for (let i = 0; i < 3000 && seen.length < 3; i++) { const was = e.state; step(s, {}); if (e.state !== was && e.state !== 'idle') seen.push(e.state); }
+  assert.deepEqual(seen.slice(0, 2), ['leap', 'leap']);
+  assert.ok(['swipe', 'bite'].includes(seen[2]));
+});
+
+test('Gregar landing sends a shock down MegaMan\'s row', () => {
+  const s = start('Gregar'), e = s.enemies[0];
+  s.player.x = 0; s.player.y = 1;
+  for (let i = 0; i < 400 && !s.hazards.some(h => h.kind === 'shock'); i++) step(s, {});
+  assert.equal(e.state, 'leap');
+  const before = s.player.hp;
+  run(s, 20);
+  assert.equal(before - s.player.hp, NAVI_AI.Gregar.jumpDamage.value[0]);
+});
+
+test('Gregar below half HP alternates Beast Breath and Giga Rush', () => {
+  const s = start('Gregar'), e = s.enemies[0]; s.player.invuln = 1e9;
+  e.hp = 1000; e.mem.c5 = 5; e.mem.c4 = 2; e.think = 1;
+  step(s, {}); assert.equal(e.state, 'breath');
+  e.mem.c5 = 5; e.mem.c4 = 2; e.state = 'idle'; e.think = 1;
+  step(s, {}); assert.equal(e.state, 'rush');
+  s.player.invuln = 0; s.player.hp = 1000;
+  run(s, NAVI_AI.Gregar.rushMark.value[0] + 2);
+  assert.equal(1000 - s.player.hp, NAVI_AI.Gregar.rushDamage.value[0]);
+});

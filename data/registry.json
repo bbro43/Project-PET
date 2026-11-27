@@ -1,2079 +1,2157 @@
 {
-  "schema": 1,
-  "note": "Offsets and metadata only. No game graphics are stored in this repository; sprites are decoded on the player's device from ROMs they import.",
-  "confidence": {
-    "rom-verified": "Bytes decoded from the ROM and checked against an independent export or hash.",
-    "visual-candidate": "Role assigned by looking at decoded frames; not yet confirmed by a runtime trace.",
-    "unverified": "Recalled or estimated; must be checked against the game."
-  },
-  "sprites": {
-    "megaman": {
-      "label": "MegaMan.EXE (base)",
-      "sources": {
-        "bn6f": {
-          "offset": "1D8000",
-          "compression": "none",
-          "bytes": 29728,
-          "sha256": "3c170c2acb1147931db572baf9e67507cb99e7d9ef972d7eeb7d056796079db6",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "1D8000",
-          "compression": "none",
-          "bytes": 29728,
-          "sha256": "3c170c2acb1147931db572baf9e67507cb99e7d9ef972d7eeb7d056796079db6",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "buster": {
-          "seq": 9,
-          "confidence": "visual-candidate"
-        },
-        "charge-hold": {
-          "seq": 10,
-          "confidence": "visual-candidate"
-        },
-        "throw": {
-          "seq": 5,
-          "confidence": "visual-candidate"
-        },
-        "slash": {
-          "seq": 6,
-          "confidence": "visual-candidate"
-        },
-        "cannon": {
-          "seq": 8,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "mettaur": {
-      "label": "Mettaur",
-      "sources": {
-        "bn6f": {
-          "offset": "241EC4",
-          "compression": "lz77",
-          "bytes": 10224,
-          "sha256": "911026111060efa7f1368db25c14f1970e9c7b8e522cf1299f7e36f3414e7690",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "241EC4",
-          "compression": "lz77",
-          "bytes": 10224,
-          "sha256": "911026111060efa7f1368db25c14f1970e9c7b8e522cf1299f7e36f3414e7690",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "attack": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "hide": {
-          "seq": 2,
-          "confidence": "visual-candidate"
-        },
-        "hidden": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "unhide": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        }
-      },
-      "note": "Variant palettes: slot = variant index (0 base, 1 \"2\", 2 \"3\", 3 Ω, 4 Rare, 5 Rare2); visually confirmed."
-    },
-    "champy": {
-      "label": "Champy",
-      "note": "Variant palettes = variant index.",
-      "sources": {
-        "bn6f": {
-          "offset": "249C7C",
-          "compression": "lz77",
-          "bytes": 12760,
-          "sha256": "9e717f77133b5ef60b86f997c3a848cf453d56def717624f5ceb7c49bcdce708",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "249C7C",
-          "compression": "lz77",
-          "bytes": 12760,
-          "sha256": "9e717f77133b5ef60b86f997c3a848cf453d56def717624f5ceb7c49bcdce708",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "ready": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "uppercut": {
-          "seq": 2,
-          "confidence": "visual-candidate"
-        },
-        "guard": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "punch": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "gunner": {
-      "label": "Gunner",
-      "note": "Variant palettes = variant index.",
-      "sources": {
-        "bn6f": {
-          "offset": "25BFC4",
-          "compression": "lz77",
-          "bytes": 5324,
-          "sha256": "e60ad8b95ad00aa0cf764ac4b52aee06bab67a9c08f4e784a85724b8612edc9e",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "25BFC4",
-          "compression": "lz77",
-          "bytes": 5324,
-          "sha256": "e60ad8b95ad00aa0cf764ac4b52aee06bab67a9c08f4e784a85724b8612edc9e",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "aim": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "fire": {
-          "seq": 2,
-          "confidence": "visual-candidate"
-        },
-        "recover": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "shockwave": {
-      "label": "ShockWave (SHOCKWAVE_B1)",
-      "note": "Sprite ID 0xB1 in the flat sprite table; offsets differ by version, bytes identical.",
-      "sources": {
-        "bn6f": {
-          "offset": "3536BC",
-          "compression": "none",
-          "bytes": 4324,
-          "sha256": "4c03b4471607841b1a2b6340aed88c072c5d43fba787cfb20605a915ff6ec680",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "352C34",
-          "compression": "none",
-          "bytes": 4324,
-          "sha256": "4c03b4471607841b1a2b6340aed88c072c5d43fba787cfb20605a915ff6ec680",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "slow": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "medium": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "fast": {
-          "seq": 2,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "target": {
-      "label": "Gunner crosshair (MACHINE_GUN_TARGET_D5)",
-      "note": "Sprite ID 0xD5; offsets differ by version, bytes identical.",
-      "sources": {
-        "bn6f": {
-          "offset": "372F34",
-          "compression": "none",
-          "bytes": 887,
-          "sha256": "d215902fa463572acd54853fd3359a2aa00ac2b3f85bc3b9d3d9990f8f2c9265",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "3724AC",
-          "compression": "none",
-          "bytes": 887,
-          "sha256": "d215902fa463572acd54853fd3359a2aa00ac2b3f85bc3b9d3d9990f8f2c9265",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "search": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "lock": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "elecman": {
-      "label": "ElecMan (BN6)",
-      "sources": {
-        "bn6f": {
-          "offset": "26FAF0",
-          "compression": "none",
-          "bytes": 37832,
-          "sha256": "6d84a8a7e95ebb54f57e791fbea9c4523e7eef8650e4cc910f9f1b78dca2288e",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "26FAF0",
-          "compression": "none",
-          "bytes": 37832,
-          "sha256": "6d84a8a7e95ebb54f57e791fbea9c4523e7eef8650e4cc910f9f1b78dca2288e",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "charge": {
-          "seq": 18,
-          "confidence": "visual-candidate"
-        },
-        "charged": {
-          "seq": 19,
-          "confidence": "visual-candidate"
-        },
-        "summon": {
-          "seq": 20,
-          "confidence": "visual-candidate"
-        },
-        "point": {
-          "seq": 21,
-          "confidence": "visual-candidate"
-        },
-        "ready": {
-          "seq": 15,
-          "confidence": "visual-candidate"
-        },
-        "dash": {
-          "seq": 16,
-          "confidence": "visual-candidate"
-        },
-        "strike": {
-          "seq": 17,
-          "confidence": "visual-candidate"
-        }
-      },
-      "note": "AI sets CurAnim 0x12/0x13 (charge, charged), 0x14/0x15 (summon, point), 0xF/0x10/0x11 (dash ready, dash, strike); read from the ElecMan AI code."
-    },
-    "protoman": {
-      "label": "ProtoMan (BN6)",
-      "sources": {
-        "bn6f": {
-          "offset": "2C7550",
-          "compression": "none",
-          "bytes": 30754,
-          "sha256": "00d7bcc4700c0acba63adfa7238663fd995221af436e4670b3df175f38e689f1",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "2C7550",
-          "compression": "none",
-          "bytes": 30754,
-          "sha256": "00d7bcc4700c0acba63adfa7238663fd995221af436e4670b3df175f38e689f1",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "guard": {
-          "seq": 2,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "swing": {
-          "seq": 5,
-          "confidence": "visual-candidate"
-        },
-        "slash": {
-          "seq": 6,
-          "confidence": "visual-candidate"
-        },
-        "ready": {
-          "seq": 15,
-          "confidence": "visual-candidate"
-        }
-      },
-      "note": "AI sets these animation numbers directly (CurAnim 3,4,5,15 read from the ProtoMan AI code); guard pose is a candidate."
-    },
-    "elecbolt": {
-      "label": "ElecMan lightning (sprite table 0x10/0x12)",
-      "note": "Loaded by ElecMan attack object type3 0x1E via sprite_load(0x80, 0x10, 0x12).",
-      "sources": {
-        "bn6f": {
-          "offset": "35CA2C",
-          "compression": "none",
-          "bytes": 6197,
-          "sha256": "e9a3aa55278470870b08e74137d9015c186cee3020aad5b4c5f6858116646b24",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "35BFA4",
-          "compression": "none",
-          "bytes": 6197,
-          "sha256": "e9a3aa55278470870b08e74137d9015c186cee3020aad5b4c5f6858116646b24",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "horizontal": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "vertical": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "eleccoil": {
-      "label": "ElecMan coil (object type3 0x19)",
-      "note": "sprite_load(0x80, 0x10, 0x13). Sequences: 0 spawn, 1 idle, 2 discharge (column lightning).",
-      "sources": {
-        "bn6f": {
-          "offset": "35E264",
-          "compression": "none",
-          "bytes": 4543,
-          "sha256": "ec0cea6c2142c39bb1754bac06aee6cdbcf28a123dbf0909e3b275f84492a706",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "35D7DC",
-          "compression": "none",
-          "bytes": 4543,
-          "sha256": "ec0cea6c2142c39bb1754bac06aee6cdbcf28a123dbf0909e3b275f84492a706",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "appear": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "idle": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "discharge": {
-          "seq": 2,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "elecaura": {
-      "label": "ElecMan charge sparkle (object type4 0x31 param 5)",
-      "note": "sprite_load(0x80, 0x10, 0x11).",
-      "sources": {
-        "bn6f": {
-          "offset": "35C794",
-          "compression": "none",
-          "bytes": 662,
-          "sha256": "3c5701be2d358f0ed11d294810fab921cfaf7bdc6b72c5e7d08922884bd120d8",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "35BD0C",
-          "compression": "none",
-          "bytes": 662,
-          "sha256": "3c5701be2d358f0ed11d294810fab921cfaf7bdc6b72c5e7d08922884bd120d8",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "spark": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "swordfx": {
-      "label": "Sword slash effect (effect objects 0x25/0x27 → sprite list 0xC index 0x14)",
-      "note": "Shape-to-sequence mapping (wide 0, long 1, sword 2) is visual; effect table 0x80E0398 lists animations 3 and 0 for ids 0x25/0x27.",
-      "sources": {
-        "bn6f": {
-          "offset": "30F144",
-          "compression": "none",
-          "bytes": 8513,
-          "sha256": "b57c66f623f940821a2694b3822d0bc5db65ec321c1818aada47bb9e80aa78d5",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "30E6BC",
-          "compression": "none",
-          "bytes": 8513,
-          "sha256": "b57c66f623f940821a2694b3822d0bc5db65ec321c1818aada47bb9e80aa78d5",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "wide": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "long": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "sword": {
-          "seq": 2,
-          "confidence": "visual-candidate"
-        },
-        "big": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "heatman": {
-      "label": "HeatMan (BN6)",
-      "sources": {
-        "bn6f": {
-          "offset": "264FA0",
-          "compression": "none",
-          "bytes": 43855,
-          "sha256": "78b32868cfe37e95f56aa53ef5ec7e4d4caf253198f089fb253c5a1f6255af91",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "264FA0",
-          "compression": "none",
-          "bytes": 43855,
-          "sha256": "78b32868cfe37e95f56aa53ef5ec7e4d4caf253198f089fb253c5a1f6255af91",
-          "confidence": "rom-verified"
-        }
-      },
-      "note": "AI sets CurAnim 3/4 (appear/vanish), 0xF aim, 0x10 arm, 0x11 close into lighter, 0x13 box, 0x15 fire; read from HeatMan AI code.",
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "aim": {
-          "seq": 15,
-          "confidence": "visual-candidate"
-        },
-        "arm": {
-          "seq": 16,
-          "confidence": "visual-candidate"
-        },
-        "close": {
-          "seq": 17,
-          "confidence": "visual-candidate"
-        },
-        "box": {
-          "seq": 19,
-          "confidence": "visual-candidate"
-        },
-        "open": {
-          "seq": 20,
-          "confidence": "visual-candidate"
-        },
-        "fire": {
-          "seq": 21,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "firepillar": {
-      "label": "Floor flame (FLOOR_FLAME_B0, object type3 0x26)",
-      "note": "sprite_load(0x80, 0x10, 0x02).",
-      "sources": {
-        "bn6f": {
-          "offset": "352360",
-          "compression": "none",
-          "bytes": 4955,
-          "sha256": "5dd039a1bfc0e20f382b0e6099e27f42e0983abc215d2cbceae10f4ebecd71ba",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "3518D8",
-          "compression": "none",
-          "bytes": 4955,
-          "sha256": "5dd039a1bfc0e20f382b0e6099e27f42e0983abc215d2cbceae10f4ebecd71ba",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "rise": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "burn": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "fall": {
-          "seq": 2,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "nozzle": {
-      "label": "Flame nozzle (object type3 0x27)",
-      "note": "sprite_load(0x80, 0x10, 0x1B). Wall-mounted nozzle; drawn for a right-facing flame.",
-      "sources": {
-        "bn6f": {
-          "offset": "368F54",
-          "compression": "none",
-          "bytes": 10065,
-          "sha256": "aeced457abf002bd64583153bda9f451ad92f2685e6239c4ac0928adbec44e58",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "3684CC",
-          "compression": "none",
-          "bytes": 10065,
-          "sha256": "aeced457abf002bd64583153bda9f451ad92f2685e6239c4ac0928adbec44e58",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "extend": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "ready": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "burn": {
-          "seq": 2,
-          "confidence": "visual-candidate"
-        },
-        "end": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "slashman": {
-      "label": "SlashMan (BN6)",
-      "sources": {
-        "bn6f": {
-          "offset": "278EBC",
-          "compression": "none",
-          "bytes": 41870,
-          "sha256": "a11fa8b6373208279bb580263389f10badeba7c34feaefc3f3d4c38a98bf1995",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "278EBC",
-          "compression": "none",
-          "bytes": 41870,
-          "sha256": "a11fa8b6373208279bb580263389f10badeba7c34feaefc3f3d4c38a98bf1995",
-          "confidence": "rom-verified"
-        }
-      },
-      "note": "AI sets CurAnim 3/4, 0xF ready, 0x10 down swipe, 0x11 side swipe, 0x12 crouch, 0x13 spin, 0x14 claws up, 0xC throw; read from SlashMan AI code.",
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "throw": {
-          "seq": 12,
-          "confidence": "visual-candidate"
-        },
-        "ready": {
-          "seq": 15,
-          "confidence": "visual-candidate"
-        },
-        "down": {
-          "seq": 16,
-          "confidence": "visual-candidate"
-        },
-        "side": {
-          "seq": 17,
-          "confidence": "visual-candidate"
-        },
-        "crouch": {
-          "seq": 18,
-          "confidence": "visual-candidate"
-        },
-        "spin": {
-          "seq": 19,
-          "confidence": "visual-candidate"
-        },
-        "up": {
-          "seq": 20,
-          "confidence": "visual-candidate"
-        },
-        "recover": {
-          "seq": 7,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "clawfx": {
-      "label": "SlashMan claw slash (effects 0x39/0x3A → sprite 0x10/0x38)",
-      "sources": {
-        "bn6f": {
-          "offset": "381340",
-          "compression": "none",
-          "bytes": 4014,
-          "sha256": "c4ea8acbd4bf4c94eb801477a5c34ce3d26462f8517cb1847265b1121bdc4b4a",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "3808B8",
-          "compression": "none",
-          "bytes": 4014,
-          "sha256": "c4ea8acbd4bf4c94eb801477a5c34ce3d26462f8517cb1847265b1121bdc4b4a",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "down": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "side": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "kunai": {
-      "label": "SlashMan kunai (object type3 0x43, sprite 0x10/0x39)",
-      "sources": {
-        "bn6f": {
-          "offset": "3822F0",
-          "compression": "none",
-          "bytes": 1591,
-          "sha256": "44bd18a9ebcc2358ac55ea6911f9e96d114a5beeed137b730cad57c69bfadd68",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "381868",
-          "compression": "none",
-          "bytes": 1591,
-          "sha256": "44bd18a9ebcc2358ac55ea6911f9e96d114a5beeed137b730cad57c69bfadd68",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "spin": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "fly": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "eraseman": {
-      "label": "EraseMan (BN6; JP KillerMan)",
-      "sources": {
-        "bn6f": {
-          "offset": "28324C",
-          "compression": "none",
-          "bytes": 48956,
-          "sha256": "3bfaff30d6c2487cc95b8d1452a008fdcb2b0f527e2edb204faf60f6069488e2",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "28324C",
-          "compression": "none",
-          "bytes": 48956,
-          "sha256": "3bfaff30d6c2487cc95b8d1452a008fdcb2b0f527e2edb204faf60f6069488e2",
-          "confidence": "rom-verified"
-        }
-      },
-      "note": "Animation ids from the AI code (0x11 raise, 0x12 hold, 0x13 wind-up, 0x14 swing) match the sprite sequences directly.",
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "mark": {
-          "seq": 17,
-          "confidence": "visual-candidate"
-        },
-        "fire": {
-          "seq": 18,
-          "confidence": "visual-candidate"
-        },
-        "windup": {
-          "seq": 19,
-          "confidence": "visual-candidate"
-        },
-        "strike": {
-          "seq": 20,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "erasemark": {
-      "label": "EraseMan target marker (object type3 0x67, sprite 0x10/0x4A)",
-      "sources": {
-        "bn6f": {
-          "offset": "38C3C8",
-          "compression": "none",
-          "bytes": 1179,
-          "sha256": "406c8db0ad945cb7cb28b75c22a39b3ccdba912d90a6844add6d702a0382a19c",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "38B940",
-          "compression": "none",
-          "bytes": 1179,
-          "sha256": "406c8db0ad945cb7cb28b75c22a39b3ccdba912d90a6844add6d702a0382a19c",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "seek": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "lock": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "erasebeam": {
-      "label": "EraseMan beam (object type3 0x68, sprite 0x10/0x51)",
-      "sources": {
-        "bn6f": {
-          "offset": "390FC4",
-          "compression": "none",
-          "bytes": 3706,
-          "sha256": "dd6085ef3ddd4e6ee1ca59b00fc9f1566c9406d72a72480916cbcd0298d95c48",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "39053C",
-          "compression": "none",
-          "bytes": 3706,
-          "sha256": "dd6085ef3ddd4e6ee1ca59b00fc9f1566c9406d72a72480916cbcd0298d95c48",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "straight": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "up": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "down": {
-          "seq": 2,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "chargeman": {
-      "label": "ChargeMan (BN6)",
-      "sources": {
-        "bn6f": {
-          "offset": "28F18C",
-          "compression": "none",
-          "bytes": 32177,
-          "sha256": "81f50238d3b049b01744e9e6c1d389d850a0450e35f6dde94e4b42734894f4c0",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "28F18C",
-          "compression": "none",
-          "bytes": 32177,
-          "sha256": "81f50238d3b049b01744e9e6c1d389d850a0450e35f6dde94e4b42734894f4c0",
-          "confidence": "rom-verified"
-        }
-      },
-      "note": "AI animation ids 0xF run, 0x10 whistle, 0x11 rush map to sequences 15-17 directly.",
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "run": {
-          "seq": 15,
-          "confidence": "visual-candidate"
-        },
-        "whistle": {
-          "seq": 16,
-          "confidence": "visual-candidate"
-        },
-        "rush": {
-          "seq": 17,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "traincar": {
-      "label": "ChargeMan train cars (object type3 0x87 / 0x88, sprite 0x10/0x54)",
-      "sources": {
-        "bn6f": {
-          "offset": "3930E0",
-          "compression": "none",
-          "bytes": 8018,
-          "sha256": "f409d58b0102885e8fbec4d0611aae2841276014a6ec0a416f0ba84c5651a82f",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "392658",
-          "compression": "none",
-          "bytes": 8018,
-          "sha256": "f409d58b0102885e8fbec4d0611aae2841276014a6ec0a416f0ba84c5651a82f",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "coal": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "skull": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "crate": {
-          "seq": 2,
-          "confidence": "visual-candidate"
-        },
-        "red": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "spoutman": {
-      "label": "SpoutMan (BN6; AquaMan in BN4)",
-      "sources": {
-        "bn6f": {
-          "offset": "296F40",
-          "compression": "none",
-          "bytes": 26836,
-          "sha256": "0a3f3af6fc502db9746d5877e86f7f8e0128f635e97c775914000b4e61af50ed",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "296F40",
-          "compression": "none",
-          "bytes": 26836,
-          "sha256": "0a3f3af6fc502db9746d5877e86f7f8e0128f635e97c775914000b4e61af50ed",
-          "confidence": "rom-verified"
-        }
-      },
-      "note": "AI animation ids 0xF-0x15 map to sequences 15-21 directly.",
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "windup": {
-          "seq": 15,
-          "confidence": "visual-candidate"
-        },
-        "hold": {
-          "seq": 16,
-          "confidence": "visual-candidate"
-        },
-        "jump": {
-          "seq": 17,
-          "confidence": "visual-candidate"
-        },
-        "spin": {
-          "seq": 18,
-          "confidence": "visual-candidate"
-        },
-        "aim": {
-          "seq": 19,
-          "confidence": "visual-candidate"
-        },
-        "throw": {
-          "seq": 20,
-          "confidence": "visual-candidate"
-        },
-        "spray": {
-          "seq": 21,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "bubblebomb": {
-      "label": "SpoutMan water bomb (object type3 0x22, sprite 0x10/0x23)",
-      "sources": {
-        "bn6f": {
-          "offset": "370D6C",
-          "compression": "none",
-          "bytes": 1286,
-          "sha256": "d4fac24e2b59f1702b1ac5481d8549bdde34ceb98b5173164cbb3d484e11e5d8",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "3702E4",
-          "compression": "none",
-          "bytes": 1286,
-          "sha256": "d4fac24e2b59f1702b1ac5481d8549bdde34ceb98b5173164cbb3d484e11e5d8",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "splash": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "fly": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "hosestream": {
-      "label": "SpoutMan hose stream (object type3 0x17, sprite 0x10/0x20)",
-      "sources": {
-        "bn6f": {
-          "offset": "36E034",
-          "compression": "none",
-          "bytes": 2651,
-          "sha256": "56d01841ef616c298980bac54d49d0913c05c9954bf67851b31f96e548c59190",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "36D5AC",
-          "compression": "none",
-          "bytes": 2651,
-          "sha256": "56d01841ef616c298980bac54d49d0913c05c9954bf67851b31f96e548c59190",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "nozzle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "stream": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "tip": {
-          "seq": 2,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "sprinkler": {
-      "label": "SpoutMan sprinkler spray (object type3 0x29, sprite 0x10/0x22)",
-      "sources": {
-        "bn6f": {
-          "offset": "36EDB8",
-          "compression": "none",
-          "bytes": 8112,
-          "sha256": "ba6187d2d1a9650f3b2da30d9cf9067d18121527aceffd45d12b720920b1dbd7",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "36E330",
-          "compression": "none",
-          "bytes": 8112,
-          "sha256": "ba6187d2d1a9650f3b2da30d9cf9067d18121527aceffd45d12b720920b1dbd7",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "horizontal": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "rising": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "vertical": {
-          "seq": 2,
-          "confidence": "visual-candidate"
-        },
-        "falling": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "tomahawkman": {
-      "label": "TomahawkMan (BN6)",
-      "sources": {
-        "bn6f": {
-          "offset": "29D818",
-          "compression": "none",
-          "bytes": 33495,
-          "sha256": "35cf0410718924785dd2196e7e3d14fe4c4d3a5b4b856a0c8c024b2b64c5e765",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "29D818",
-          "compression": "none",
-          "bytes": 33495,
-          "sha256": "35cf0410718924785dd2196e7e3d14fe4c4d3a5b4b856a0c8c024b2b64c5e765",
-          "confidence": "rom-verified"
-        }
-      },
-      "note": "AI animation ids 7, 0xC, 0xF-0x12 map to sequences directly.",
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "rearm": {
-          "seq": 7,
-          "confidence": "visual-candidate"
-        },
-        "throw": {
-          "seq": 12,
-          "confidence": "visual-candidate"
-        },
-        "windup": {
-          "seq": 15,
-          "confidence": "visual-candidate"
-        },
-        "swing": {
-          "seq": 16,
-          "confidence": "visual-candidate"
-        },
-        "raise": {
-          "seq": 17,
-          "confidence": "visual-candidate"
-        },
-        "chop": {
-          "seq": 18,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "tomahawk": {
-      "label": "TomahawkMan thrown axe (object type3 0x3A, sprite 0x10/0x2B)",
-      "sources": {
-        "bn6f": {
-          "offset": "376364",
-          "compression": "none",
-          "bytes": 1726,
-          "sha256": "762f416ba563c9eeed30d791ad63300495cc2656eb2246a57faefe8b981f1e79",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "3758DC",
-          "compression": "none",
-          "bytes": 1726,
-          "sha256": "762f416ba563c9eeed30d791ad63300495cc2656eb2246a57faefe8b981f1e79",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "spin": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "axewave": {
-      "label": "TomahawkMan slash wave (sprite 0x10/0x37)",
-      "sources": {
-        "bn6f": {
-          "offset": "3805D4",
-          "compression": "none",
-          "bytes": 3435,
-          "sha256": "86bcf607dfb077e4c452bedd1c99967881e42d61df00ce572fb0fbe18ea64635",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "37FB4C",
-          "compression": "none",
-          "bytes": 3435,
-          "sha256": "86bcf607dfb077e4c452bedd1c99967881e42d61df00ce572fb0fbe18ea64635",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "small": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "wave": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "tenguman": {
-      "label": "TenguMan (BN6)",
-      "sources": {
-        "bn6f": {
-          "offset": "2A5AF0",
-          "compression": "none",
-          "bytes": 43935,
-          "sha256": "7660ca1825769128c224b5163e9cb128cfe397df8564b9ae96a02a619169b2b9",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "2A5AF0",
-          "compression": "none",
-          "bytes": 43935,
-          "sha256": "7660ca1825769128c224b5163e9cb128cfe397df8564b9ae96a02a619169b2b9",
-          "confidence": "rom-verified"
-        }
-      },
-      "note": "AI animation ids 0xF-0x16 map to sequences directly; 0x12-0x14 are the flying dash poses.",
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "fanup": {
-          "seq": 15,
-          "confidence": "visual-candidate"
-        },
-        "fan": {
-          "seq": 16,
-          "confidence": "visual-candidate"
-        },
-        "armsup": {
-          "seq": 17,
-          "confidence": "visual-candidate"
-        },
-        "dash": {
-          "seq": 18,
-          "confidence": "visual-candidate"
-        },
-        "brace": {
-          "seq": 21,
-          "confidence": "visual-candidate"
-        },
-        "nose": {
-          "seq": 22,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "tornado": {
-      "label": "TenguMan tornado (object type3 0x47, sprite 0x10/0x42)",
-      "sources": {
-        "bn6f": {
-          "offset": "387244",
-          "compression": "none",
-          "bytes": 3078,
-          "sha256": "de58227906ba0ae5b9047c6161743f2579bc43fa1e66f97be910861d2eaa8ccf",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "3867BC",
-          "compression": "none",
-          "bytes": 3078,
-          "sha256": "de58227906ba0ae5b9047c6161743f2579bc43fa1e66f97be910861d2eaa8ccf",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "spin": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "groundman": {
-      "label": "GroundMan (BN6)",
-      "sources": {
-        "bn6f": {
-          "offset": "2B0690",
-          "compression": "none",
-          "bytes": 41259,
-          "sha256": "11003ce415f3e7c78fadfe7bfa59791c1994db25aa7c2dae7d18279071971c41",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "2B0690",
-          "compression": "none",
-          "bytes": 41259,
-          "sha256": "11003ce415f3e7c78fadfe7bfa59791c1994db25aa7c2dae7d18279071971c41",
-          "confidence": "rom-verified"
-        }
-      },
-      "note": "AI animation ids 0x11-0x16 map to sequences directly; the drill clones in 0xB use this sprite too (sequences 23/24).",
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "tank": {
-          "seq": 17,
-          "confidence": "visual-candidate"
-        },
-        "tankrun": {
-          "seq": 18,
-          "confidence": "visual-candidate"
-        },
-        "drillup": {
-          "seq": 19,
-          "confidence": "visual-candidate"
-        },
-        "drills": {
-          "seq": 20,
-          "confidence": "visual-candidate"
-        },
-        "missile": {
-          "seq": 21,
-          "confidence": "visual-candidate"
-        },
-        "missilefly": {
-          "seq": 22,
-          "confidence": "visual-candidate"
-        },
-        "clone": {
-          "seq": 23,
-          "confidence": "visual-candidate"
-        },
-        "clonefly": {
-          "seq": 24,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "rock": {
-      "label": "Falling rock (object type3 0x80, sprite 0x10/0x05)",
-      "sources": {
-        "bn6f": {
-          "offset": "3547A4",
-          "compression": "none",
-          "bytes": 1380,
-          "sha256": "ce001170f943642b391807fdacbb9ac9be2e995d8a19d7bd68283a7879e04eb8",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "353D1C",
-          "compression": "none",
-          "bytes": 1380,
-          "sha256": "ce001170f943642b391807fdacbb9ac9be2e995d8a19d7bd68283a7879e04eb8",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "fall": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "break": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "dustman": {
-      "label": "DustMan (BN6)",
-      "sources": {
-        "bn6f": {
-          "offset": "2BA7BC",
-          "compression": "none",
-          "bytes": 52624,
-          "sha256": "5e7b78a8d36c67e70f196f19690ba2810a1bd26ddb9ad42ed204fbc99874bde8",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "2BA7BC",
-          "compression": "none",
-          "bytes": 52624,
-          "sha256": "5e7b78a8d36c67e70f196f19690ba2810a1bd26ddb9ad42ed204fbc99874bde8",
-          "confidence": "rom-verified"
-        }
-      },
-      "note": "AI animation ids 0xF-0x17 map to sequences directly; the thrown junk (type3 0x83) uses sequence 24 of this sprite.",
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "transform": {
-          "seq": 15,
-          "confidence": "visual-candidate"
-        },
-        "hold": {
-          "seq": 16,
-          "confidence": "visual-candidate"
-        },
-        "mouth": {
-          "seq": 17,
-          "confidence": "visual-candidate"
-        },
-        "suck": {
-          "seq": 18,
-          "confidence": "visual-candidate"
-        },
-        "fist": {
-          "seq": 20,
-          "confidence": "visual-candidate"
-        },
-        "throw": {
-          "seq": 23,
-          "confidence": "visual-candidate"
-        },
-        "junk": {
-          "seq": 24,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "scrapshot": {
-      "label": "DustMan scrap shot (object type3 0x84, sprite 0x0C/0x33)",
-      "sources": {
-        "bn6f": {
-          "offset": "325EF4",
-          "compression": "none",
-          "bytes": 968,
-          "sha256": "12b10df7fd16fc4aa8f2e2476e2ae93c8ed34426112e131d09a4a6e9c239d494",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "32546C",
-          "compression": "none",
-          "bytes": 968,
-          "sha256": "12b10df7fd16fc4aa8f2e2476e2ae93c8ed34426112e131d09a4a6e9c239d494",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "fly": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "blastman": {
-      "label": "BlastMan (BN6)",
-      "sources": {
-        "bn6f": {
-          "offset": "2CED74",
-          "compression": "lz77",
-          "bytes": 34608,
-          "sha256": "2c0da1f9e3790414035d918327d5d782a2eb96a14356e02d8d7f5e2008d82272",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "2CED74",
-          "compression": "lz77",
-          "bytes": 34608,
-          "sha256": "2c0da1f9e3790414035d918327d5d782a2eb96a14356e02d8d7f5e2008d82272",
-          "confidence": "rom-verified"
-        }
-      },
-      "note": "LZ77-compressed. AI animation ids 5, 7, 9-0xC map to sequences directly; his fire objects (type3 0x1F/0x20/0x21) use sequences 13-18 of this same sprite.",
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "punch": {
-          "seq": 5,
-          "confidence": "visual-candidate"
-        },
-        "burn": {
-          "seq": 7,
-          "confidence": "visual-candidate"
-        },
-        "kick": {
-          "seq": 9,
-          "confidence": "visual-candidate"
-        },
-        "charge": {
-          "seq": 10,
-          "confidence": "visual-candidate"
-        },
-        "release": {
-          "seq": 11,
-          "confidence": "visual-candidate"
-        },
-        "raise": {
-          "seq": 12,
-          "confidence": "visual-candidate"
-        },
-        "ring": {
-          "seq": 13,
-          "confidence": "visual-candidate"
-        },
-        "bigring": {
-          "seq": 14,
-          "confidence": "visual-candidate"
-        },
-        "fireball": {
-          "seq": 17,
-          "confidence": "visual-candidate"
-        },
-        "fireup": {
-          "seq": 18,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "diveman": {
-      "label": "DiveMan (BN6)",
-      "sources": {
-        "bn6f": {
-          "offset": "2D2AC8",
-          "compression": "lz77",
-          "bytes": 41296,
-          "sha256": "9fe98933f93355bf45f70a042b7e8764c32f76906c00a52a1dc710174df219a2",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "2D2AC8",
-          "compression": "lz77",
-          "bytes": 41296,
-          "sha256": "9fe98933f93355bf45f70a042b7e8764c32f76906c00a52a1dc710174df219a2",
-          "confidence": "rom-verified"
-        }
-      },
-      "note": "LZ77-compressed. AI animation ids 3-8 map to sequences directly (3 = submerged periscope); the wave (20), torpedo (23/24) and splash (25) are sequences of this same sprite.",
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 7,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 8,
-          "confidence": "visual-candidate"
-        },
-        "submerged": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "leap": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "slam": {
-          "seq": 5,
-          "confidence": "visual-candidate"
-        },
-        "launch": {
-          "seq": 6,
-          "confidence": "visual-candidate"
-        },
-        "surface": {
-          "seq": 7,
-          "confidence": "visual-candidate"
-        },
-        "dive": {
-          "seq": 8,
-          "confidence": "visual-candidate"
-        },
-        "wave": {
-          "seq": 20,
-          "confidence": "visual-candidate"
-        },
-        "torpedo": {
-          "seq": 24,
-          "confidence": "visual-candidate"
-        },
-        "splash": {
-          "seq": 25,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "circusman": {
-      "label": "CircusMan (BN6)",
-      "sources": {
-        "bn6f": {
-          "offset": "2D6FE4",
-          "compression": "lz77",
-          "bytes": 43792,
-          "sha256": "3053db7fa31e9153ee624de4059f6647affda87589d6d6a44dfc03d7228fc320",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "2D6FE4",
-          "compression": "lz77",
-          "bytes": 43792,
-          "sha256": "3053db7fa31e9153ee624de4059f6647affda87589d6d6a44dfc03d7228fc320",
-          "confidence": "rom-verified"
-        }
-      },
-      "note": "LZ77-compressed, 64 sequences: body 0-19 (tent 14-18), separate hand layers 20-59 (not drawn here), giant hands 60/61, hoop 62, lion 63. AI animation ids map to sequences directly.",
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "jump": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "raise": {
-          "seq": 7,
-          "confidence": "visual-candidate"
-        },
-        "clap": {
-          "seq": 8,
-          "confidence": "visual-candidate"
-        },
-        "bow": {
-          "seq": 9,
-          "confidence": "visual-candidate"
-        },
-        "whip": {
-          "seq": 10,
-          "confidence": "visual-candidate"
-        },
-        "present": {
-          "seq": 11,
-          "confidence": "visual-candidate"
-        },
-        "tentprep": {
-          "seq": 12,
-          "confidence": "visual-candidate"
-        },
-        "leap": {
-          "seq": 13,
-          "confidence": "visual-candidate"
-        },
-        "tent": {
-          "seq": 14,
-          "confidence": "visual-candidate"
-        },
-        "tentdrop": {
-          "seq": 15,
-          "confidence": "visual-candidate"
-        },
-        "tentshake": {
-          "seq": 16,
-          "confidence": "visual-candidate"
-        },
-        "handl": {
-          "seq": 60,
-          "confidence": "visual-candidate"
-        },
-        "handr": {
-          "seq": 61,
-          "confidence": "visual-candidate"
-        },
-        "hoop": {
-          "seq": 62,
-          "confidence": "visual-candidate"
-        },
-        "lion": {
-          "seq": 63,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "judgeman": {
-      "label": "JudgeMan (BN6)",
-      "sources": {
-        "bn6f": {
-          "offset": "2DABC8",
-          "compression": "lz77",
-          "bytes": 26880,
-          "sha256": "87094a8ea43f8cadb31ae7e40b05958db9fa24e86ed2eedaf090d60ab5cb33a8",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "2DABC8",
-          "compression": "lz77",
-          "bytes": 26880,
-          "sha256": "87094a8ea43f8cadb31ae7e40b05958db9fa24e86ed2eedaf090d60ab5cb33a8",
-          "confidence": "rom-verified"
-        }
-      },
-      "note": "LZ77-compressed, 19 sequences. AI animation ids 5-7 map to sequences directly; whip 8/9, press books 10/11, law book 13-18.",
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "summon": {
-          "seq": 5,
-          "confidence": "visual-candidate"
-        },
-        "windup": {
-          "seq": 6,
-          "confidence": "visual-candidate"
-        },
-        "whip": {
-          "seq": 7,
-          "confidence": "visual-candidate"
-        },
-        "lash": {
-          "seq": 9,
-          "confidence": "visual-candidate"
-        },
-        "press": {
-          "seq": 10,
-          "confidence": "visual-candidate"
-        },
-        "pressshut": {
-          "seq": 11,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "lawbook": {
-      "label": "JudgeMan law book (object type3 0x70; same sprite as JudgeMan)",
-      "sources": {
-        "bn6f": {
-          "offset": "2DABC8",
-          "compression": "lz77",
-          "bytes": 26880,
-          "sha256": "87094a8ea43f8cadb31ae7e40b05958db9fa24e86ed2eedaf090d60ab5cb33a8",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "2DABC8",
-          "compression": "lz77",
-          "bytes": 26880,
-          "sha256": "87094a8ea43f8cadb31ae7e40b05958db9fa24e86ed2eedaf090d60ab5cb33a8",
-          "confidence": "rom-verified"
-        }
-      },
-      "sequences": {
-        "appear": {
-          "seq": 13,
-          "confidence": "visual-candidate"
-        },
-        "idle": {
-          "seq": 13,
-          "confidence": "visual-candidate"
-        },
-        "open": {
-          "seq": 14,
-          "confidence": "visual-candidate"
-        },
-        "flip": {
-          "seq": 15,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "elementman": {
-      "label": "ElementMan (BN6)",
-      "sources": {
-        "bn6f": {
-          "offset": "2DD9A8",
-          "compression": "lz77",
-          "bytes": 22568,
-          "sha256": "6e1807a009dc061794bc2206db750bf448777f97bf9ead91412d057dacb4a237",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "2DD9A8",
-          "compression": "lz77",
-          "bytes": 22568,
-          "sha256": "6e1807a009dc061794bc2206db750bf448777f97bf9ead91412d057dacb4a237",
-          "confidence": "rom-verified"
-        }
-      },
-      "note": "LZ77-compressed, 20 sequences: body 0-8, element ring 9-17, rising tower 18/19. The attack objects (type3 0x8D-0x90, type4 0x57) use other sprites not yet registered.",
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "cast": {
-          "seq": 5,
-          "confidence": "visual-candidate"
-        },
-        "castloop": {
-          "seq": 6,
-          "confidence": "visual-candidate"
-        },
-        "push": {
-          "seq": 7,
-          "confidence": "visual-candidate"
-        },
-        "ring": {
-          "seq": 9,
-          "confidence": "visual-candidate"
-        },
-        "tower": {
-          "seq": 18,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "colonel": {
-      "label": "Colonel (BN6)",
-      "sources": {
-        "bn6f": {
-          "offset": "2E0114",
-          "compression": "lz77",
-          "bytes": 39612,
-          "sha256": "da3899fc9e8bdfbe6001aacf033c4c5ea62c884adc98335cabb407e85988e1b8",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "2E0114",
-          "compression": "lz77",
-          "bytes": 39612,
-          "sha256": "da3899fc9e8bdfbe6001aacf033c4c5ea62c884adc98335cabb407e85988e1b8",
-          "confidence": "rom-verified"
-        }
-      },
-      "note": "LZ77-compressed, 33 sequences: body 0-12, cape layers 13-29 (not drawn), missile 30-32.",
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "slash": {
-          "seq": 5,
-          "confidence": "visual-candidate"
-        },
-        "cannon": {
-          "seq": 7,
-          "confidence": "visual-candidate"
-        },
-        "fire": {
-          "seq": 8,
-          "confidence": "visual-candidate"
-        },
-        "thrust": {
-          "seq": 11,
-          "confidence": "visual-candidate"
-        },
-        "raise": {
-          "seq": 12,
-          "confidence": "visual-candidate"
-        },
-        "launch": {
-          "seq": 30,
-          "confidence": "visual-candidate"
-        },
-        "missile": {
-          "seq": 32,
-          "confidence": "visual-candidate"
-        }
-      }
-    },
-    "bass": {
-      "label": "Bass (BN6)",
-      "sources": {
-        "bn6f": {
-          "offset": "2E4050",
-          "compression": "lz77",
-          "bytes": 43124,
-          "sha256": "c343e7e7356f6b158baea23e387a3d105f030f0f529bb7310cd3610b08956598",
-          "confidence": "rom-verified"
-        },
-        "bn6g": {
-          "offset": "2E4050",
-          "compression": "lz77",
-          "bytes": 43124,
-          "sha256": "c343e7e7356f6b158baea23e387a3d105f030f0f529bb7310cd3610b08956598",
-          "confidence": "rom-verified"
-        }
-      },
-      "note": "LZ77-compressed, 47 sequences: body 0-19, cape layers 20-39 (not composited yet, so he shows without his cape), projectiles 40-46.",
-      "sequences": {
-        "idle": {
-          "seq": 0,
-          "confidence": "visual-candidate"
-        },
-        "flinch": {
-          "seq": 1,
-          "confidence": "visual-candidate"
-        },
-        "appear": {
-          "seq": 3,
-          "confidence": "visual-candidate"
-        },
-        "vanish": {
-          "seq": 4,
-          "confidence": "visual-candidate"
-        },
-        "fist": {
-          "seq": 5,
-          "confidence": "visual-candidate"
-        },
-        "point": {
-          "seq": 9,
-          "confidence": "visual-candidate"
-        },
-        "rapid": {
-          "seq": 11,
-          "confidence": "visual-candidate"
-        },
-        "rapid2": {
-          "seq": 12,
-          "confidence": "visual-candidate"
-        },
-        "charge": {
-          "seq": 13,
-          "confidence": "visual-candidate"
-        },
-        "slash": {
-          "seq": 14,
-          "confidence": "visual-candidate"
-        },
-        "wheel": {
-          "seq": 45,
-          "confidence": "visual-candidate"
-        },
-        "shot": {
-          "seq": 40,
-          "confidence": "visual-candidate"
-        }
-      }
-    }
-  },
-  "tables": {
-    "note": "BN6 sprite pointer table (flat sprite ID index, bit 31 = LZ77) and virus stats tables; see tools/extract_bn6_viruses.py",
+ "schema": 1,
+ "note": "Offsets and metadata only. No game graphics are stored in this repository; sprites are decoded on the player's device from ROMs they import.",
+ "confidence": {
+  "rom-verified": "Bytes decoded from the ROM and checked against an independent export or hash.",
+  "visual-candidate": "Role assigned by looking at decoded frames; not yet confirmed by a runtime trace.",
+  "unverified": "Recalled or estimated; must be checked against the game."
+ },
+ "sprites": {
+  "megaman": {
+   "label": "MegaMan.EXE (base)",
+   "sources": {
     "bn6f": {
-      "spritePointers": "31CEC",
-      "virusStats": "109150"
+     "offset": "1D8000",
+     "compression": "none",
+     "bytes": 29728,
+     "sha256": "3c170c2acb1147931db572baf9e67507cb99e7d9ef972d7eeb7d056796079db6",
+     "confidence": "rom-verified"
     },
     "bn6g": {
-      "spritePointers": "31CEC",
-      "virusStats": "10A478"
+     "offset": "1D8000",
+     "compression": "none",
+     "bytes": 29728,
+     "sha256": "3c170c2acb1147931db572baf9e67507cb99e7d9ef972d7eeb7d056796079db6",
+     "confidence": "rom-verified"
     }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "buster": {
+     "seq": 9,
+     "confidence": "visual-candidate"
+    },
+    "charge-hold": {
+     "seq": 10,
+     "confidence": "visual-candidate"
+    },
+    "throw": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "slash": {
+     "seq": 6,
+     "confidence": "visual-candidate"
+    },
+    "cannon": {
+     "seq": 8,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "mettaur": {
+   "label": "Mettaur",
+   "sources": {
+    "bn6f": {
+     "offset": "241EC4",
+     "compression": "lz77",
+     "bytes": 10224,
+     "sha256": "911026111060efa7f1368db25c14f1970e9c7b8e522cf1299f7e36f3414e7690",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "241EC4",
+     "compression": "lz77",
+     "bytes": 10224,
+     "sha256": "911026111060efa7f1368db25c14f1970e9c7b8e522cf1299f7e36f3414e7690",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "attack": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "hide": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "hidden": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "unhide": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    }
+   },
+   "note": "Variant palettes: slot = variant index (0 base, 1 \"2\", 2 \"3\", 3 \u03a9, 4 Rare, 5 Rare2); visually confirmed."
+  },
+  "champy": {
+   "label": "Champy",
+   "note": "Variant palettes = variant index.",
+   "sources": {
+    "bn6f": {
+     "offset": "249C7C",
+     "compression": "lz77",
+     "bytes": 12760,
+     "sha256": "9e717f77133b5ef60b86f997c3a848cf453d56def717624f5ceb7c49bcdce708",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "249C7C",
+     "compression": "lz77",
+     "bytes": 12760,
+     "sha256": "9e717f77133b5ef60b86f997c3a848cf453d56def717624f5ceb7c49bcdce708",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "ready": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "uppercut": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "guard": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "punch": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "gunner": {
+   "label": "Gunner",
+   "note": "Variant palettes = variant index.",
+   "sources": {
+    "bn6f": {
+     "offset": "25BFC4",
+     "compression": "lz77",
+     "bytes": 5324,
+     "sha256": "e60ad8b95ad00aa0cf764ac4b52aee06bab67a9c08f4e784a85724b8612edc9e",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "25BFC4",
+     "compression": "lz77",
+     "bytes": 5324,
+     "sha256": "e60ad8b95ad00aa0cf764ac4b52aee06bab67a9c08f4e784a85724b8612edc9e",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "aim": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "fire": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "recover": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "shockwave": {
+   "label": "ShockWave (SHOCKWAVE_B1)",
+   "note": "Sprite ID 0xB1 in the flat sprite table; offsets differ by version, bytes identical.",
+   "sources": {
+    "bn6f": {
+     "offset": "3536BC",
+     "compression": "none",
+     "bytes": 4324,
+     "sha256": "4c03b4471607841b1a2b6340aed88c072c5d43fba787cfb20605a915ff6ec680",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "352C34",
+     "compression": "none",
+     "bytes": 4324,
+     "sha256": "4c03b4471607841b1a2b6340aed88c072c5d43fba787cfb20605a915ff6ec680",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "slow": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "medium": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "fast": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "target": {
+   "label": "Gunner crosshair (MACHINE_GUN_TARGET_D5)",
+   "note": "Sprite ID 0xD5; offsets differ by version, bytes identical.",
+   "sources": {
+    "bn6f": {
+     "offset": "372F34",
+     "compression": "none",
+     "bytes": 887,
+     "sha256": "d215902fa463572acd54853fd3359a2aa00ac2b3f85bc3b9d3d9990f8f2c9265",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3724AC",
+     "compression": "none",
+     "bytes": 887,
+     "sha256": "d215902fa463572acd54853fd3359a2aa00ac2b3f85bc3b9d3d9990f8f2c9265",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "search": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "lock": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "elecman": {
+   "label": "ElecMan (BN6)",
+   "sources": {
+    "bn6f": {
+     "offset": "26FAF0",
+     "compression": "none",
+     "bytes": 37832,
+     "sha256": "6d84a8a7e95ebb54f57e791fbea9c4523e7eef8650e4cc910f9f1b78dca2288e",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "26FAF0",
+     "compression": "none",
+     "bytes": 37832,
+     "sha256": "6d84a8a7e95ebb54f57e791fbea9c4523e7eef8650e4cc910f9f1b78dca2288e",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "charge": {
+     "seq": 18,
+     "confidence": "visual-candidate"
+    },
+    "charged": {
+     "seq": 19,
+     "confidence": "visual-candidate"
+    },
+    "summon": {
+     "seq": 20,
+     "confidence": "visual-candidate"
+    },
+    "point": {
+     "seq": 21,
+     "confidence": "visual-candidate"
+    },
+    "ready": {
+     "seq": 15,
+     "confidence": "visual-candidate"
+    },
+    "dash": {
+     "seq": 16,
+     "confidence": "visual-candidate"
+    },
+    "strike": {
+     "seq": 17,
+     "confidence": "visual-candidate"
+    }
+   },
+   "note": "AI sets CurAnim 0x12/0x13 (charge, charged), 0x14/0x15 (summon, point), 0xF/0x10/0x11 (dash ready, dash, strike); read from the ElecMan AI code."
+  },
+  "protoman": {
+   "label": "ProtoMan (BN6)",
+   "sources": {
+    "bn6f": {
+     "offset": "2C7550",
+     "compression": "none",
+     "bytes": 30754,
+     "sha256": "00d7bcc4700c0acba63adfa7238663fd995221af436e4670b3df175f38e689f1",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2C7550",
+     "compression": "none",
+     "bytes": 30754,
+     "sha256": "00d7bcc4700c0acba63adfa7238663fd995221af436e4670b3df175f38e689f1",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "guard": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "swing": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "slash": {
+     "seq": 6,
+     "confidence": "visual-candidate"
+    },
+    "ready": {
+     "seq": 15,
+     "confidence": "visual-candidate"
+    }
+   },
+   "note": "AI sets these animation numbers directly (CurAnim 3,4,5,15 read from the ProtoMan AI code); guard pose is a candidate."
+  },
+  "elecbolt": {
+   "label": "ElecMan lightning (sprite table 0x10/0x12)",
+   "note": "Loaded by ElecMan attack object type3 0x1E via sprite_load(0x80, 0x10, 0x12).",
+   "sources": {
+    "bn6f": {
+     "offset": "35CA2C",
+     "compression": "none",
+     "bytes": 6197,
+     "sha256": "e9a3aa55278470870b08e74137d9015c186cee3020aad5b4c5f6858116646b24",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "35BFA4",
+     "compression": "none",
+     "bytes": 6197,
+     "sha256": "e9a3aa55278470870b08e74137d9015c186cee3020aad5b4c5f6858116646b24",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "horizontal": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "vertical": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "eleccoil": {
+   "label": "ElecMan coil (object type3 0x19)",
+   "note": "sprite_load(0x80, 0x10, 0x13). Sequences: 0 spawn, 1 idle, 2 discharge (column lightning).",
+   "sources": {
+    "bn6f": {
+     "offset": "35E264",
+     "compression": "none",
+     "bytes": 4543,
+     "sha256": "ec0cea6c2142c39bb1754bac06aee6cdbcf28a123dbf0909e3b275f84492a706",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "35D7DC",
+     "compression": "none",
+     "bytes": 4543,
+     "sha256": "ec0cea6c2142c39bb1754bac06aee6cdbcf28a123dbf0909e3b275f84492a706",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "appear": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "idle": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "discharge": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "elecaura": {
+   "label": "ElecMan charge sparkle (object type4 0x31 param 5)",
+   "note": "sprite_load(0x80, 0x10, 0x11).",
+   "sources": {
+    "bn6f": {
+     "offset": "35C794",
+     "compression": "none",
+     "bytes": 662,
+     "sha256": "3c5701be2d358f0ed11d294810fab921cfaf7bdc6b72c5e7d08922884bd120d8",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "35BD0C",
+     "compression": "none",
+     "bytes": 662,
+     "sha256": "3c5701be2d358f0ed11d294810fab921cfaf7bdc6b72c5e7d08922884bd120d8",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "spark": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "swordfx": {
+   "label": "Sword slash effect (effect objects 0x25/0x27 \u2192 sprite list 0xC index 0x14)",
+   "note": "Shape-to-sequence mapping (wide 0, long 1, sword 2) is visual; effect table 0x80E0398 lists animations 3 and 0 for ids 0x25/0x27.",
+   "sources": {
+    "bn6f": {
+     "offset": "30F144",
+     "compression": "none",
+     "bytes": 8513,
+     "sha256": "b57c66f623f940821a2694b3822d0bc5db65ec321c1818aada47bb9e80aa78d5",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "30E6BC",
+     "compression": "none",
+     "bytes": 8513,
+     "sha256": "b57c66f623f940821a2694b3822d0bc5db65ec321c1818aada47bb9e80aa78d5",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "wide": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "long": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "sword": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "big": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "heatman": {
+   "label": "HeatMan (BN6)",
+   "sources": {
+    "bn6f": {
+     "offset": "264FA0",
+     "compression": "none",
+     "bytes": 43855,
+     "sha256": "78b32868cfe37e95f56aa53ef5ec7e4d4caf253198f089fb253c5a1f6255af91",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "264FA0",
+     "compression": "none",
+     "bytes": 43855,
+     "sha256": "78b32868cfe37e95f56aa53ef5ec7e4d4caf253198f089fb253c5a1f6255af91",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "AI sets CurAnim 3/4 (appear/vanish), 0xF aim, 0x10 arm, 0x11 close into lighter, 0x13 box, 0x15 fire; read from HeatMan AI code.",
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "aim": {
+     "seq": 15,
+     "confidence": "visual-candidate"
+    },
+    "arm": {
+     "seq": 16,
+     "confidence": "visual-candidate"
+    },
+    "close": {
+     "seq": 17,
+     "confidence": "visual-candidate"
+    },
+    "box": {
+     "seq": 19,
+     "confidence": "visual-candidate"
+    },
+    "open": {
+     "seq": 20,
+     "confidence": "visual-candidate"
+    },
+    "fire": {
+     "seq": 21,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "firepillar": {
+   "label": "Floor flame (FLOOR_FLAME_B0, object type3 0x26)",
+   "note": "sprite_load(0x80, 0x10, 0x02).",
+   "sources": {
+    "bn6f": {
+     "offset": "352360",
+     "compression": "none",
+     "bytes": 4955,
+     "sha256": "5dd039a1bfc0e20f382b0e6099e27f42e0983abc215d2cbceae10f4ebecd71ba",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3518D8",
+     "compression": "none",
+     "bytes": 4955,
+     "sha256": "5dd039a1bfc0e20f382b0e6099e27f42e0983abc215d2cbceae10f4ebecd71ba",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "rise": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "burn": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "fall": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "nozzle": {
+   "label": "Flame nozzle (object type3 0x27)",
+   "note": "sprite_load(0x80, 0x10, 0x1B). Wall-mounted nozzle; drawn for a right-facing flame.",
+   "sources": {
+    "bn6f": {
+     "offset": "368F54",
+     "compression": "none",
+     "bytes": 10065,
+     "sha256": "aeced457abf002bd64583153bda9f451ad92f2685e6239c4ac0928adbec44e58",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3684CC",
+     "compression": "none",
+     "bytes": 10065,
+     "sha256": "aeced457abf002bd64583153bda9f451ad92f2685e6239c4ac0928adbec44e58",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "extend": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "ready": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "burn": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "end": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "slashman": {
+   "label": "SlashMan (BN6)",
+   "sources": {
+    "bn6f": {
+     "offset": "278EBC",
+     "compression": "none",
+     "bytes": 41870,
+     "sha256": "a11fa8b6373208279bb580263389f10badeba7c34feaefc3f3d4c38a98bf1995",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "278EBC",
+     "compression": "none",
+     "bytes": 41870,
+     "sha256": "a11fa8b6373208279bb580263389f10badeba7c34feaefc3f3d4c38a98bf1995",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "AI sets CurAnim 3/4, 0xF ready, 0x10 down swipe, 0x11 side swipe, 0x12 crouch, 0x13 spin, 0x14 claws up, 0xC throw; read from SlashMan AI code.",
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "throw": {
+     "seq": 12,
+     "confidence": "visual-candidate"
+    },
+    "ready": {
+     "seq": 15,
+     "confidence": "visual-candidate"
+    },
+    "down": {
+     "seq": 16,
+     "confidence": "visual-candidate"
+    },
+    "side": {
+     "seq": 17,
+     "confidence": "visual-candidate"
+    },
+    "crouch": {
+     "seq": 18,
+     "confidence": "visual-candidate"
+    },
+    "spin": {
+     "seq": 19,
+     "confidence": "visual-candidate"
+    },
+    "up": {
+     "seq": 20,
+     "confidence": "visual-candidate"
+    },
+    "recover": {
+     "seq": 7,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "clawfx": {
+   "label": "SlashMan claw slash (effects 0x39/0x3A \u2192 sprite 0x10/0x38)",
+   "sources": {
+    "bn6f": {
+     "offset": "381340",
+     "compression": "none",
+     "bytes": 4014,
+     "sha256": "c4ea8acbd4bf4c94eb801477a5c34ce3d26462f8517cb1847265b1121bdc4b4a",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3808B8",
+     "compression": "none",
+     "bytes": 4014,
+     "sha256": "c4ea8acbd4bf4c94eb801477a5c34ce3d26462f8517cb1847265b1121bdc4b4a",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "down": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "side": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "kunai": {
+   "label": "SlashMan kunai (object type3 0x43, sprite 0x10/0x39)",
+   "sources": {
+    "bn6f": {
+     "offset": "3822F0",
+     "compression": "none",
+     "bytes": 1591,
+     "sha256": "44bd18a9ebcc2358ac55ea6911f9e96d114a5beeed137b730cad57c69bfadd68",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "381868",
+     "compression": "none",
+     "bytes": 1591,
+     "sha256": "44bd18a9ebcc2358ac55ea6911f9e96d114a5beeed137b730cad57c69bfadd68",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "spin": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "fly": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "eraseman": {
+   "label": "EraseMan (BN6; JP KillerMan)",
+   "sources": {
+    "bn6f": {
+     "offset": "28324C",
+     "compression": "none",
+     "bytes": 48956,
+     "sha256": "3bfaff30d6c2487cc95b8d1452a008fdcb2b0f527e2edb204faf60f6069488e2",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "28324C",
+     "compression": "none",
+     "bytes": 48956,
+     "sha256": "3bfaff30d6c2487cc95b8d1452a008fdcb2b0f527e2edb204faf60f6069488e2",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "Animation ids from the AI code (0x11 raise, 0x12 hold, 0x13 wind-up, 0x14 swing) match the sprite sequences directly.",
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "mark": {
+     "seq": 17,
+     "confidence": "visual-candidate"
+    },
+    "fire": {
+     "seq": 18,
+     "confidence": "visual-candidate"
+    },
+    "windup": {
+     "seq": 19,
+     "confidence": "visual-candidate"
+    },
+    "strike": {
+     "seq": 20,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "erasemark": {
+   "label": "EraseMan target marker (object type3 0x67, sprite 0x10/0x4A)",
+   "sources": {
+    "bn6f": {
+     "offset": "38C3C8",
+     "compression": "none",
+     "bytes": 1179,
+     "sha256": "406c8db0ad945cb7cb28b75c22a39b3ccdba912d90a6844add6d702a0382a19c",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "38B940",
+     "compression": "none",
+     "bytes": 1179,
+     "sha256": "406c8db0ad945cb7cb28b75c22a39b3ccdba912d90a6844add6d702a0382a19c",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "seek": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "lock": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "erasebeam": {
+   "label": "EraseMan beam (object type3 0x68, sprite 0x10/0x51)",
+   "sources": {
+    "bn6f": {
+     "offset": "390FC4",
+     "compression": "none",
+     "bytes": 3706,
+     "sha256": "dd6085ef3ddd4e6ee1ca59b00fc9f1566c9406d72a72480916cbcd0298d95c48",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "39053C",
+     "compression": "none",
+     "bytes": 3706,
+     "sha256": "dd6085ef3ddd4e6ee1ca59b00fc9f1566c9406d72a72480916cbcd0298d95c48",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "straight": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "up": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "down": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "chargeman": {
+   "label": "ChargeMan (BN6)",
+   "sources": {
+    "bn6f": {
+     "offset": "28F18C",
+     "compression": "none",
+     "bytes": 32177,
+     "sha256": "81f50238d3b049b01744e9e6c1d389d850a0450e35f6dde94e4b42734894f4c0",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "28F18C",
+     "compression": "none",
+     "bytes": 32177,
+     "sha256": "81f50238d3b049b01744e9e6c1d389d850a0450e35f6dde94e4b42734894f4c0",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "AI animation ids 0xF run, 0x10 whistle, 0x11 rush map to sequences 15-17 directly.",
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "run": {
+     "seq": 15,
+     "confidence": "visual-candidate"
+    },
+    "whistle": {
+     "seq": 16,
+     "confidence": "visual-candidate"
+    },
+    "rush": {
+     "seq": 17,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "traincar": {
+   "label": "ChargeMan train cars (object type3 0x87 / 0x88, sprite 0x10/0x54)",
+   "sources": {
+    "bn6f": {
+     "offset": "3930E0",
+     "compression": "none",
+     "bytes": 8018,
+     "sha256": "f409d58b0102885e8fbec4d0611aae2841276014a6ec0a416f0ba84c5651a82f",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "392658",
+     "compression": "none",
+     "bytes": 8018,
+     "sha256": "f409d58b0102885e8fbec4d0611aae2841276014a6ec0a416f0ba84c5651a82f",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "coal": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "skull": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "crate": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "red": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "spoutman": {
+   "label": "SpoutMan (BN6; AquaMan in BN4)",
+   "sources": {
+    "bn6f": {
+     "offset": "296F40",
+     "compression": "none",
+     "bytes": 26836,
+     "sha256": "0a3f3af6fc502db9746d5877e86f7f8e0128f635e97c775914000b4e61af50ed",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "296F40",
+     "compression": "none",
+     "bytes": 26836,
+     "sha256": "0a3f3af6fc502db9746d5877e86f7f8e0128f635e97c775914000b4e61af50ed",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "AI animation ids 0xF-0x15 map to sequences 15-21 directly.",
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "windup": {
+     "seq": 15,
+     "confidence": "visual-candidate"
+    },
+    "hold": {
+     "seq": 16,
+     "confidence": "visual-candidate"
+    },
+    "jump": {
+     "seq": 17,
+     "confidence": "visual-candidate"
+    },
+    "spin": {
+     "seq": 18,
+     "confidence": "visual-candidate"
+    },
+    "aim": {
+     "seq": 19,
+     "confidence": "visual-candidate"
+    },
+    "throw": {
+     "seq": 20,
+     "confidence": "visual-candidate"
+    },
+    "spray": {
+     "seq": 21,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "bubblebomb": {
+   "label": "SpoutMan water bomb (object type3 0x22, sprite 0x10/0x23)",
+   "sources": {
+    "bn6f": {
+     "offset": "370D6C",
+     "compression": "none",
+     "bytes": 1286,
+     "sha256": "d4fac24e2b59f1702b1ac5481d8549bdde34ceb98b5173164cbb3d484e11e5d8",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3702E4",
+     "compression": "none",
+     "bytes": 1286,
+     "sha256": "d4fac24e2b59f1702b1ac5481d8549bdde34ceb98b5173164cbb3d484e11e5d8",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "splash": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "fly": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "hosestream": {
+   "label": "SpoutMan hose stream (object type3 0x17, sprite 0x10/0x20)",
+   "sources": {
+    "bn6f": {
+     "offset": "36E034",
+     "compression": "none",
+     "bytes": 2651,
+     "sha256": "56d01841ef616c298980bac54d49d0913c05c9954bf67851b31f96e548c59190",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "36D5AC",
+     "compression": "none",
+     "bytes": 2651,
+     "sha256": "56d01841ef616c298980bac54d49d0913c05c9954bf67851b31f96e548c59190",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "nozzle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "stream": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "tip": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "sprinkler": {
+   "label": "SpoutMan sprinkler spray (object type3 0x29, sprite 0x10/0x22)",
+   "sources": {
+    "bn6f": {
+     "offset": "36EDB8",
+     "compression": "none",
+     "bytes": 8112,
+     "sha256": "ba6187d2d1a9650f3b2da30d9cf9067d18121527aceffd45d12b720920b1dbd7",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "36E330",
+     "compression": "none",
+     "bytes": 8112,
+     "sha256": "ba6187d2d1a9650f3b2da30d9cf9067d18121527aceffd45d12b720920b1dbd7",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "horizontal": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "rising": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "vertical": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "falling": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "tomahawkman": {
+   "label": "TomahawkMan (BN6)",
+   "sources": {
+    "bn6f": {
+     "offset": "29D818",
+     "compression": "none",
+     "bytes": 33495,
+     "sha256": "35cf0410718924785dd2196e7e3d14fe4c4d3a5b4b856a0c8c024b2b64c5e765",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "29D818",
+     "compression": "none",
+     "bytes": 33495,
+     "sha256": "35cf0410718924785dd2196e7e3d14fe4c4d3a5b4b856a0c8c024b2b64c5e765",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "AI animation ids 7, 0xC, 0xF-0x12 map to sequences directly.",
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "rearm": {
+     "seq": 7,
+     "confidence": "visual-candidate"
+    },
+    "throw": {
+     "seq": 12,
+     "confidence": "visual-candidate"
+    },
+    "windup": {
+     "seq": 15,
+     "confidence": "visual-candidate"
+    },
+    "swing": {
+     "seq": 16,
+     "confidence": "visual-candidate"
+    },
+    "raise": {
+     "seq": 17,
+     "confidence": "visual-candidate"
+    },
+    "chop": {
+     "seq": 18,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "tomahawk": {
+   "label": "TomahawkMan thrown axe (object type3 0x3A, sprite 0x10/0x2B)",
+   "sources": {
+    "bn6f": {
+     "offset": "376364",
+     "compression": "none",
+     "bytes": 1726,
+     "sha256": "762f416ba563c9eeed30d791ad63300495cc2656eb2246a57faefe8b981f1e79",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3758DC",
+     "compression": "none",
+     "bytes": 1726,
+     "sha256": "762f416ba563c9eeed30d791ad63300495cc2656eb2246a57faefe8b981f1e79",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "spin": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "axewave": {
+   "label": "TomahawkMan slash wave (sprite 0x10/0x37)",
+   "sources": {
+    "bn6f": {
+     "offset": "3805D4",
+     "compression": "none",
+     "bytes": 3435,
+     "sha256": "86bcf607dfb077e4c452bedd1c99967881e42d61df00ce572fb0fbe18ea64635",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "37FB4C",
+     "compression": "none",
+     "bytes": 3435,
+     "sha256": "86bcf607dfb077e4c452bedd1c99967881e42d61df00ce572fb0fbe18ea64635",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "small": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "wave": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "tenguman": {
+   "label": "TenguMan (BN6)",
+   "sources": {
+    "bn6f": {
+     "offset": "2A5AF0",
+     "compression": "none",
+     "bytes": 43935,
+     "sha256": "7660ca1825769128c224b5163e9cb128cfe397df8564b9ae96a02a619169b2b9",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2A5AF0",
+     "compression": "none",
+     "bytes": 43935,
+     "sha256": "7660ca1825769128c224b5163e9cb128cfe397df8564b9ae96a02a619169b2b9",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "AI animation ids 0xF-0x16 map to sequences directly; 0x12-0x14 are the flying dash poses.",
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "fanup": {
+     "seq": 15,
+     "confidence": "visual-candidate"
+    },
+    "fan": {
+     "seq": 16,
+     "confidence": "visual-candidate"
+    },
+    "armsup": {
+     "seq": 17,
+     "confidence": "visual-candidate"
+    },
+    "dash": {
+     "seq": 18,
+     "confidence": "visual-candidate"
+    },
+    "brace": {
+     "seq": 21,
+     "confidence": "visual-candidate"
+    },
+    "nose": {
+     "seq": 22,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "tornado": {
+   "label": "TenguMan tornado (object type3 0x47, sprite 0x10/0x42)",
+   "sources": {
+    "bn6f": {
+     "offset": "387244",
+     "compression": "none",
+     "bytes": 3078,
+     "sha256": "de58227906ba0ae5b9047c6161743f2579bc43fa1e66f97be910861d2eaa8ccf",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3867BC",
+     "compression": "none",
+     "bytes": 3078,
+     "sha256": "de58227906ba0ae5b9047c6161743f2579bc43fa1e66f97be910861d2eaa8ccf",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "spin": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "groundman": {
+   "label": "GroundMan (BN6)",
+   "sources": {
+    "bn6f": {
+     "offset": "2B0690",
+     "compression": "none",
+     "bytes": 41259,
+     "sha256": "11003ce415f3e7c78fadfe7bfa59791c1994db25aa7c2dae7d18279071971c41",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2B0690",
+     "compression": "none",
+     "bytes": 41259,
+     "sha256": "11003ce415f3e7c78fadfe7bfa59791c1994db25aa7c2dae7d18279071971c41",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "AI animation ids 0x11-0x16 map to sequences directly; the drill clones in 0xB use this sprite too (sequences 23/24).",
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "tank": {
+     "seq": 17,
+     "confidence": "visual-candidate"
+    },
+    "tankrun": {
+     "seq": 18,
+     "confidence": "visual-candidate"
+    },
+    "drillup": {
+     "seq": 19,
+     "confidence": "visual-candidate"
+    },
+    "drills": {
+     "seq": 20,
+     "confidence": "visual-candidate"
+    },
+    "missile": {
+     "seq": 21,
+     "confidence": "visual-candidate"
+    },
+    "missilefly": {
+     "seq": 22,
+     "confidence": "visual-candidate"
+    },
+    "clone": {
+     "seq": 23,
+     "confidence": "visual-candidate"
+    },
+    "clonefly": {
+     "seq": 24,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "rock": {
+   "label": "Falling rock (object type3 0x80, sprite 0x10/0x05)",
+   "sources": {
+    "bn6f": {
+     "offset": "3547A4",
+     "compression": "none",
+     "bytes": 1380,
+     "sha256": "ce001170f943642b391807fdacbb9ac9be2e995d8a19d7bd68283a7879e04eb8",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "353D1C",
+     "compression": "none",
+     "bytes": 1380,
+     "sha256": "ce001170f943642b391807fdacbb9ac9be2e995d8a19d7bd68283a7879e04eb8",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "fall": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "break": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "dustman": {
+   "label": "DustMan (BN6)",
+   "sources": {
+    "bn6f": {
+     "offset": "2BA7BC",
+     "compression": "none",
+     "bytes": 52624,
+     "sha256": "5e7b78a8d36c67e70f196f19690ba2810a1bd26ddb9ad42ed204fbc99874bde8",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2BA7BC",
+     "compression": "none",
+     "bytes": 52624,
+     "sha256": "5e7b78a8d36c67e70f196f19690ba2810a1bd26ddb9ad42ed204fbc99874bde8",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "AI animation ids 0xF-0x17 map to sequences directly; the thrown junk (type3 0x83) uses sequence 24 of this sprite.",
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "transform": {
+     "seq": 15,
+     "confidence": "visual-candidate"
+    },
+    "hold": {
+     "seq": 16,
+     "confidence": "visual-candidate"
+    },
+    "mouth": {
+     "seq": 17,
+     "confidence": "visual-candidate"
+    },
+    "suck": {
+     "seq": 18,
+     "confidence": "visual-candidate"
+    },
+    "fist": {
+     "seq": 20,
+     "confidence": "visual-candidate"
+    },
+    "throw": {
+     "seq": 23,
+     "confidence": "visual-candidate"
+    },
+    "junk": {
+     "seq": 24,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "scrapshot": {
+   "label": "DustMan scrap shot (object type3 0x84, sprite 0x0C/0x33)",
+   "sources": {
+    "bn6f": {
+     "offset": "325EF4",
+     "compression": "none",
+     "bytes": 968,
+     "sha256": "12b10df7fd16fc4aa8f2e2476e2ae93c8ed34426112e131d09a4a6e9c239d494",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "32546C",
+     "compression": "none",
+     "bytes": 968,
+     "sha256": "12b10df7fd16fc4aa8f2e2476e2ae93c8ed34426112e131d09a4a6e9c239d494",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "fly": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "blastman": {
+   "label": "BlastMan (BN6)",
+   "sources": {
+    "bn6f": {
+     "offset": "2CED74",
+     "compression": "lz77",
+     "bytes": 34608,
+     "sha256": "2c0da1f9e3790414035d918327d5d782a2eb96a14356e02d8d7f5e2008d82272",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2CED74",
+     "compression": "lz77",
+     "bytes": 34608,
+     "sha256": "2c0da1f9e3790414035d918327d5d782a2eb96a14356e02d8d7f5e2008d82272",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "LZ77-compressed. AI animation ids 5, 7, 9-0xC map to sequences directly; his fire objects (type3 0x1F/0x20/0x21) use sequences 13-18 of this same sprite.",
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "punch": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "burn": {
+     "seq": 7,
+     "confidence": "visual-candidate"
+    },
+    "kick": {
+     "seq": 9,
+     "confidence": "visual-candidate"
+    },
+    "charge": {
+     "seq": 10,
+     "confidence": "visual-candidate"
+    },
+    "release": {
+     "seq": 11,
+     "confidence": "visual-candidate"
+    },
+    "raise": {
+     "seq": 12,
+     "confidence": "visual-candidate"
+    },
+    "ring": {
+     "seq": 13,
+     "confidence": "visual-candidate"
+    },
+    "bigring": {
+     "seq": 14,
+     "confidence": "visual-candidate"
+    },
+    "fireball": {
+     "seq": 17,
+     "confidence": "visual-candidate"
+    },
+    "fireup": {
+     "seq": 18,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "diveman": {
+   "label": "DiveMan (BN6)",
+   "sources": {
+    "bn6f": {
+     "offset": "2D2AC8",
+     "compression": "lz77",
+     "bytes": 41296,
+     "sha256": "9fe98933f93355bf45f70a042b7e8764c32f76906c00a52a1dc710174df219a2",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2D2AC8",
+     "compression": "lz77",
+     "bytes": 41296,
+     "sha256": "9fe98933f93355bf45f70a042b7e8764c32f76906c00a52a1dc710174df219a2",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "LZ77-compressed. AI animation ids 3-8 map to sequences directly (3 = submerged periscope); the wave (20), torpedo (23/24) and splash (25) are sequences of this same sprite.",
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 7,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 8,
+     "confidence": "visual-candidate"
+    },
+    "submerged": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "leap": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "slam": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "launch": {
+     "seq": 6,
+     "confidence": "visual-candidate"
+    },
+    "surface": {
+     "seq": 7,
+     "confidence": "visual-candidate"
+    },
+    "dive": {
+     "seq": 8,
+     "confidence": "visual-candidate"
+    },
+    "wave": {
+     "seq": 20,
+     "confidence": "visual-candidate"
+    },
+    "torpedo": {
+     "seq": 24,
+     "confidence": "visual-candidate"
+    },
+    "splash": {
+     "seq": 25,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "circusman": {
+   "label": "CircusMan (BN6)",
+   "sources": {
+    "bn6f": {
+     "offset": "2D6FE4",
+     "compression": "lz77",
+     "bytes": 43792,
+     "sha256": "3053db7fa31e9153ee624de4059f6647affda87589d6d6a44dfc03d7228fc320",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2D6FE4",
+     "compression": "lz77",
+     "bytes": 43792,
+     "sha256": "3053db7fa31e9153ee624de4059f6647affda87589d6d6a44dfc03d7228fc320",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "LZ77-compressed, 64 sequences: body 0-19 (tent 14-18), separate hand layers 20-59 (not drawn here), giant hands 60/61, hoop 62, lion 63. AI animation ids map to sequences directly.",
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "jump": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "raise": {
+     "seq": 7,
+     "confidence": "visual-candidate"
+    },
+    "clap": {
+     "seq": 8,
+     "confidence": "visual-candidate"
+    },
+    "bow": {
+     "seq": 9,
+     "confidence": "visual-candidate"
+    },
+    "whip": {
+     "seq": 10,
+     "confidence": "visual-candidate"
+    },
+    "present": {
+     "seq": 11,
+     "confidence": "visual-candidate"
+    },
+    "tentprep": {
+     "seq": 12,
+     "confidence": "visual-candidate"
+    },
+    "leap": {
+     "seq": 13,
+     "confidence": "visual-candidate"
+    },
+    "tent": {
+     "seq": 14,
+     "confidence": "visual-candidate"
+    },
+    "tentdrop": {
+     "seq": 15,
+     "confidence": "visual-candidate"
+    },
+    "tentshake": {
+     "seq": 16,
+     "confidence": "visual-candidate"
+    },
+    "handl": {
+     "seq": 60,
+     "confidence": "visual-candidate"
+    },
+    "handr": {
+     "seq": 61,
+     "confidence": "visual-candidate"
+    },
+    "hoop": {
+     "seq": 62,
+     "confidence": "visual-candidate"
+    },
+    "lion": {
+     "seq": 63,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "judgeman": {
+   "label": "JudgeMan (BN6)",
+   "sources": {
+    "bn6f": {
+     "offset": "2DABC8",
+     "compression": "lz77",
+     "bytes": 26880,
+     "sha256": "87094a8ea43f8cadb31ae7e40b05958db9fa24e86ed2eedaf090d60ab5cb33a8",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2DABC8",
+     "compression": "lz77",
+     "bytes": 26880,
+     "sha256": "87094a8ea43f8cadb31ae7e40b05958db9fa24e86ed2eedaf090d60ab5cb33a8",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "LZ77-compressed, 19 sequences. AI animation ids 5-7 map to sequences directly; whip 8/9, press books 10/11, law book 13-18.",
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "summon": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "windup": {
+     "seq": 6,
+     "confidence": "visual-candidate"
+    },
+    "whip": {
+     "seq": 7,
+     "confidence": "visual-candidate"
+    },
+    "lash": {
+     "seq": 9,
+     "confidence": "visual-candidate"
+    },
+    "press": {
+     "seq": 10,
+     "confidence": "visual-candidate"
+    },
+    "pressshut": {
+     "seq": 11,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "lawbook": {
+   "label": "JudgeMan law book (object type3 0x70; same sprite as JudgeMan)",
+   "sources": {
+    "bn6f": {
+     "offset": "2DABC8",
+     "compression": "lz77",
+     "bytes": 26880,
+     "sha256": "87094a8ea43f8cadb31ae7e40b05958db9fa24e86ed2eedaf090d60ab5cb33a8",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2DABC8",
+     "compression": "lz77",
+     "bytes": 26880,
+     "sha256": "87094a8ea43f8cadb31ae7e40b05958db9fa24e86ed2eedaf090d60ab5cb33a8",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "appear": {
+     "seq": 13,
+     "confidence": "visual-candidate"
+    },
+    "idle": {
+     "seq": 13,
+     "confidence": "visual-candidate"
+    },
+    "open": {
+     "seq": 14,
+     "confidence": "visual-candidate"
+    },
+    "flip": {
+     "seq": 15,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "elementman": {
+   "label": "ElementMan (BN6)",
+   "sources": {
+    "bn6f": {
+     "offset": "2DD9A8",
+     "compression": "lz77",
+     "bytes": 22568,
+     "sha256": "6e1807a009dc061794bc2206db750bf448777f97bf9ead91412d057dacb4a237",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2DD9A8",
+     "compression": "lz77",
+     "bytes": 22568,
+     "sha256": "6e1807a009dc061794bc2206db750bf448777f97bf9ead91412d057dacb4a237",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "LZ77-compressed, 20 sequences: body 0-8, element ring 9-17, rising tower 18/19. The attack objects (type3 0x8D-0x90, type4 0x57) use other sprites not yet registered.",
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "cast": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "castloop": {
+     "seq": 6,
+     "confidence": "visual-candidate"
+    },
+    "push": {
+     "seq": 7,
+     "confidence": "visual-candidate"
+    },
+    "ring": {
+     "seq": 9,
+     "confidence": "visual-candidate"
+    },
+    "tower": {
+     "seq": 18,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "colonel": {
+   "label": "Colonel (BN6)",
+   "sources": {
+    "bn6f": {
+     "offset": "2E0114",
+     "compression": "lz77",
+     "bytes": 39612,
+     "sha256": "da3899fc9e8bdfbe6001aacf033c4c5ea62c884adc98335cabb407e85988e1b8",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2E0114",
+     "compression": "lz77",
+     "bytes": 39612,
+     "sha256": "da3899fc9e8bdfbe6001aacf033c4c5ea62c884adc98335cabb407e85988e1b8",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "LZ77-compressed, 33 sequences: body 0-12, cape layers 13-29 (not drawn), missile 30-32.",
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "slash": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "cannon": {
+     "seq": 7,
+     "confidence": "visual-candidate"
+    },
+    "fire": {
+     "seq": 8,
+     "confidence": "visual-candidate"
+    },
+    "thrust": {
+     "seq": 11,
+     "confidence": "visual-candidate"
+    },
+    "raise": {
+     "seq": 12,
+     "confidence": "visual-candidate"
+    },
+    "launch": {
+     "seq": 30,
+     "confidence": "visual-candidate"
+    },
+    "missile": {
+     "seq": 32,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "bass": {
+   "label": "Bass (BN6)",
+   "sources": {
+    "bn6f": {
+     "offset": "2E4050",
+     "compression": "lz77",
+     "bytes": 43124,
+     "sha256": "c343e7e7356f6b158baea23e387a3d105f030f0f529bb7310cd3610b08956598",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2E4050",
+     "compression": "lz77",
+     "bytes": 43124,
+     "sha256": "c343e7e7356f6b158baea23e387a3d105f030f0f529bb7310cd3610b08956598",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "LZ77-compressed, 47 sequences: body 0-19, cape layers 20-39 (not composited yet, so he shows without his cape), projectiles 40-46.",
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flinch": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "appear": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "vanish": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "fist": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "point": {
+     "seq": 9,
+     "confidence": "visual-candidate"
+    },
+    "rapid": {
+     "seq": 11,
+     "confidence": "visual-candidate"
+    },
+    "rapid2": {
+     "seq": 12,
+     "confidence": "visual-candidate"
+    },
+    "charge": {
+     "seq": 13,
+     "confidence": "visual-candidate"
+    },
+    "slash": {
+     "seq": 14,
+     "confidence": "visual-candidate"
+    },
+    "wheel": {
+     "seq": 45,
+     "confidence": "visual-candidate"
+    },
+    "shot": {
+     "seq": 40,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "gregar": {
+   "label": "Cybeast Gregar (BN6 Gregar)",
+   "sources": {
+    "bn6g": {
+     "offset": "2E8470",
+     "compression": "lz77",
+     "bytes": 77232,
+     "sha256": "7199ed8eecaffaf4265b4275740be5d8826a5d39b3084c9a52de7cda39fdd9b9",
+     "confidence": "rom-verified"
+    }
+   },
+   "note": "Only the Gregar ROM carries the full battle sprite (sprite table category 8, index 0x14); the Falzar ROM's entry at that index is a small 31-sequence block, so a Falzar-only install falls back to the Gregar ROM if it is imported, else placeholder art. 86 sequences: five stacked layers of 16 animations (0-15 shadow, 16-31 body, 32-47 head and tail, 48-63 forelegs, 64-79 mane) plus effects 80-85. Layer draw order is a visual guess.",
+   "layers": [
+    0,
+    64,
+    16,
+    48,
+    32
+   ],
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "rise": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "land": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "crouch": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "swipe": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "swipe2": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "bite": {
+     "seq": 6,
+     "confidence": "visual-candidate"
+    },
+    "charge": {
+     "seq": 7,
+     "confidence": "visual-candidate"
+    },
+    "charge2": {
+     "seq": 8,
+     "confidence": "visual-candidate"
+    },
+    "charge3": {
+     "seq": 9,
+     "confidence": "visual-candidate"
+    },
+    "rush": {
+     "seq": 11,
+     "confidence": "visual-candidate"
+    },
+    "rush2": {
+     "seq": 12,
+     "confidence": "visual-candidate"
+    },
+    "rush3": {
+     "seq": 13,
+     "confidence": "visual-candidate"
+    },
+    "rush4": {
+     "seq": 14,
+     "confidence": "visual-candidate"
+    }
+   }
   }
+ },
+ "tables": {
+  "note": "BN6 sprite pointer table (flat sprite ID index, bit 31 = LZ77) and virus stats tables; see tools/extract_bn6_viruses.py",
+  "bn6f": {
+   "spritePointers": "31CEC",
+   "virusStats": "109150"
+  },
+  "bn6g": {
+   "spritePointers": "31CEC",
+   "virusStats": "10A478"
+  }
+ }
 }

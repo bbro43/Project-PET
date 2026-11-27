@@ -66,7 +66,12 @@ async function loadBank() {
   if (id) {
     try {
       const rec = await loadRom(id);
-      bank = buildBank(new Uint8Array(rec.bytes), id, registry);
+      // Other imported BN6 ROMs fill in sprites this one lacks (the other version's Cybeast).
+      const others = {};
+      for (const r of await listRoms().catch(() => [])) {
+        if (r.id !== id && /^bn6/.test(r.id)) { const o = await loadRom(r.id); if (o) others[r.id] = new Uint8Array(o.bytes); }
+      }
+      bank = buildBank(new Uint8Array(rec.bytes), id, registry, others);
       $('#navi-note').textContent = `Sprites decoded from ${rec.title}.`;
     } catch (err) {
       console.error(err);

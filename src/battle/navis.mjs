@@ -4,13 +4,13 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'BlastMan', 'DiveMan', 'CircusMan', 'JudgeMan', 'ElementMan', 'Colonel', 'Bass', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', BlastMan: 'blastman', DiveMan: 'diveman', CircusMan: 'circusman', JudgeMan: 'judgeman', ElementMan: 'elementman', Colonel: 'colonel', Bass: 'bass', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'BlastMan', 'DiveMan', 'CircusMan', 'JudgeMan', 'ElementMan', 'Colonel', 'Bass', 'Gregar', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', BlastMan: 'blastman', DiveMan: 'diveman', CircusMan: 'circusman', JudgeMan: 'judgeman', ElementMan: 'elementman', Colonel: 'colonel', Bass: 'bass', Gregar: 'gregar', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
 export function naviVariants(navi) {
-  return BN6.navis[navi].variants.map((v, i) => ({ ...v, index: i })).filter(v => !v.name.includes('?'));
+  return BN6.navis[navi].variants.map((v, i) => ({ ...v, index: i, ...(NAVI_AI[navi]?.hp ? { hp: pv(NAVI_AI[navi].hp, i) } : {}) })).filter(v => !v.name.includes('?'));
 }
 
 export function createNavi(navi, variant, x, y, id) {
@@ -20,7 +20,15 @@ export function createNavi(navi, variant, x, y, id) {
     x, y, drawX: x, drawY: y, homeX: x, homeY: y, hp: st.hp, maxHp: st.hp, element: st.element,
     state: 'idle', stateT: 0, anim: 'idle', animT: 0, think: 40, flash: 0,
     mem: { c4: 0, c5: 0, c6: 0, c7: 0, c7x: 0, toggle: 0, special: 0 }, plan: null, guard: false, guardHit: false,
+    ...(navi === 'Gregar' ? cybeast(NAVI_AI.Gregar, variant) : {}),
   };
+}
+
+// Cybeasts fill the whole enemy area: drawn from its centre, hit on any of its 9 panels.
+function cybeast(P, variant) {
+  const hp = pv(P.hp, variant), cells = [];
+  for (let x = 3; x < 6; x++) for (let y = 0; y < 3; y++) cells.push([x, y]);
+  return { hp, maxHp: hp, x: 4, y: 1, drawX: 5, drawY: 1, homeX: 4, homeY: 1, cells, big: true };
 }
 
 const setAnim = (e, anim) => { e.anim = anim; e.animT = 0; };
@@ -1662,7 +1670,95 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, BlastMan: blastman, DiveMan: diveman, CircusMan: circusman, JudgeMan: judgeman, ElementMan: elementman, Colonel: colonel, Bass: bass, ProtoMan: protoman };
+// ======================= Cybeast Gregar =======================
+// Decision 0x8103CD0 → 9 leap, 0xA claw swipe, 0xB claw lunge, 0xC Beast Breath, 0xD Beast Thunder, 0xE Giga Rush.
+function gregar(e, api) {
+  const P = NAVI_AI.Gregar, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const wait = t => { go(e, 'idle', 'idle'); e.think = Math.max(1, t); };
+  const rows = y => [y - 1, y, y + 1].filter(r => r >= 0 && r <= 2);
+  const strike = (cells, dmg) => {
+    e.highlight = null; s.effects.push({ kind: 'shake', t: 0 });
+    api.hitPlayerCells(cells, dmg);
+    for (const [x, y] of cells) s.effects.push({ kind: 'spark', x, y, t: 0 });
+  };
+  switch (e.state) {
+    case 'idle':
+      if (--e.think > 0) return;
+      return decide();
+    case 'leap': { // 9: crouch, leap, land with a shock along MegaMan's row
+      const hold = pv(P.jumpHold, v), air = P.jumpAir.value;
+      if (e.stateT === hold) { setAnim(e, 'rise'); e.airborne = true; }
+      if (e.stateT > hold && e.stateT <= hold + air) e.z = (e.stateT - hold) * 8;
+      if (e.stateT > hold + air && e.stateT <= hold + air * 2) e.z = (hold + air * 2 - e.stateT) * 8;
+      if (e.stateT === hold + air * 2) {
+        e.z = 0; e.airborne = false; setAnim(e, 'land'); s.effects.push({ kind: 'shake', t: 0 });
+        s.hazards.push({ kind: 'shock', x0: 2, y: p.y, start: s.tick + 1, step: 4, damage: pv(P.jumpDamage, v), owner: e.id });
+      }
+      if (e.stateT >= hold + air * 2 + 12) wait(pv(P.jumpWait, v));
+      return;
+    }
+    case 'swipe': { // 0xA: front column across three rows
+      const mark = pv(P.clawMark, v);
+      if (e.stateT === 1) { e.cellsHit = rows(p.y).map(y => [2, y]); e.highlight = [e.cellsHit]; }
+      if (e.stateT === mark) { setAnim(e, 'swipe2'); strike(e.cellsHit, pv(P.swipeDamage, v)); }
+      if (e.stateT >= mark + 16) wait(pv(P.clawWait, v));
+      return;
+    }
+    case 'bite': { // 0xB: lunge over the two front columns of MegaMan's row
+      const mark = pv(P.clawMark, v);
+      if (e.stateT === 1) { e.cellsHit = [[2, p.y], [1, p.y]]; e.highlight = [e.cellsHit]; }
+      if (e.stateT === mark) strike(e.cellsHit, pv(P.biteDamage, v));
+      if (e.stateT >= mark + 16) wait(pv(P.clawWait, v));
+      return;
+    }
+    case 'breath': { // 0xC: targets in MegaMan's area lit one after another, then hit
+      const mark = P.breathMark.value, n = P.breathCount.value, gap = 16;
+      const t = e.stateT - 8;
+      if (t >= 0 && t % gap === 0 && t / gap < n) {
+        const others = [];
+        for (let x = 0; x < 3; x++) for (let y = 0; y < 3; y++) if (x !== p.x || y !== p.y) others.push([x, y]);
+        const [x, y] = t === 0 ? [p.x, p.y] : pick(others, api);
+        s.hazards.push({ kind: 'estrike', x, y, hit: s.tick + mark, damage: pv(P.breathDamage, v), elem: 'beast', owner: e.id });
+      }
+      if (t >= gap * (n - 1) + mark + 12) wait(pv(P.jumpWait, v));
+      return;
+    }
+    case 'thunder': { // 0xD: lightning on MegaMan's panel, three times
+      const mark = P.thunderMark.value, n = P.thunderCount.value, gap = mark + 12;
+      if (e.stateT % gap === 1 && Math.floor(e.stateT / gap) < n) {
+        setAnim(e, ['charge', 'charge2', 'charge3'][Math.floor(e.stateT / gap) % 3]);
+        s.hazards.push({ kind: 'estrike', x: p.x, y: p.y, hit: s.tick + mark, damage: pv(P.thunderDamage, v), elem: 'elec', owner: e.id });
+      }
+      if (e.stateT >= gap * n + 8) wait(pv(P.thunderWait, v));
+      return;
+    }
+    case 'rush': { // 0xE: Giga Rush down MegaMan's row
+      const mark = pv(P.rushMark, v);
+      if (e.stateT === 1) { e.cellsHit = [[0, p.y], [1, p.y], [2, p.y]]; e.highlight = [e.cellsHit]; }
+      if (e.stateT === mark) { setAnim(e, 'rush2'); strike(e.cellsHit, pv(P.rushDamage, v)); }
+      if (e.stateT === mark + 10) setAnim(e, 'rush4');
+      if (e.stateT >= mark + 30) wait(pv(P.jumpWait, v));
+      return;
+    }
+  }
+
+  function decide() {
+    if (m.c4 < 2) { m.c4++; return go(e, 'leap', 'crouch'); }
+    m.c4 = 0;
+    if (m.c5 < 5) {
+      m.c5++;
+      if (m.c6 < 3) { m.c6++; return rnd16(api) < 8 ? go(e, 'swipe', 'swipe') : go(e, 'bite', 'bite'); }
+      m.c6 = 0;
+      return go(e, 'thunder', 'charge');
+    }
+    m.c5 = 0;
+    if (e.hp >= e.maxHp / 2) return go(e, 'breath', 'charge');
+    const was = m.c7; m.c7 = was ? 0 : 1;
+    return was ? go(e, 'rush', 'rush') : go(e, 'breath', 'charge');
+  }
+}
+
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, BlastMan: blastman, DiveMan: diveman, CircusMan: circusman, JudgeMan: judgeman, ElementMan: elementman, Colonel: colonel, Bass: bass, Gregar: gregar, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;
