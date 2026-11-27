@@ -247,6 +247,15 @@ export function render(g, s, bank) {
       sprite(g, bank, 'circusman', 'handr', 0, ax, ay - 30 * (1 - k), '#fff', 0, true);
     }
     if (h.kind === 'hoop') { const [ax, ay] = anchor(h.x, h.y); sprite(g, bank, 'circusman', 'hoop', s.tick - h.start, ax, ay, '#f84', 0, true); }
+    if (h.kind === 'portal' && s.tick >= h.start) {
+      const [ax, ay] = anchor(h.x, h.y), lunge = s.tick >= h.hit;
+      if (s.tick < h.hit) { g.fillStyle = 'rgba(176,96,255,.35)'; g.fillRect(ax - PANEL_W / 2 + 2, ay - 14, PANEL_W - 4, 16); }
+      sprite(g, bank, 'eraseportal', lunge ? 'lunge' : 'open', lunge ? s.tick - h.hit : s.tick - h.start, ax, ay, (g, x, y) => { g.fillStyle = '#7a3cc0'; g.beginPath(); g.ellipse(x, y - 14, 10, 14, 0, 0, 7); g.fill(); }, 0, true);
+    }
+    if (h.kind === 'mine') {
+      const [ax, ay] = anchor(h.x, h.y), flying = s.tick >= h.launch;
+      sprite(g, bank, 'diveman', flying ? 'torpedo' : 'mine', s.tick - (flying ? h.launch : h.start), ax, ay, (g, x, y) => { g.fillStyle = '#4060a0'; g.beginPath(); g.arc(x, y - 8, 7, 0, 7); g.fill(); }, 0, true);
+    }
     if (h.kind === 'shock' && h.x !== undefined && h.style === 'wind') {
       const [ax, ay] = anchor(h.x, h.y);
       g.strokeStyle = '#d0f0ff'; g.lineWidth = 2;
@@ -318,11 +327,11 @@ export function render(g, s, bank) {
     if (e.hover && bank?.get(e.sprite)?.shadow) sprite(g, bank, e.sprite, 'shadow', 0, ax + 30, ay0, () => {}, e.palette, true); // under his talons
     else if (e.z > 0) { g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(ax, ay0 - 2, e.hover ? 30 : 10, e.hover ? 8 : 4, 0, 0, 7); g.fill(); }
     draw.push({ y: e.drawY ?? e.y, fn: () => {
-      sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, fallback, e.palette, e.kind === 'navi');
+      sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, fallback, e.palette, e.kind === 'navi' || !!e.flip);
       if (e.kind === 'coil' && e.discharge > 0 && !bank?.has('eleccoil')) { g.strokeStyle = '#80f0ff'; g.lineWidth = 2; g.beginPath(); g.moveTo(ax, FIELD_Y); g.lineTo(ax, FIELD_Y + 3 * PANEL_H); g.stroke(); }
       if (e.guard) { g.fillStyle = 'rgba(200,230,255,.7)'; g.fillRect(ax - 18, ay - 34, 3, 28); }
       if (e.flash) { g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(ax - 14, ay - 26, 28, 26); g.globalCompositeOperation = 'source-over'; }
-      text(g, String(e.hp), ax, ay + 6, '#fff', 'center');
+      if (!e.noHp) text(g, String(e.hp), ax, ay + 6, '#fff', 'center');
     } });
   }
   draw.sort((a, b) => a.y - b.y).forEach(d => d.fn());

@@ -1670,6 +1670,10 @@
     "splash": {
      "seq": 25,
      "confidence": "visual-candidate"
+    },
+    "mine": {
+     "seq": 23,
+     "confidence": "visual-candidate"
     }
    }
   },
@@ -2208,6 +2212,109 @@
      "layers": [
       0
      ],
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "eagle": {
+   "label": "TomahawkMan eagle (object type3 0x40, sprite 0x10/0x2A)",
+   "sources": {
+    "bn6f": {
+     "offset": "373D70",
+     "compression": "none",
+     "bytes": 9713,
+     "sha256": "5c38a2908925ace7a8a22a4f26c9aa024b1fb215005b3900884ee435692f5039",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3732E8",
+     "compression": "none",
+     "bytes": 9713,
+     "sha256": "5c38a2908925ace7a8a22a4f26c9aa024b1fb215005b3900884ee435692f5039",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "perch": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "flap": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "swoop": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "return": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "toaxe": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "totem": {
+   "label": "TomahawkMan totem pole (object type3 0x41, sprite 0x10/0x29)",
+   "sources": {
+    "bn6f": {
+     "offset": "373AFC",
+     "compression": "none",
+     "bytes": 626,
+     "sha256": "0e8e9c24afa07a796ca3c6d5ca44f1c9dd8d462c602bb0cde3d46efd1c88663d",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "373074",
+     "compression": "none",
+     "bytes": 626,
+     "sha256": "0e8e9c24afa07a796ca3c6d5ca44f1c9dd8d462c602bb0cde3d46efd1c88663d",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "eraseportal": {
+   "label": "EraseMan dark portal (object type3 0x65, sprite 0x10/0x4B)",
+   "sources": {
+    "bn6f": {
+     "offset": "38C864",
+     "compression": "none",
+     "bytes": 6446,
+     "sha256": "103ffaf6bd9541108a50491753a974be127fb62a0087a349a09b9618fc7a53d3",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "38BDDC",
+     "compression": "none",
+     "bytes": 6446,
+     "sha256": "103ffaf6bd9541108a50491753a974be127fb62a0087a349a09b9618fc7a53d3",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "open": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "idle": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "lunge": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "dash": {
+     "seq": 3,
      "confidence": "visual-candidate"
     }
    }

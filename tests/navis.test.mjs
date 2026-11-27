@@ -926,3 +926,51 @@ test('Falzar below half HP alternates Feather Storm and Drill Dive', () => {
   run(s, NAVI_AI.Falzar.diveMark.value[0] + 8);
   assert.equal(1000 - s.player.hp, NAVI_AI.Falzar.diveDamage.value[0]);
 });
+
+test('EraseMan dark portals: three open (one per row) after 40 frames, staggered by 20', () => {
+  const s = start('EraseMan'); s.player.invuln = 1e9;
+  run(s, 41);
+  const ps = s.hazards.filter(h => h.kind === 'portal');
+  assert.equal(ps.length, 3);
+  assert.deepEqual(ps.map(h => h.y).sort(), [0, 1, 2]);
+  assert.deepEqual(ps.map(h => h.start - s.tick + 1).sort((a, b) => a - b), [0, 20, 40]);
+  assert.ok(ps.every(h => h.x >= 0 && h.x <= 2));
+});
+
+test('EraseMan portal hits MegaMan standing on it for the portal damage', () => {
+  const s = start('EraseMan'); s.player.invuln = 1e9;
+  run(s, 41);
+  const h = s.hazards.find(h => h.kind === 'portal' && h.start === Math.min(...s.hazards.filter(k => k.kind === 'portal').map(k => k.start)));
+  s.player.x = h.x; s.player.y = h.y; s.player.invuln = 0; s.player.hp = 500;
+  s.enemies[0].think = 1e9;
+  while (s.tick < h.hit + 1) step(s, {});
+  assert.equal(500 - s.player.hp, NAVI_AI.EraseMan.portalDamage.value[0]);
+});
+
+test('DiveMan mines: first in MegaMan\'s row, second shortly after, then they launch as torpedoes', () => {
+  const s = start('DiveMan'); s.player.invuln = 1e9; s.enemies[0].think = 1e9;
+  const P = NAVI_AI.DiveMan;
+  run(s, P.mineInterval.value[0]);
+  let ms = s.hazards.filter(h => h.kind === 'mine');
+  assert.equal(ms.length, 1); assert.equal(ms[0].y, s.player.y);
+  s.player.x = (ms[0].x + 1) % 3; // step off the first mine
+  run(s, P.mineSecond.value[0]);
+  assert.equal(s.hazards.filter(h => h.kind === 'mine').length, 2);
+  const m = ms[0], x0 = m.x0;
+  run(s, P.mineLaunch.value + 20);
+  assert.ok(!s.hazards.includes(m) || m.x < x0);
+});
+
+test('TomahawkMan totem and eagle: the eagle swoops down the middle row and a hit sends it home', () => {
+  const s = start('TomahawkMan'); s.player.invuln = 1e9;
+  const P = NAVI_AI.TomahawkMan; s.enemies[0].think = 1e9;
+  run(s, 1);
+  const eagle = s.enemies.find(e => e.family === 'Eagle'), totem = s.enemies.find(e => e.family === 'Totem');
+  assert.ok(eagle && totem); assert.deepEqual([totem.x, totem.y], P.eaglePerch.value);
+  run(s, P.eagleWait.value + P.eagleWarn.value + P.eagleLead.value + 2);
+  assert.equal(eagle.state, 'fly');
+  s.player.x = 0; s.player.y = 1; s.player.invuln = 0; s.player.hp = 500;
+  for (let i = 0; i < 60 && eagle.state === 'fly'; i++) step(s, {});
+  assert.equal(500 - s.player.hp, P.eagleDamage.value[0]);
+  assert.ok(s.enemies.includes(eagle));
+});

@@ -652,7 +652,8 @@ function tomahawkman(e, api) {
   const P = NAVI_AI.TomahawkMan, s = api.s, p = s.player, v = e.variant, m = e.mem;
   const [VAN, APP] = P.warpTicks.value;
   const wait = t => { go(e, 'idle', 'rearm'); e.think = Math.max(1, t); };
-  const free = (x, y) => x >= 3 && x <= 5 && y >= 0 && y <= 2 && (!api.at(x, y) || api.at(x, y) === e);
+  const [PX, PY] = P.eaglePerch.value;
+  const free = (x, y) => x >= 3 && x <= 5 && y >= 0 && y <= 2 && !(x === PX && y === PY) && (!api.at(x, y) || api.at(x, y) === e);
   switch (e.state) {
     case 'idle':
       if (e.anim === 'rearm' && e.animT > 12) setAnim(e, 'idle');
@@ -1848,11 +1849,72 @@ function falzar(e, api) {
   }
 }
 
+// ======================= Battle-start objects =======================
+// Helpers the spawn hooks place when the fight begins; they act on their own clocks.
+function startObjects(e, api) {
+  const s = api.s, p = s.player, v = e.variant;
+  if (e.family === 'EraseMan') { // type4 0x88: three dark portals, one per row, every few seconds
+    const P = NAVI_AI.EraseMan;
+    e.obj ??= { t: 40 };
+    if (--e.obj.t > 0) return;
+    e.obj.t = pv(P.portalInterval, v);
+    const order = [0, 1, 2].sort(() => api.rng() - 0.5);
+    order.forEach((slot, y) => {
+      const start = s.tick + slot * P.portalStagger.value;
+      s.hazards.push({ kind: 'portal', x: Math.floor(api.rng() * 3), y, start, hit: start + P.portalOpen.value, until: start + P.portalOpen.value + P.portalHit.value + 12, hitFor: P.portalHit.value, damage: pv(P.portalDamage, v), owner: e.id });
+    });
+  }
+  if (e.family === 'DiveMan') { // type3 0x36: mines surface in MegaMan's area, then shoot off as torpedoes
+    const P = NAVI_AI.DiveMan;
+    e.obj ??= { t: pv(P.mineInterval, v), second: false };
+    if (['torpedo', 'leap', 'slam'].includes(e.state)) return;
+    if (--e.obj.t > 0) return;
+    const x = Math.floor(api.rng() * 3), y = e.obj.second ? Math.floor(api.rng() * 3) : p.y;
+    s.hazards.push({ kind: 'mine', x, y, x0: x, start: s.tick, arm: s.tick + P.mineArm.value, launch: s.tick + P.mineLaunch.value, step: pv(P.mineStep, v), damage: pv(P.mineDamage, v), owner: e.id });
+    e.obj.second = !e.obj.second;
+    e.obj.t = e.obj.second ? pv(P.mineSecond, v) : pv(P.mineInterval, v);
+  }
+  if (e.family === 'TomahawkMan' && !e.obj) { // type3 0x41 totem pole with the type3 0x40 eagle on it
+    const P = NAVI_AI.TomahawkMan, [x, y] = P.eaglePerch.value;
+    e.obj = { totem: api.addEnemy({ kind: 'coil', family: 'Totem', name: 'Totem', owner: e.id, sprite: 'totem', palette: 0, flip: true, x, y, drawX: x, drawY: y, hp: 1, maxHp: 1, airborne: true, noHp: true, anim: 'idle', animT: 0, state: 'idle', stateT: 0, flash: 0, discharge: 0 }) };
+    e.obj.eagle = api.addEnemy({ kind: 'coil', family: 'Eagle', name: 'Eagle', owner: e.id, sprite: 'eagle', palette: 0, flip: true, noHp: true, x, y, drawX: x, drawY: y, z: 40, hp: P.eagleHp.value, maxHp: P.eagleHp.value, sturdy: true, airborne: true, anim: 'perch', animT: 0, state: 'perch', stateT: 0, flash: 0, discharge: 0, variant: v });
+  }
+}
+
+function stepEagle(c, api) {
+  const P = NAVI_AI.TomahawkMan, s = api.s, p = s.player, v = c.variant, [PX, PY] = P.eaglePerch.value;
+  const to = (state, anim) => { c.state = state; c.stateT = 0; c.anim = anim; c.animT = 0; };
+  switch (c.state) {
+    case 'perch':
+      if (c.stateT >= P.eagleWait.value) { to('warn', 'flap'); c.highlight = [[[0, PY], [1, PY], [2, PY]]]; }
+      return;
+    case 'warn':
+      if (c.stateT >= P.eagleWarn.value + P.eagleLead.value) {
+        c.highlight = null; to('fly', 'swoop');
+        c.fx = PX - 1; c.x = c.fx; c.drawX = c.fx; c.z = 20; c.airborne = false; c.hp = c.maxHp; c.hitDone = false;
+      }
+      return;
+    case 'fly': {
+      if (c.hp < c.maxHp) return home(); // any hit sends it back
+      c.fx -= 1 / pv(P.eagleStep, v); c.drawX = c.fx; c.x = Math.round(c.fx);
+      if (!c.hitDone && c.x === p.x && PY === p.y && p.state !== 'vanish') { c.hitDone = true; api.hitPlayerCells([[p.x, p.y]], pv(P.eagleDamage, v)); }
+      if (c.fx < -1) home();
+      return;
+    }
+    case 'return':
+      if (c.stateT === 5) c.anim = 'perch';
+      if (c.stateT >= P.eagleReturn.value) to('perch', 'perch');
+      return;
+  }
+  function home() { c.x = PX; c.y = PY; c.drawX = PX; c.drawY = PY; c.z = 40; c.airborne = true; c.hp = c.maxHp; to('return', 'return'); }
+}
+
 const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, DustMan: dustman, BlastMan: blastman, DiveMan: diveman, CircusMan: circusman, JudgeMan: judgeman, ElementMan: elementman, Colonel: colonel, Bass: bass, Gregar: gregar, Falzar: falzar, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;
   if (e.flash) e.flash--;
+  startObjects(e, api);
   if (e.state === 'glide') {
     const k = Math.min(1, e.stateT / e.glideTicks);
     e.drawX = e.from[0] + (e.dest[0] - e.from[0]) * k; e.drawY = e.from[1] + (e.dest[1] - e.from[1]) * k;
@@ -1865,6 +1927,7 @@ export function stepNavi(e, api) {
 export function stepCoil(c, api) {
   c.animT++; c.stateT++;
   if (c.flash) c.flash--;
+  if (c.family === 'Eagle') stepEagle(c, api);
   if (c.anim === 'appear' && c.animT > 9) { c.anim = 'idle'; c.animT = 0; }
   if (c.discharge > 0 && --c.discharge === 0) { c.anim = 'idle'; c.animT = 0; }
   const owner = api.s.enemies.find(e => e.id === c.owner);

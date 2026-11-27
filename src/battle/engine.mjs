@@ -111,7 +111,7 @@ function hitEnemy(s, e, damage, extra = {}) {
   if (!e || e.hp <= 0 || e.airborne) return;
   if (e.guard) { e.guardHit = true; s.events.push({ type: 'guard', target: e.id }); s.effects.push({ kind: 'guard', x: e.x, y: e.y, t: 0 }); return; }
   damage *= elementMultiplier(extra.element, e.element);
-  e.hp = Math.max(0, e.hp - damage);
+  e.hp = Math.max(e.sturdy ? 1 : 0, e.hp - damage);
   e.flash = 4;
   s.effects.push({ kind: 'hit', x: e.x, y: e.y, t: 0, damage });
   s.events.push({ type: 'hit', target: e.id, damage });
@@ -269,6 +269,16 @@ function stepHazards(s) {
     if (h.kind === 'estrike') { // ElementMan: a lit panel, then an elemental strike on it
       if (s.tick === h.hit && p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
       return s.tick < h.hit + 12;
+    }
+    if (h.kind === 'portal') { // EraseMan's dark portal: opens, then a ghost lunges out for a few frames
+      if (s.tick >= h.hit && s.tick < h.hit + h.hitFor && !h.done && p.x === h.x && p.y === h.y && p.state !== 'vanish') { h.done = true; hitPlayer(s, h.damage); }
+      return s.tick < h.until && s.enemies.some(e => e.id === h.owner && e.hp > 0);
+    }
+    if (h.kind === 'mine') { // DiveMan's mine: surfaces, then shoots off down its row as a torpedo
+      if (!s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
+      if (s.tick >= h.launch) h.x = h.x0 - (s.tick - h.launch) / h.step;
+      if (s.tick >= h.arm && !h.done && Math.round(h.x) === p.x && h.y === p.y && p.state !== 'vanish') { h.done = true; hitPlayer(s, h.damage); return false; }
+      return h.x > -1;
     }
     if (h.kind === 'shock') { // Gregar's landing: a ground shock running down MegaMan's row
       const k = Math.floor((s.tick - h.start) / h.step);
