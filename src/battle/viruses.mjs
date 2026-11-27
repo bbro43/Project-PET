@@ -3,8 +3,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_FAMILIES = ['Mettaur', 'Piranha', 'Heady', 'Swordy', 'KillerEye', 'Quaker', 'Catack', 'Champy', 'WindBox', 'Trumpy', 'OldStove', 'HauntedCandle', 'Gunner'];
-const SPRITE = { Mettaur: 'mettaur', Piranha: 'piranha', Heady: 'heady', Swordy: 'swordy', KillerEye: 'killereye', Quaker: 'quaker', Catack: 'catack', Champy: 'champy', WindBox: 'windbox', Trumpy: 'trumpy', OldStove: 'oldstove', HauntedCandle: 'hauntedcandle', Gunner: 'gunner' };
+export const PLAYABLE_FAMILIES = ['Mettaur', 'Piranha', 'Heady', 'Swordy', 'KillerEye', 'Quaker', 'Catack', 'Champy', 'WindBox', 'Trumpy', 'OldStove', 'HauntedCandle', 'Kettle', 'Puffy', 'StarFish', 'Dragon', 'ScareCrow', 'Gunner'];
+const SPRITE = { Mettaur: 'mettaur', Piranha: 'piranha', Heady: 'heady', Swordy: 'swordy', KillerEye: 'killereye', Quaker: 'quaker', Catack: 'catack', Champy: 'champy', WindBox: 'windbox', Trumpy: 'trumpy', OldStove: 'oldstove', HauntedCandle: 'hauntedcandle', Kettle: 'kettle', Puffy: 'puffy', StarFish: 'starfish', Dragon: 'dragon', ScareCrow: 'scarecrow', Gunner: 'gunner' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[variant] : param.value;
 
 // In-game names, read from the ROM's enemy name strings.
@@ -26,6 +26,134 @@ const go = (e, state, anim) => { e.state = state; e.stateT = 0; if (anim) setAni
 
 // api: { s, at(x,y), hitPlayerAt(x,y,damage,element), spawnWave(e,x,y,stepTicks), turnFree(e), takeTurn(e), endTurn(e) }
 const BEHAVIOUR = {
+
+  // 0x810E7B0: the base Kettle is harmless; others appear beside MegaMan and burst steam.
+  Kettle(e, api) {
+    const P = AI.Kettle, s = api.s, p = s.player, v = e.variant;
+    const hop = () => { const free = []; for (let x = 3; x < 6; x++) for (let y = 0; y < 3; y++) if (!api.at(x, y)) free.push([x, y]); if (free.length) [e.x, e.y] = free[Math.floor(api.rng() * free.length)]; };
+    switch (e.state) {
+      case 'idle': {
+        if (v === 0) return;
+        if (--e.think > 0) return;
+        e.turns = (e.turns || 0) + 1;
+        if (e.turns < 3 || !api.turnFree(e)) { hop(); e.think = pv(P.moveWait, v); return; }
+        e.turns = 0;
+        const spots = [[0, -1], [0, 1], [1, 1], [-1, 1], [1, -1], [-1, -1], [1, 0], [-1, 0]].map(([dx, dy]) => [p.x + dx, p.y + dy]).filter(([x, y]) => x >= 0 && x <= 5 && y >= 0 && y <= 2 && !api.at(x, y) && !(x === p.x && y === p.y));
+        if (!spots.length) { e.think = 60; return; }
+        api.takeTurn(e); e.home = [e.x, e.y]; [e.x, e.y] = spots[0];
+        return go(e, 'boil', 'boil');
+      }
+      case 'boil':
+        if (e.stateT === pv(P.boil, v)) setAnim(e, 'hiss');
+        if (e.stateT === pv(P.boil, v) + P.hold.value) { setAnim(e, 'burst'); e.highlight = [[]]; }
+        if (e.stateT === pv(P.boil, v) + P.hold.value + P.burst.value - 8) {
+          const cells = []; for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) cells.push([e.x + dx, e.y + dy]);
+          api.hitPlayerCells(cells, pv(P.damage, v));
+          for (const [x, y] of cells) if (x >= 0 && x <= 5 && y >= 0 && y <= 2) s.effects.push({ kind: 'spark', x, y, t: 0 });
+        }
+        if (e.stateT >= pv(P.boil, v) + P.hold.value + P.burst.value) {
+          e.highlight = null; if (e.home && !api.at(...e.home)) [e.x, e.y] = e.home; api.endTurn(e);
+          e.think = pv(P.moveWait, v); go(e, 'idle', 'idle');
+        }
+        return;
+    }
+  },
+
+  // 0x810F010: drift every 20 frames, every 4th time spit a bubble.
+  Puffy(e, api) {
+    const P = AI.Puffy, s = api.s, v = e.variant;
+    if (e.state === 'spit') { if (e.stateT >= 20) go(e, 'idle', 'idle'); return; }
+    if (--e.think > 0) return;
+    e.think = P.moveWait.value; e.count = (e.count || 0) + 1;
+    if (e.count >= 4) {
+      e.count = 0;
+      s.hazards.push({ kind: 'bolt', x: e.x - 1, fx: e.x - 1, y: e.y, dx: -1 / P.bubbleStep.value, damage: pv(P.damage, v), sprite: 'puffy', seq: 'bubble', owner: e.id });
+      return go(e, 'spit', 'shoot');
+    }
+    const free = []; for (let x = 3; x < 6; x++) for (let y = 0; y < 3; y++) if (!api.at(x, y)) free.push([x, y]);
+    if (free.length) [e.x, e.y] = free[Math.floor(api.rng() * free.length)];
+  },
+
+  // 0x810F39C: three slow bubbles down its row, then a long wait.
+  StarFish(e, api) {
+    const P = AI.StarFish, s = api.s, v = e.variant;
+    switch (e.state) {
+      case 'idle':
+        if (--e.think > 0) return;
+        if (s.hazards.some(h => h.owner === e.id)) { e.think = 10; return; }
+        e.left = P.count.value; return go(e, 'release', 'open');
+      case 'release':
+        if ((e.stateT - 16) % P.gap.value === 0 && e.stateT >= 16 && e.left > 0) {
+          e.left--; setAnim(e, 'shoot');
+          s.hazards.push({ kind: 'bolt', x: e.x - 1, fx: e.x - 1, y: e.y, dx: -pv(P.speed, v) / 40, damage: pv(P.damage, v), sprite: 'starfish', seq: 'bubble', owner: e.id });
+        }
+        if (e.left === 0 && e.stateT >= 16 + P.gap.value * P.count.value) { e.think = P.after.value; go(e, 'idle', 'idle'); }
+        return;
+    }
+  },
+
+  // 0x810FCE0: dive under, then fly through MegaMan's column.
+  Dragon(e, api) {
+    const P = AI.Dragon, s = api.s, p = s.player, v = e.variant;
+    switch (e.state) {
+      case 'idle': {
+        if (--e.think > 0) return;
+        e.turns = (e.turns || 0) + 1;
+        if (e.turns < 3 || !api.turnFree(e)) {
+          const free = []; for (let x = 3; x < 6; x++) for (let y = 0; y < 3; y++) if (!api.at(x, y)) free.push([x, y]);
+          if (free.length) [e.x, e.y] = free[Math.floor(api.rng() * free.length)];
+          e.think = pv(P.after, v); return;
+        }
+        e.turns = 0; api.takeTurn(e); e.home = [e.x, e.y]; e.passes = pv(P.passes, v);
+        return go(e, 'rise', 'rise');
+      }
+      case 'rise':
+        if (e.stateT >= P.rise.value) { e.hidden = true; e.airborne = true; go(e, 'under', null); }
+        return;
+      case 'under':
+        if (e.stateT >= pv(P.under, v)) {
+          e.col = p.x; e.dir = api.rng() < 0.5 ? 1 : -1; e.fy = e.dir > 0 ? -0.5 : 2.5;
+          e.hidden = false; e.hitDone = false; e.drawX = e.col; go(e, 'fly', 'rise');
+        }
+        return;
+      case 'fly': {
+        e.fy += e.dir * P.speed.value / 24; e.drawY = e.fy;
+        const y = Math.round(e.fy);
+        e.highlight = y >= 0 && y <= 2 ? [[[e.col, y]]] : null;
+        if (!e.hitDone && y === p.y && e.col === p.x && p.state !== 'vanish') { e.hitDone = true; api.hitPlayerAt(e.col, y, pv(P.damage, v)); }
+        if (e.fy < -1 || e.fy > 3) {
+          e.highlight = null;
+          if (--e.passes > 0) { e.hidden = true; return go(e, 'under', null); }
+          const [hx, hy] = e.home; if (!api.at(hx, hy)) { e.x = hx; e.y = hy; }
+          e.drawX = e.x; e.drawY = e.y; e.airborne = false; api.endTurn(e); e.think = pv(P.after, v); go(e, 'idle', 'idle');
+        }
+        return;
+      }
+    }
+  },
+
+  // 0x81104D4: heals itself every 180 frames and attacks; being hit sets it off too.
+  ScareCrow(e, api) {
+    const P = AI.ScareCrow, s = api.s, v = e.variant;
+    e.lastHp ??= e.hp;
+    const hit = e.hp < e.lastHp; e.lastHp = e.hp;
+    switch (e.state) {
+      case 'idle':
+        e.clock = (e.clock ?? P.cycle.value) - 1;
+        e.highlight = e.clock <= 60 && (e.clock & 4) ? [[[e.x, e.y]]] : null;
+        if (e.clock > 0 && !hit) return;
+        e.highlight = null;
+        if (e.clock <= 0) { e.hp = e.maxHp; e.lastHp = e.hp; s.effects.push({ kind: 'heal', x: e.x, y: e.y, t: 0 }); }
+        e.clock = P.cycle.value; return go(e, 'raise', 'raise');
+      case 'raise':
+        if (e.stateT >= P.windup.value) { setAnim(e, 'lit'); e.beam = []; for (let x = e.x - 1; x >= 0; x--) e.beam.push([x, e.y]); go(e, 'thunder', null); }
+        return;
+      case 'thunder':
+        api.hitPlayerCells(e.beam, pv(P.damage, v));
+        if (e.stateT >= P.thunder.value) { e.beam = null; setAnim(e, 'end'); go(e, 'idle', null); }
+        return;
+    }
+  },
 
   // 0x810C6F0: roll along the row, then fire the cannon (one Catack at a time).
   Catack(e, api) {

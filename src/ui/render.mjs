@@ -259,7 +259,7 @@ export function render(g, s, bank) {
       sprite(g, bank, 'circusman', 'handr', 0, ax, ay - 30 * (1 - k), '#fff', 0, true);
     }
     if (h.kind === 'hoop') { const [ax, ay] = anchor(h.x, h.y); sprite(g, bank, 'circusman', 'hoop', s.tick - h.start, ax, ay, '#f84', 0, true); }
-    if (h.kind === 'bolt') { const [ax, ay] = anchor(h.fx, h.y); sprite(g, bank, h.sprite, h.seq, s.tick, ax, ay, (g, x, y) => { g.fillStyle = '#cde'; g.fillRect(x - 8, y - 12, 16, 6); }, 0, true); }
+    if (h.kind === 'bolt') { const [ax, ay] = anchor(h.fx, h.y), own = bank?.get(h.sprite)?.[h.seq]; sprite(g, own ? bank : null, h.sprite, h.seq, s.tick, ax, ay, h.seq === 'bubble' ? (g, x, y) => { g.strokeStyle = '#bff'; g.lineWidth = 2; g.beginPath(); g.arc(x, y - 14, 7, 0, 7); g.stroke(); } : (g, x, y) => { g.fillStyle = '#cde'; g.fillRect(x - 8, y - 12, 16, 6); }, 0, true); }
     if (h.kind === 'portal' && s.tick >= h.start) {
       const [ax, ay] = anchor(h.x, h.y), lunge = s.tick >= h.hit;
       if (s.tick < h.hit) { g.fillStyle = 'rgba(176,96,255,.35)'; g.fillRect(ax - PANEL_W / 2 + 2, ay - 14, PANEL_W - 4, 16); }

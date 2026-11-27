@@ -2786,6 +2786,207 @@
      "confidence": "visual-candidate"
     }
    }
+  },
+  "kettle": {
+   "label": "Kettle (BN6 virus, AI 13)",
+   "sources": {
+    "bn6f": {
+     "offset": "24EAF4",
+     "compression": "none",
+     "bytes": 14947,
+     "sha256": "09ac039f087a8b482e6d09f7838e6a746623046265577892eb5b1f8a687a67ce",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "24EAF4",
+     "compression": "none",
+     "bytes": 14947,
+     "sha256": "09ac039f087a8b482e6d09f7838e6a746623046265577892eb5b1f8a687a67ce",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "boil": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "hiss": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "burst": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "steam": {
+     "seq": 10,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "puffy": {
+   "label": "Puffy (BN6 virus, AI 14)",
+   "sources": {
+    "bn6f": {
+     "offset": "252558",
+     "compression": "lz77",
+     "bytes": 7772,
+     "sha256": "40e8a0a731dbe6629258fc119379cb0e3de973c43601160dd5f15f78d84ad4f0",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "252558",
+     "compression": "lz77",
+     "bytes": 7772,
+     "sha256": "40e8a0a731dbe6629258fc119379cb0e3de973c43601160dd5f15f78d84ad4f0",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "shoot": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "idle1": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "shoot1": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "idle2": {
+     "seq": 8,
+     "confidence": "visual-candidate"
+    },
+    "shoot2": {
+     "seq": 9,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "starfish": {
+   "label": "StarFish (BN6 virus, AI 15)",
+   "sources": {
+    "bn6f": {
+     "offset": "2533F4",
+     "compression": "none",
+     "bytes": 2963,
+     "sha256": "0e417456829cf1ea160def40055623d490a99413d67a7e5c5e523e4034a9e42a",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2533F4",
+     "compression": "none",
+     "bytes": 2963,
+     "sha256": "0e417456829cf1ea160def40055623d490a99413d67a7e5c5e523e4034a9e42a",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "open": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "shoot": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "dragon": {
+   "label": "Dragon (BN6 virus, AI 16)",
+   "sources": {
+    "bn6f": {
+     "offset": "253F88",
+     "compression": "none",
+     "bytes": 14859,
+     "sha256": "ff4d4ffb33700731d29309b8f51e128d4c29e2d5f5b3bf67839f9fe9a4ff669b",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "253F88",
+     "compression": "none",
+     "bytes": 14859,
+     "sha256": "ff4d4ffb33700731d29309b8f51e128d4c29e2d5f5b3bf67839f9fe9a4ff669b",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "rise": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "dive": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "fly": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "fire": {
+     "seq": 7,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "scarecrow": {
+   "label": "ScareCrow (BN6 virus, AI 17)",
+   "sources": {
+    "bn6f": {
+     "offset": "257994",
+     "compression": "lz77",
+     "bytes": 6964,
+     "sha256": "ccb10922f25fd060faad82832bdf2a0403ccb073fbd7c5e826f0f0cf6db78542",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "257994",
+     "compression": "lz77",
+     "bytes": 6964,
+     "sha256": "ccb10922f25fd060faad82832bdf2a0403ccb073fbd7c5e826f0f0cf6db78542",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "raise": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "lit": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "end": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "thunder": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    }
+   }
   }
  },
  "tables": {

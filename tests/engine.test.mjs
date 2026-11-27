@@ -284,3 +284,28 @@ test('Trumpy (base) makes its allies invincible while it plays', () => {
   const hp = m.hp; m.invuln > 0 && assert.ok(true);
   assert.ok(m.invuln > 0);
 });
+
+for (const [fam, versions] of [['Kettle', [1, 2, 3, 4, 5]], ['Puffy', [0, 1, 2, 3, 4, 5]], ['StarFish', [0, 1, 2, 3, 4, 5]], ['Dragon', [0, 1, 2, 3, 4, 5]], ['ScareCrow', [0, 1, 2, 3, 4, 5]]]) {
+  test(`${fam} attacks MegaMan within 30 seconds`, () => {
+    for (const v of versions) {
+      const s = start({ seed: 70 + v, enemies: formation(fam, v, 1) });
+      let hit = false;
+      for (let i = 0; i < 1800 && !hit; i++) {
+        s.player.hp = 1000; s.player.invuln = 0;
+        const e = s.enemies[0]; if (e && i % 60 === 0) { s.player.y = e.y; s.player.x = 2; }
+        step(s, {}); hit = s.events.some(ev => ev.type === 'playerHit');
+      }
+      assert.ok(hit, `${fam} version ${v}`);
+    }
+  });
+}
+
+test('the base Kettle never attacks; ScareCrow heals itself every 180 frames', () => {
+  const s = start({ seed: 80, enemies: [['Kettle', 0], ['ScareCrow', 0]] });
+  s.player.invuln = 1e9;
+  const [k, c] = s.enemies;
+  c.hp = 1;
+  run(s, {}, 200);
+  assert.equal(k.state, 'idle');
+  assert.equal(c.hp, c.maxHp);
+});
