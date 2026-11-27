@@ -759,6 +759,122 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "chargeman": {
+      "label": "ChargeMan (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "28F18C",
+          "compression": "none",
+          "bytes": 32177,
+          "sha256": "81f50238d3b049b01744e9e6c1d389d850a0450e35f6dde94e4b42734894f4c0",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "28F18C",
+          "compression": "none",
+          "bytes": 32177,
+          "sha256": "81f50238d3b049b01744e9e6c1d389d850a0450e35f6dde94e4b42734894f4c0",
+          "confidence": "rom-verified"
+        }
+      },
+      "note": "Sprite has 18 sequences; the AI sets animations 0x11–0x14, so the wind-up/strike/fire roles are mapped by appearance (inferred).",
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "fire": {
+          "seq": 14,
+          "confidence": "visual-candidate"
+        },
+        "windup": {
+          "seq": 15,
+          "confidence": "visual-candidate"
+        },
+        "strike": {
+          "seq": 16,
+          "confidence": "visual-candidate"
+        },
+        "mark": {
+          "seq": 17,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "chargemark": {
+      "label": "ChargeMan target marker (object type3 0x67, sprite 0x10/0x4A)",
+      "sources": {
+        "bn6f": {
+          "offset": "38C3C8",
+          "compression": "none",
+          "bytes": 1179,
+          "sha256": "406c8db0ad945cb7cb28b75c22a39b3ccdba912d90a6844add6d702a0382a19c",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "38B940",
+          "compression": "none",
+          "bytes": 1179,
+          "sha256": "406c8db0ad945cb7cb28b75c22a39b3ccdba912d90a6844add6d702a0382a19c",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "seek": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "lock": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "chargefire": {
+      "label": "ChargeMan fire burst (object type3 0x68, sprite 0x10/0x51)",
+      "sources": {
+        "bn6f": {
+          "offset": "390FC4",
+          "compression": "none",
+          "bytes": 3706,
+          "sha256": "dd6085ef3ddd4e6ee1ca59b00fc9f1566c9406d72a72480916cbcd0298d95c48",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "39053C",
+          "compression": "none",
+          "bytes": 3706,
+          "sha256": "dd6085ef3ddd4e6ee1ca59b00fc9f1566c9406d72a72480916cbcd0298d95c48",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "straight": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "up": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "down": {
+          "seq": 2,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {

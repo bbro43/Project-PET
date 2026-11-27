@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'ChargeMan', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', ChargeMan: 'chargeman', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -362,6 +362,83 @@ function slashman(e, api) {
 }
 
 // ======================= ProtoMan =======================
+// ======================= ChargeMan =======================
+// Decision 0x80F594C: move (9) N times, then strike (0xA) 3-4 times, then target-and-burst (0xB).
+function chargeman(e, api) {
+  const P = NAVI_AI.ChargeMan, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const W = P.warpTicks.value;
+  const done = wait => { go(e, 'idle', 'idle'); e.think = wait; };
+  switch (e.state) {
+    case 'idle':
+      if (--e.think > 0) return;
+      return decide();
+    case 'vanish':
+      if (e.stateT >= W) { [e.x, e.y] = e.dest; e.drawX = e.x; e.drawY = e.y; go(e, 'appear', 'appear'); }
+      return;
+    case 'appear':
+      if (e.stateT >= W) {
+        if (e.after) { const a = e.after; e.after = null; return go(e, a, a === 'strike' ? 'windup' : 'fire'); }
+        const half = P.moveWait.value[api.rng() < 0.5 ? 'slow' : 'fast'];
+        done(half[Math.min(v, half.length - 1)]);
+      }
+      return;
+    // ---- 0xA: wind up, then ram the two panels ahead
+    case 'strike': {
+      const wind = P.strikeWindup.value, hold = P.strikeHold.value;
+      if (e.stateT === wind) setAnim(e, 'strike');
+      if (e.stateT === wind + hold) {
+        const cells = P.strikeShape.value.map(([dx, dy]) => [e.x + dx, e.y + dy]);
+        e.struck = cells.some(([x, y]) => p.x === x && p.y === y && p.state !== 'vanish');
+        api.hitPlayerCells(cells, pv(P.strikeDamage, v));
+        for (const [x, y] of cells) s.effects.push({ kind: 'spark', x, y, t: 0 });
+        s.effects.push({ kind: 'shake', t: 0 });
+      }
+      if (e.stateT >= wind + hold + 4) {
+        if (!e.struck) { m.c5 = 0; return burst(); } // state 4: var 0x1A clear → burst at once
+        done(pv(P.strikeWait, v));
+      }
+      return;
+    }
+    // ---- 0xB: marker hunts MegaMan, ChargeMan lines up and fires
+    case 'mark':
+      if (s.hazards.includes(e.marker) && !e.marker.locked) return;
+      return warp(frontPanel(e.marker.y), 'burstfire');
+    case 'burstfire':
+      if (e.stateT === P.burstCharge.value) {
+        const mk = e.marker;
+        s.hazards.push({ kind: 'burst', x: mk.x, y: mk.y, start: s.tick, until: s.tick + P.burstTicks.value, damage: pv(P.burstDamage, v) });
+        s.hazards = s.hazards.filter(h => h !== mk);
+      }
+      if (e.stateT >= P.burstCharge.value + P.burstTicks.value) { e.marker = null; done(P.burstWait.value); }
+      return;
+  }
+
+  function decide() {
+    if (m.c4 < pv(P.moveCount, v)) { m.c4++; return warp(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], null); }
+    m.c4 = 0;
+    m.target ??= 3 + (api.rng() < 0.5 ? 0 : 1);
+    if (m.c5 < m.target) { m.c5++; return warp(strikePanel(), 'strike'); }
+    m.c5 = 0; m.target = null;
+    return burst();
+  }
+  function burst() {
+    m.target = null;
+    e.marker = { kind: 'mark', x: p.x, y: p.y, start: s.tick, until: s.tick + P.burstSeek.value, step: P.markerStep.value, next: s.tick + P.markerStep.value, locked: false, owner: e.id };
+    s.hazards.push(e.marker);
+    go(e, 'mark', 'mark');
+  }
+  function strikePanel() { // two panels ahead of MegaMan if that is ChargeMan's side, else his row nearest the front
+    const want = [p.x + 2, p.y];
+    if (want[0] >= 3 && want[0] <= 5 && (!api.at(...want) || api.at(...want) === e)) return want;
+    return frontPanel(p.y);
+  }
+  function frontPanel(y) {
+    for (const x of [3, 4, 5]) if (!api.at(x, y) || api.at(x, y) === e) return [x, y];
+    return [e.x, e.y];
+  }
+  function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
+}
+
 const AREAS = {
   wide: [[-1, -1], [-1, 0], [-1, 1]],
   long: [[-1, 0], [-2, 0]],
@@ -477,7 +554,7 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, ProtoMan: protoman };
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, ChargeMan: chargeman, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;

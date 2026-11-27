@@ -241,6 +241,19 @@ function stepHazards(s) {
       if (h.cells.some(([x, y]) => p.x === x && p.y === y) && p.state !== 'vanish') hitPlayer(s, h.damage);
       return s.tick < h.until;
     }
+    if (h.kind === 'mark') { // ChargeMan target marker: follows MegaMan a panel at a time, then locks
+      if (!s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
+      if (!h.locked && s.tick >= h.next) {
+        h.next = s.tick + h.step;
+        h.x += Math.sign(p.x - h.x); if (h.x === p.x) h.y += Math.sign(p.y - h.y);
+      }
+      if (!h.locked && s.tick >= h.until) h.locked = true;
+      return true;
+    }
+    if (h.kind === 'burst') {
+      if (p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      return s.tick < h.until;
+    }
     if (h.kind === 'rowbolt' || h.kind === 'colbolt') {
       const hit = h.kind === 'rowbolt' ? p.y === h.y && p.x < h.x : p.x === h.x;
       if (hit && p.state !== 'vanish') hitPlayer(s, h.damage);

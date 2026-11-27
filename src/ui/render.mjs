@@ -94,6 +94,21 @@ export function render(g, s, bank) {
     }
   }
 
+  // ChargeMan: target marker and fire burst
+  const mark = bank?.get('chargemark'), fire = bank?.get('chargefire');
+  for (const h of s.hazards) {
+    if (h.kind === 'mark') {
+      const [ax, ay] = anchor(h.x, h.y), t = s.tick - h.start;
+      if (mark) { const f = frameAt(mark[h.locked ? 'lock' : 'seek'], t); g.drawImage(f.image, Math.round(ax - f.originX), Math.round(ay - 10 - f.originY)); }
+      else { g.strokeStyle = '#ff40c0'; g.lineWidth = 2; g.strokeRect(ax - 10, ay - 18, 20, 14); }
+    }
+    if (h.kind === 'burst') {
+      const [ax, ay] = anchor(h.x, h.y), t = s.tick - h.start;
+      if (fire) { const f = frameAt(fire.straight, t); g.save(); g.translate(Math.round(ax), 0); g.scale(-1, 1); g.drawImage(f.image, -f.originX, Math.round(ay - 12 - f.originY)); g.restore(); }
+      else { g.fillStyle = t & 2 ? '#ffe060' : '#ff8020'; g.beginPath(); g.arc(ax, ay - 12, 12, 0, 7); g.fill(); }
+    }
+  }
+
   // Hazards under actors.
   const wave = bank?.get('shockwave');
   for (const h of s.hazards) {

@@ -253,3 +253,48 @@ test('SlashMan chained darts use the short wait from the ROM table', () => {
   assert.equal(waits[0], 36);
   assert.ok(waits.slice(1).some(w => w === 6), JSON.stringify(waits));
 });
+
+test('ChargeMan names and HP from the ROM tables; fights in the Navi list', () => {
+  const vs = naviVariants('ChargeMan');
+  assert.equal(vs[0].name, 'ChrgeMan', 'ROM name is abbreviated to 8 letters');
+  const s = start('ChargeMan');
+  assert.equal(s.enemies[0].sprite, 'chargeman');
+  assert.equal(s.enemies[0].hp, vs[0].hp);
+});
+
+test('ChargeMan moves the ROM count of times before his first strike', () => {
+  const s = start('ChargeMan', 0, 3), e = s.enemies[0];
+  s.player.invuln = 1e9;
+  let moves = 0;
+  for (let i = 0; i < 4000 && e.state !== 'strike'; i++) { const was = e.state; step(s, {}); if (was !== 'vanish' && e.state === 'vanish' && !e.after) moves++; }
+  assert.equal(e.state, 'strike');
+  assert.equal(moves, NAVI_AI.ChargeMan.moveCount.value[0]);
+});
+
+test('ChargeMan strike: 40-frame wind-up, then hits the panel two ahead for 60', () => {
+  const { s, e } = findState('ChargeMan', 0, 'strike', s => { s.player.invuln = 1e9; });
+  s.player.invuln = 0; s.player.x = e.x - 2; s.player.y = e.y;
+  const P = NAVI_AI.ChargeMan;
+  run(s, P.strikeWindup.value + P.strikeHold.value - e.stateT - 1);
+  assert.equal(s.player.hp, 100);
+  run(s, 1);
+  assert.equal(s.player.hp, 40);
+});
+
+test('ChargeMan burst: marker follows MegaMan, locks, and the burst hits the marked panel', () => {
+  const { s, e } = findState('ChargeMan', 0, 'mark', s => { s.player.invuln = 1e9; });
+  s.player.invuln = 0;
+  const mk = e.marker;
+  assert.ok(s.hazards.includes(mk));
+  s.player.x = 1; s.player.y = 2; s.player.hp = s.player.maxHp = 500;
+  run(s, NAVI_AI.ChargeMan.burstSeek.value + 2);
+  assert.ok(mk.locked);
+  const [lx, ly] = [mk.x, mk.y];
+  for (let i = 0; i < 200 && !s.hazards.some(h => h.kind === 'burst'); i++) step(s, {});
+  const b = s.hazards.find(h => h.kind === 'burst');
+  assert.deepEqual([b.x, b.y], [lx, ly]);
+  assert.equal(e.y, ly, 'ChargeMan lines up in the marked row');
+  assert.deepEqual([lx, ly], [1, 2], 'marker caught up with MegaMan');
+  run(s, 1);
+  assert.equal(s.player.hp, 400, 'base burst damage 100');
+});
