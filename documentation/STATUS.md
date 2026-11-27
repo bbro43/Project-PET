@@ -1,4 +1,4 @@
-# Project PET — status (updated 27 Nov 2026, app 0.31.0 / assets 35)
+# Project PET — status (updated 27 Nov 2026, app 0.32.0 / assets 35)
 
 Legend: **Done** = implemented and tested · **Partial** = works but incomplete or using unverified values · **Pending** = not started · **Unverified** = claim without fresh evidence.
 
@@ -12,7 +12,7 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 | Phone update flow | Partial | In-app "Update ready" banner; 0.1.x installs auto-migrate once. Real-phone test pending. |
 | Sprite format (tiles/OAM/palette) | Done (BN6) | 78/78 MegaMan frames pixel-exact; JS = Python on 108 frames |
 | Runtime palette choice, flip bits | Unverified | See audit |
-| On-device ROM import | Done | .gba or .zip, header + SHA-1 check, IndexedDB, nothing uploaded |
+| On-device ROM import | Done | .gba or .zip, header + SHA-1 check, IndexedDB, nothing uploaded. Sprites come from all imported ROMs, priority Gregar → Falzar → Team Colonel → Team ProtoMan → Red Sun → Blue Moon (0.32.0) |
 | Asset registry | Partial | BN6: MegaMan, Mettaur, Champy, Gunner, ShockWave, crosshair (both versions). Sprite offsets + stats for all 29 BN6 virus families. BN4/BN5 not mapped |
 | Sequence roles (MegaMan, Mettaur) | Unverified | Visual candidates; runtime trace pending |
 | Battle engine core | Partial | 60 Hz deterministic; 6×3 field, areas, move, buster, charge, flinch + invincibility, custom gauge, chip select rules, queue. Several timings unverified (data/rules.mjs) |

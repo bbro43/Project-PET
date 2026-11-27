@@ -353,3 +353,19 @@ test('FighterPlane bombs all nine panels of MegaMan\'s area in a snake', () => {
   for (let i = 0; i < 2000 && seen.length < 9; i++) { step(s, {}); for (const f of s.effects) if (f.kind === 'blast' && f.t === 1) seen.push(`${f.x},${f.y}`); }
   assert.deepEqual(seen, ['2,0', '2,1', '2,2', '1,2', '1,1', '1,0', '0,0', '0,1', '0,2']);
 });
+
+test('sprites come from imported ROMs in order Gregar, Falzar, Colonel, ProtoMan, Red Sun, Blue Moon', async () => {
+  const { pickSources, SOURCE_ORDER } = await import('../src/rom/bank.mjs');
+  assert.deepEqual(SOURCE_ORDER, ['bn6g', 'bn6f', 'bn5tc', 'bn5tp', 'bn4rs', 'bn4bm']);
+  const reg = { sprites: {
+    megaman: { sources: { bn6f: 1, bn6g: 1, bn5tp: 1, bn4bm: 1 } },
+    falzar: { sources: { bn6f: 1 } },
+    gregar: { sources: { bn6g: 1 } },
+    bn5only: { sources: { bn5tp: 1, bn5tc: 1 } },
+    bn4only: { sources: { bn4bm: 1, bn4rs: 1 } },
+  } };
+  assert.deepEqual(pickSources(reg, ['bn4bm', 'bn5tp', 'bn6f', 'bn6g', 'bn4rs', 'bn5tc']),
+    { megaman: 'bn6g', falzar: 'bn6f', gregar: 'bn6g', bn5only: 'bn5tc', bn4only: 'bn4rs' });
+  assert.deepEqual(pickSources(reg, ['bn4bm', 'bn5tp', 'bn6f']),
+    { megaman: 'bn6f', falzar: 'bn6f', bn5only: 'bn5tp', bn4only: 'bn4bm' });
+});

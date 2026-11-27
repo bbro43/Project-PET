@@ -22,20 +22,32 @@ function compose(parts) {
   return { canvas, originX: -x0, originY: -y0 };
 }
 
-// `others` maps game ids to other imported ROMs. A sprite missing from the chosen ROM is taken
-// from one of them (each BN6 version only carries the full sprite for its own Cybeast).
-export function buildBank(rom, gameId, registry, others = {}) {
-  const blocks = {}, cache = new Map();
+// Sprite source priority across every imported ROM (user decision, 0.32.0):
+// Gregar, Falzar, Team Colonel, Team ProtoMan, Red Sun, Blue Moon.
+export const SOURCE_ORDER = ['bn6g', 'bn6f', 'bn5tc', 'bn5tp', 'bn4rs', 'bn4bm'];
+
+// Which imported ROM supplies each sprite: the first one in `order` that is imported and mapped.
+export function pickSources(registry, imported, order = SOURCE_ORDER) {
+  const ids = [...order.filter(id => imported.includes(id)), ...imported.filter(id => !order.includes(id))];
+  const pick = {};
   for (const [key, sprite] of Object.entries(registry.sprites)) {
-    let src = sprite.sources[gameId], from = rom;
-    if (!src) {
-      const alt = Object.keys(others).find(id => sprite.sources[id]);
-      if (alt) { src = sprite.sources[alt]; from = others[alt]; }
-    }
-    if (src) blocks[key] = { ...openBlock(from, src, lz77), roles: sprite.sequences, layers: sprite.layers };
+    const id = ids.find(id => sprite.sources[id]);
+    if (id) pick[key] = id;
+  }
+  return pick;
+}
+
+// `roms` maps game ids to imported ROM bytes; every sprite comes from its highest-priority ROM.
+export function buildBank(roms, registry, order = SOURCE_ORDER) {
+  const blocks = {}, cache = new Map(), from = pickSources(registry, Object.keys(roms), order);
+  for (const [key, id] of Object.entries(from)) {
+    const sprite = registry.sprites[key];
+    blocks[key] = { ...openBlock(roms[id], sprite.sources[id], lz77), roles: sprite.sequences, layers: sprite.layers };
   }
   return {
     has: key => key in blocks,
+    sourceOf: key => from[key] || null,
+    sources: [...new Set(Object.values(from))],
     get(key, palette = 0) {
       const id = key + ':' + palette;
       if (cache.has(id)) return cache.get(id);

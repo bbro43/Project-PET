@@ -3,7 +3,7 @@ import BN6 from '../../data/bn6-viruses.mjs';
 import { CHIPS } from '../../data/rules.mjs';
 import { identify, extractRoms, sha1Hex } from '../rom/gba.mjs';
 import { saveRom, loadRom, listRoms } from '../rom/store.mjs';
-import { buildBank } from '../rom/bank.mjs';
+import { buildBank, pickSources, SOURCE_ORDER } from '../rom/bank.mjs';
 import { render, preview } from './render.mjs';
 
 const $ = s => document.querySelector(s);
@@ -46,7 +46,8 @@ let registry, bank = null;
 const registryReady = fetch('./data/registry.json').then(r => r.json()).then(r => (registry = r));
 
 async function refreshRoms() {
-  const roms = await listRoms().catch(() => []);
+  const rank = id => (i => i < 0 ? 99 : i)(SOURCE_ORDER.indexOf(id));
+  const roms = (await listRoms().catch(() => [])).sort((a, b) => rank(a.id) - rank(b.id));
   const supported = Object.values((await registryReady).sprites).flatMap(s => Object.keys(s.sources));
   $('#roms').replaceChildren(...roms.map(r => {
     const li = document.createElement('li');
@@ -54,8 +55,10 @@ async function refreshRoms() {
     return li;
   }));
   const sel = $('#sprite-source');
-  sel.replaceChildren(new Option('Placeholder shapes', ''), ...roms.filter(r => supported.includes(r.id)).map(r => new Option(r.title, r.id)));
-  sel.value = roms.some(r => r.id === prefs.source) ? prefs.source : '';
+  const usable = roms.some(r => supported.includes(r.id));
+  sel.replaceChildren(new Option('Placeholder shapes', ''), ...(usable ? [new Option('All imported ROMs', 'all')] : []));
+  if (prefs.source && prefs.source !== 'all') { prefs.source = 'all'; savePrefs(); } // 0.31 and earlier stored one ROM id
+  sel.value = usable && prefs.source !== '' ? 'all' : '';
   await loadBank();
 }
 
@@ -65,17 +68,17 @@ async function loadBank() {
   $('#navi-note').textContent = id ? 'Loading sprites…' : 'Placeholder art — import a BN6 ROM for original sprites.';
   if (id) {
     try {
-      const rec = await loadRom(id);
-      // Other imported BN6 ROMs fill in sprites this one lacks (the other version's Cybeast).
-      const others = {};
-      for (const r of await listRoms().catch(() => [])) {
-        if (r.id !== id && /^bn6/.test(r.id)) { const o = await loadRom(r.id); if (o) others[r.id] = new Uint8Array(o.bytes); }
-      }
-      bank = buildBank(new Uint8Array(rec.bytes), id, registry, others);
-      $('#navi-note').textContent = `Sprites decoded from ${rec.title}.`;
+      // Every imported ROM is a source; each sprite comes from the first ROM in SOURCE_ORDER that has it.
+      const list = await listRoms().catch(() => []);
+      const need = new Set(Object.values(pickSources(registry, list.map(r => r.id))));
+      const roms = {};
+      for (const r of list) if (need.has(r.id)) { const o = await loadRom(r.id); if (o) roms[r.id] = new Uint8Array(o.bytes); }
+      bank = buildBank(roms, registry);
+      const names = Object.fromEntries(list.map(r => [r.id, r.title.replace('Battle Network ', 'BN')]));
+      $('#navi-note').textContent = `Sprites decoded from ${SOURCE_ORDER.filter(id => bank.sources.includes(id)).map(id => names[id]).join(', ')}.`;
     } catch (err) {
       console.error(err);
-      $('#navi-note').textContent = 'Could not decode sprites from this ROM.';
+      $('#navi-note').textContent = 'Could not decode sprites from the imported ROMs.';
     }
   }
   preview($('#navi-preview').getContext('2d'), bank, $('#navi').value);
@@ -94,7 +97,7 @@ $('#rom-input').addEventListener('change', async event => {
         const sha1 = await sha1Hex(rom);
         await saveRom({ id: game.id, code: game.code, title: game.title, sha1, known: sha1 === game.sha1, bytes: rom.buffer.slice(rom.byteOffset, rom.byteOffset + rom.byteLength) });
         added++;
-        if (!prefs.source && game.series === 6) { prefs.source = game.id; savePrefs(); }
+        if (prefs.source === undefined || prefs.source === null) { prefs.source = 'all'; savePrefs(); }
       }
     } catch (err) { console.error(err); skipped++; }
   }
