@@ -1,4 +1,4 @@
-# Project PET — status (updated 27 Nov 2026, app 0.8.0 / assets 8)
+# Project PET — status (updated 27 Nov 2026, app 0.8.1 / assets 9)
 
 Legend: **Done** = implemented and tested · **Partial** = works but incomplete or using unverified values · **Pending** = not started · **Unverified** = claim without fresh evidence.
 
@@ -20,7 +20,7 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 | Folder editor | Pending | Test folder only (not the canonical BN6 default) |
 | Virus battles | Partial | Mettaur, Champy, Gunner families, all 6 variants, 1–3 count. Stats ROM-verified; Champy/Gunner AI from recall (26 families have stats but no AI yet) |
 | Endless survival | Partial | Random Mettaur/Champy/Gunner waves up to Ω; composition non-canonical |
-| Navi roster / NetBattle vs CPU Navis | Partial | CPU: HeatMan and SlashMan (all three attacks each decoded), ChargeMan (move/strike/burst decoded; start-of-battle object not simulated), ElecMan (all four attacks + coils decoded) and ProtoMan (both phases, guard, targets decoded) with ROM stats, damage and timings (documentation/audit/2026-11-27-bn6-navi-ai.md). Data: Sprite blocks located for 19 BN6 Navis + Beast/Cross forms (sprite table) and 35 BN4/BN5 Navis (matched to the owner's reference sprites): data/navi-sprites.json. No sequence roles or AI yet |
+| Navi roster / NetBattle vs CPU Navis | Partial | CPU: HeatMan and SlashMan (all three attacks each decoded), EraseMan (move, scythe, eye-marker beam decoded; start-of-battle object not simulated), ElecMan (all four attacks + coils decoded) and ProtoMan (both phases, guard, targets decoded) with ROM stats, damage and timings (documentation/audit/2026-11-27-bn6-navi-ai.md). Data: Sprite blocks located for 19 BN6 Navis + Beast/Cross forms (sprite table) and 35 BN4/BN5 Navis (matched to the owner's reference sprites): data/navi-sprites.json. No sequence roles or AI yet |
 | Transformations (Cross/Beast/Soul) | Pending | |
 | Navi Customizer | Pending | |
 | Audio | Pending | |
@@ -34,11 +34,11 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 | Mettaur (BN6) | ✓ (on device) | ✓ ROM tables | candidate roles | – | ✓ AI (partly ROM) | engine tests |
 | Champy, Gunner (BN6) | ✓ (on device) | ✓ ROM tables | candidate roles | – | ✓ AI (recalled) | engine tests |
 | 26 other BN6 virus families | offsets ✓ | ✓ ROM names/stats | – | – | – | ROM hash test |
-| HeatMan, ElecMan, SlashMan, ChargeMan, ProtoMan (BN6) CPU | ✓ | ✓ ROM tables | AI-set animations + effect sprites | – | ✓ decoded AI (some timings estimated) | 27 tests |
+| HeatMan, ElecMan, SlashMan, EraseMan, ProtoMan (BN6) CPU | ✓ | ✓ ROM tables | AI-set animations + effect sprites | – | ✓ decoded AI (some timings estimated) | 27 tests |
 | 19 BN6 Navis, 35 BN4/BN5 Navis | offsets ✓ | ✓ (BN6 labels / BN4-5 visual) | – | – | – | ROM hash test |
 
 ## Next checkpoint
-1. More BN6 CPU Navis using the same method (SpoutMan, TomahawkMan, …); decode ChargeMan's start-of-battle object.
+1. More BN6 CPU Navis using the same method (ChargeMan — table 0x80F6454 — then SpoutMan, TomahawkMan, …); decode EraseMan's start-of-battle object.
 2. Decode Champy/Gunner AI routines to replace recalled behaviour.
 3. Trace timings in an emulator (glide speeds, hit frames, custom gauge, charge, invincibility).
 4. Chip table and icons from the ROM; folder editor; Navi Customizer.

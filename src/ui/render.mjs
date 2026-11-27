@@ -94,8 +94,8 @@ export function render(g, s, bank) {
     }
   }
 
-  // ChargeMan: target marker and fire burst
-  const mark = bank?.get('chargemark'), fire = bank?.get('chargefire');
+  // EraseMan: eye marker and beam
+  const mark = bank?.get('erasemark'), fire = bank?.get('erasebeam');
   for (const h of s.hazards) {
     if (h.kind === 'mark') {
       const [ax, ay] = anchor(h.x, h.y), t = s.tick - h.start;

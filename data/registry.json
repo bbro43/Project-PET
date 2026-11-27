@@ -760,25 +760,25 @@
         }
       }
     },
-    "chargeman": {
-      "label": "ChargeMan (BN6)",
+    "eraseman": {
+      "label": "EraseMan (BN6; JP KillerMan)",
       "sources": {
         "bn6f": {
-          "offset": "28F18C",
+          "offset": "28324C",
           "compression": "none",
-          "bytes": 32177,
-          "sha256": "81f50238d3b049b01744e9e6c1d389d850a0450e35f6dde94e4b42734894f4c0",
+          "bytes": 48956,
+          "sha256": "3bfaff30d6c2487cc95b8d1452a008fdcb2b0f527e2edb204faf60f6069488e2",
           "confidence": "rom-verified"
         },
         "bn6g": {
-          "offset": "28F18C",
+          "offset": "28324C",
           "compression": "none",
-          "bytes": 32177,
-          "sha256": "81f50238d3b049b01744e9e6c1d389d850a0450e35f6dde94e4b42734894f4c0",
+          "bytes": 48956,
+          "sha256": "3bfaff30d6c2487cc95b8d1452a008fdcb2b0f527e2edb204faf60f6069488e2",
           "confidence": "rom-verified"
         }
       },
-      "note": "Sprite has 18 sequences; the AI sets animations 0x11–0x14, so the wind-up/strike/fire roles are mapped by appearance (inferred).",
+      "note": "Animation ids from the AI code (0x11 raise, 0x12 hold, 0x13 wind-up, 0x14 swing) match the sprite sequences directly.",
       "sequences": {
         "idle": {
           "seq": 0,
@@ -796,26 +796,26 @@
           "seq": 4,
           "confidence": "visual-candidate"
         },
+        "mark": {
+          "seq": 17,
+          "confidence": "visual-candidate"
+        },
         "fire": {
-          "seq": 14,
+          "seq": 18,
           "confidence": "visual-candidate"
         },
         "windup": {
-          "seq": 15,
+          "seq": 19,
           "confidence": "visual-candidate"
         },
         "strike": {
-          "seq": 16,
-          "confidence": "visual-candidate"
-        },
-        "mark": {
-          "seq": 17,
+          "seq": 20,
           "confidence": "visual-candidate"
         }
       }
     },
-    "chargemark": {
-      "label": "ChargeMan target marker (object type3 0x67, sprite 0x10/0x4A)",
+    "erasemark": {
+      "label": "EraseMan target marker (object type3 0x67, sprite 0x10/0x4A)",
       "sources": {
         "bn6f": {
           "offset": "38C3C8",
@@ -843,8 +843,8 @@
         }
       }
     },
-    "chargefire": {
-      "label": "ChargeMan fire burst (object type3 0x68, sprite 0x10/0x51)",
+    "erasebeam": {
+      "label": "EraseMan beam (object type3 0x68, sprite 0x10/0x51)",
       "sources": {
         "bn6f": {
           "offset": "390FC4",

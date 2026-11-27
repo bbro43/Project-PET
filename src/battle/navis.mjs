@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'ChargeMan', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', ChargeMan: 'chargeman', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -362,10 +362,10 @@ function slashman(e, api) {
 }
 
 // ======================= ProtoMan =======================
-// ======================= ChargeMan =======================
-// Decision 0x80F594C: move (9) N times, then strike (0xA) 3-4 times, then target-and-burst (0xB).
-function chargeman(e, api) {
-  const P = NAVI_AI.ChargeMan, s = api.s, p = s.player, v = e.variant, m = e.mem;
+// ======================= EraseMan =======================
+// Decision 0x80F594C: move (9) N times, then scythe strike (0xA) 3-4 times, then eye marker + beam (0xB).
+function eraseman(e, api) {
+  const P = NAVI_AI.EraseMan, s = api.s, p = s.player, v = e.variant, m = e.mem;
   const W = P.warpTicks.value;
   const done = wait => { go(e, 'idle', 'idle'); e.think = wait; };
   switch (e.state) {
@@ -382,7 +382,7 @@ function chargeman(e, api) {
         done(half[Math.min(v, half.length - 1)]);
       }
       return;
-    // ---- 0xA: wind up, then ram the two panels ahead
+    // ---- 0xA: scythe wind-up, then a swing over the two panels ahead
     case 'strike': {
       const wind = P.strikeWindup.value, hold = P.strikeHold.value;
       if (e.stateT === wind) setAnim(e, 'strike');
@@ -399,7 +399,7 @@ function chargeman(e, api) {
       }
       return;
     }
-    // ---- 0xB: marker hunts MegaMan, ChargeMan lines up and fires
+    // ---- 0xB: eye marker hunts MegaMan, EraseMan lines up and fires the beam
     case 'mark':
       if (s.hazards.includes(e.marker) && !e.marker.locked) return;
       return warp(frontPanel(e.marker.y), 'burstfire');
@@ -427,7 +427,7 @@ function chargeman(e, api) {
     s.hazards.push(e.marker);
     go(e, 'mark', 'mark');
   }
-  function strikePanel() { // two panels ahead of MegaMan if that is ChargeMan's side, else his row nearest the front
+  function strikePanel() { // two panels ahead of MegaMan if that is EraseMan's side, else his row nearest the front
     const want = [p.x + 2, p.y];
     if (want[0] >= 3 && want[0] <= 5 && (!api.at(...want) || api.at(...want) === e)) return want;
     return frontPanel(p.y);
@@ -554,7 +554,7 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, ChargeMan: chargeman, ProtoMan: protoman };
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;

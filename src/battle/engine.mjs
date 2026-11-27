@@ -241,7 +241,7 @@ function stepHazards(s) {
       if (h.cells.some(([x, y]) => p.x === x && p.y === y) && p.state !== 'vanish') hitPlayer(s, h.damage);
       return s.tick < h.until;
     }
-    if (h.kind === 'mark') { // ChargeMan target marker: follows MegaMan a panel at a time, then locks
+    if (h.kind === 'mark') { // EraseMan target marker: follows MegaMan a panel at a time, then locks
       if (!s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
       if (!h.locked && s.tick >= h.next) {
         h.next = s.tick + h.step;
