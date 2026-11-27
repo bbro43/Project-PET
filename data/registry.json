@@ -2012,7 +2012,7 @@
      "confidence": "rom-verified"
     }
    },
-   "note": "LZ77-compressed, 47 sequences: body 0-19, cape layers 20-39 (not composited yet, so he shows without his cape), projectiles 40-46.",
+   "note": "LZ77-compressed, 47 sequences: body 0-19, cape 20-39 (sequence n+20 is the cape for body sequence n, drawn over the body; attack poses throw it back to show his arms), projectiles 40-46.",
    "sequences": {
     "idle": {
      "seq": 0,
@@ -2056,13 +2056,23 @@
     },
     "wheel": {
      "seq": 45,
-     "confidence": "visual-candidate"
+     "confidence": "visual-candidate",
+     "layers": [
+      0
+     ]
     },
     "shot": {
      "seq": 40,
-     "confidence": "visual-candidate"
+     "confidence": "visual-candidate",
+     "layers": [
+      0
+     ]
     }
-   }
+   },
+   "layers": [
+    0,
+    20
+   ]
   },
   "gregar": {
    "label": "Cybeast Gregar (BN6 Gregar)",
@@ -2075,12 +2085,12 @@
      "confidence": "rom-verified"
     }
    },
-   "note": "Only the Gregar ROM carries the full battle sprite (sprite table category 8, index 0x14); the Falzar ROM's entry at that index is a small 31-sequence block, so a Falzar-only install falls back to the Gregar ROM if it is imported, else placeholder art. 86 sequences: five stacked layers of 16 animations (0-15 shadow, 16-31 body, 32-47 head and tail, 48-63 forelegs, 64-79 mane) plus effects 80-85. Layer draw order is a visual guess.",
+   "note": "Only the Gregar ROM carries the full battle sprite (sprite table category 8, index 0x14); the Falzar ROM's entry at that index is a small 31-sequence block, so a Falzar-only install falls back to the Gregar ROM if it is imported, else placeholder art. 86 sequences: five stacked layers of 16 animations (0-15 shadow, 16-31 hind legs, 32-47 head and tail, 48-63 forelegs, 64-79 body and mane) plus effects 80-85. Drawn legs first, then body, then head (order checked visually against the game).",
    "layers": [
     0,
-    64,
     16,
     48,
+    64,
     32
    ],
    "sequences": {
