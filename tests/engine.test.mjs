@@ -249,3 +249,38 @@ test('Quaker shockwave speed and damage come from its tables', () => {
   for (let i = 0; i < 600 && !w; i++) { step(s, {}); w = s.hazards.find(h => h.kind === 'wave'); }
   assert.equal(w.step, 11); assert.equal(w.damage, 100);
 });
+
+for (const fam of ['Catack', 'OldStove', 'HauntedCandle']) {
+  test(`${fam} (every version) attacks MegaMan within 30 seconds`, () => {
+    for (let v = 0; v < 6; v++) {
+      const s = start({ seed: 50 + v, enemies: formation(fam, v, 1) });
+      let hit = false;
+      for (let i = 0; i < 1800 && !hit; i++) {
+        s.player.hp = 1000; s.player.invuln = 0;
+        const e = s.enemies[0]; if (e && i % 60 === 0) { s.player.y = e.y; s.player.x = 2; }
+        step(s, {}); hit = s.events.some(ev => ev.type === 'playerHit');
+      }
+      assert.ok(hit, `${fam} version ${v}`);
+    }
+  });
+}
+
+test('WindBox blows MegaMan back; VacuumFan pulls him forward', () => {
+  for (const [v, x0, x1] of [[0, 2, 0], [1, 0, 2]]) {
+    const s = start({ seed: 60, enemies: formation('WindBox', v, 1) });
+    s.player.x = x0; s.player.y = 1;
+    run(s, {}, 120);
+    assert.equal(s.player.x, x1, `version ${v}`);
+  }
+});
+
+test('Trumpy (base) makes its allies invincible while it plays', () => {
+  const s = start({ seed: 61, enemies: [['Trumpy', 0], ['Mettaur', 0]] });
+  s.player.invuln = 1e9;
+  const [t, m] = s.enemies;
+  for (let i = 0; i < 1200 && t.state !== 'play'; i++) step(s, {});
+  assert.equal(t.state, 'play');
+  run(s, {}, 5);
+  const hp = m.hp; m.invuln > 0 && assert.ok(true);
+  assert.ok(m.invuln > 0);
+});

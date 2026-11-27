@@ -2589,6 +2589,203 @@
      "confidence": "visual-candidate"
     }
    }
+  },
+  "catack": {
+   "label": "Catack (BN6 virus, AI 7)",
+   "sources": {
+    "bn6f": {
+     "offset": "2492FC",
+     "compression": "lz77",
+     "bytes": 7988,
+     "sha256": "481ee96682e610e9ee7b40afe7494fa8c989ef29ef7981912eb9623806490aab",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2492FC",
+     "compression": "lz77",
+     "bytes": 7988,
+     "sha256": "481ee96682e610e9ee7b40afe7494fa8c989ef29ef7981912eb9623806490aab",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "aim": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "fire": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "recover": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "roll": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "windbox": {
+   "label": "WindBox (BN6 virus, AI 9)",
+   "sources": {
+    "bn6f": {
+     "offset": "24AC94",
+     "compression": "none",
+     "bytes": 1468,
+     "sha256": "10264817eb04feacae4b24a24969268bce000d8c4de3977455bbec473ba98edc",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "24AC94",
+     "compression": "none",
+     "bytes": 1468,
+     "sha256": "10264817eb04feacae4b24a24969268bce000d8c4de3977455bbec473ba98edc",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "trumpy": {
+   "label": "Trumpy (BN6 virus, AI 10)",
+   "sources": {
+    "bn6f": {
+     "offset": "24B254",
+     "compression": "none",
+     "bytes": 8165,
+     "sha256": "c1568201f0fa994b20587135f031ec7ee8da5c22f26e00094227b89876d6a201",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "24B254",
+     "compression": "none",
+     "bytes": 8165,
+     "sha256": "c1568201f0fa994b20587135f031ec7ee8da5c22f26e00094227b89876d6a201",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "hop": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "hop2": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "ready": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "play": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "oldstove": {
+   "label": "OldStove (BN6 virus, AI 11)",
+   "sources": {
+    "bn6f": {
+     "offset": "24D23C",
+     "compression": "lz77",
+     "bytes": 7396,
+     "sha256": "34ae310623cd62f285d91cbfe22c1d2d9cf43b919405ae3c31764dabd5fdfdfa",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "24D23C",
+     "compression": "lz77",
+     "bytes": 7396,
+     "sha256": "34ae310623cd62f285d91cbfe22c1d2d9cf43b919405ae3c31764dabd5fdfdfa",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "open": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "breathe": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "close": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "ember": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "smoke": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "hauntedcandle": {
+   "label": "HauntedCandle (BN6 virus, AI 12)",
+   "sources": {
+    "bn6f": {
+     "offset": "24DC7C",
+     "compression": "lz77",
+     "bytes": 8112,
+     "sha256": "ddb9a2e41904c44f2cf604352f2dda9733a4d9c4cab5ca58789a59a56b704a05",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "24DC7C",
+     "compression": "lz77",
+     "bytes": 8112,
+     "sha256": "ddb9a2e41904c44f2cf604352f2dda9733a4d9c4cab5ca58789a59a56b704a05",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "lit": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "out": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "outidle": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "aim": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "strike": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    }
+   }
   }
  },
  "tables": {

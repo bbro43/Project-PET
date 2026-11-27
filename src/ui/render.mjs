@@ -69,6 +69,7 @@ export function render(g, s, bank) {
 
   // Virus overlays: Piranha's sonar mark, KillerEye's scan line and beam.
   for (const e of s.enemies) if (e.hp > 0) {
+    if (e.flame) for (const [x, y] of e.flame) { const [ax, ay] = anchor(x, y), k = (s.tick >> 2) & 1; g.fillStyle = k ? '#ff7a20' : '#ffc040'; g.beginPath(); g.moveTo(ax - 14, ay); g.lineTo(ax, ay - 30 - 4 * k); g.lineTo(ax + 14, ay); g.fill(); }
     if (e.mark) { const [ax, ay] = anchor(e.mark.fx, e.y); sprite(g, bank, 'piranha', 'mark', s.tick, ax, ay, (g, x, y) => { g.strokeStyle = '#fff'; g.strokeRect(x - 6, y - 12, 12, 8); }, 0, true); }
     if (e.scan) for (const [x, y] of e.scan) { g.fillStyle = 'rgba(255,80,80,.25)'; g.fillRect(x * PANEL_W + 3, FIELD_Y + y * PANEL_H + 3, PANEL_W - 6, PANEL_H - 9); }
     if (e.beam && e.beam.length) {
@@ -448,6 +449,19 @@ export function render(g, s, bank) {
     g.fillStyle = '#222'; g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill();
   }
   for (const f of s.effects) {
+    if (f.kind === 'gust') { // WindBox / VacuumFan gust along a row
+      if (f.t > 10) continue;
+      const [x0, y0] = anchor(f.dir < 0 ? 5 : 0, f.y), [x1] = anchor(f.dir < 0 ? 0 : 5, f.y), k = f.t / 10;
+      g.strokeStyle = 'rgba(220,240,255,.7)'; g.lineWidth = 2;
+      for (let i = 0; i < 3; i++) { const x = x0 + (x1 - x0) * k + i * 10 * f.dir; g.beginPath(); g.moveTo(x, y0 - 8 - i * 6); g.lineTo(x + 14 * f.dir, y0 - 8 - i * 6); g.stroke(); }
+      continue;
+    }
+    if (f.kind === 'note' || f.kind === 'heal') {
+      if (f.t > 16) continue;
+      const [ax, ay] = anchor(f.x, f.y);
+      g.fillStyle = f.kind === 'heal' ? '#80ff90' : '#ffe070'; g.font = '10px monospace'; g.fillText(f.kind === 'heal' ? '+' : '\u266a', ax - 12 - f.t, ay - 30 - f.t);
+      continue;
+    }
     const [ax, ay] = anchor(f.x, f.y);
     if (f.kind === 'shot' && f.t > 6) continue;
     const r = f.kind === 'blast' ? 4 + f.t : f.kind === 'delete' ? f.t : f.kind === 'shot' ? 3 + f.t : 6 - f.t / 4;

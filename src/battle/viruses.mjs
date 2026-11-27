@@ -3,8 +3,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_FAMILIES = ['Mettaur', 'Piranha', 'Heady', 'Swordy', 'KillerEye', 'Quaker', 'Champy', 'Gunner'];
-const SPRITE = { Mettaur: 'mettaur', Piranha: 'piranha', Heady: 'heady', Swordy: 'swordy', KillerEye: 'killereye', Quaker: 'quaker', Champy: 'champy', Gunner: 'gunner' };
+export const PLAYABLE_FAMILIES = ['Mettaur', 'Piranha', 'Heady', 'Swordy', 'KillerEye', 'Quaker', 'Catack', 'Champy', 'WindBox', 'Trumpy', 'OldStove', 'HauntedCandle', 'Gunner'];
+const SPRITE = { Mettaur: 'mettaur', Piranha: 'piranha', Heady: 'heady', Swordy: 'swordy', KillerEye: 'killereye', Quaker: 'quaker', Catack: 'catack', Champy: 'champy', WindBox: 'windbox', Trumpy: 'trumpy', OldStove: 'oldstove', HauntedCandle: 'hauntedcandle', Gunner: 'gunner' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[variant] : param.value;
 
 // In-game names, read from the ROM's enemy name strings.
@@ -26,6 +26,122 @@ const go = (e, state, anim) => { e.state = state; e.stateT = 0; if (anim) setAni
 
 // api: { s, at(x,y), hitPlayerAt(x,y,damage,element), spawnWave(e,x,y,stepTicks), turnFree(e), takeTurn(e), endTurn(e) }
 const BEHAVIOUR = {
+
+  // 0x810C6F0: roll along the row, then fire the cannon (one Catack at a time).
+  Catack(e, api) {
+    const P = AI.Catack, s = api.s, v = e.variant;
+    switch (e.state) {
+      case 'idle':
+        if (e.think === 30 && !e.started) { e.started = true; e.think = pv(P.firstWait, v); }
+        if (--e.think > 0) return;
+        {
+          const row = [3, 4, 5].filter(x => x !== e.x && !api.at(x, e.y));
+          e.from = e.x; e.dest = row.length ? row[Math.floor(api.rng() * row.length)] : e.x;
+        }
+        return go(e, 'roll', 'roll');
+      case 'roll': {
+        const T = pv(P.rollTicks, v), k = Math.min(1, e.stateT / T);
+        e.drawX = e.from + (e.dest - e.from) * k;
+        if (k >= 1) { if (!api.at(e.dest, e.y) || api.at(e.dest, e.y) === e) e.x = e.dest; e.drawX = e.x; go(e, 'ready', 'idle'); }
+        return;
+      }
+      case 'ready':
+        if (!api.turnFree(e)) { e.think = P.waitAfter.value; return go(e, 'idle', 'idle'); }
+        api.takeTurn(e); return go(e, 'aim', 'aim');
+      case 'aim':
+        if (e.stateT === 20) {
+          setAnim(e, 'fire');
+          s.hazards.push({ kind: 'bolt', x: e.x - 1, fx: e.x - 1, y: e.y, dx: -1 / P.shellStep.value, damage: pv(P.damage, v), sprite: 'catack', seq: 'shell', owner: e.id });
+        }
+        if (e.stateT === 40) setAnim(e, 'recover');
+        if (e.stateT >= 60) { api.endTurn(e); e.think = P.waitAfter.value; go(e, 'idle', 'idle'); }
+        return;
+    }
+  },
+
+  // 0x810D0F4: a wind object pushes (WindBox) or pulls (VacuumFan) MegaMan, one row at a time.
+  WindBox(e, api) {
+    const P = AI.WindBox, s = api.s, p = s.player;
+    e.gustRow ??= 3;
+    if (s.tick % P.gustEvery.value !== 0) return;
+    e.gustRow = e.gustRow <= 1 ? 3 : e.gustRow - 1;
+    const y = e.gustRow - 1, dir = e.variant % 2 ? 1 : -1; // VacuumFan pulls toward the front column
+    s.effects.push({ kind: 'gust', y, dir, t: 0 });
+    if (p.y === y && p.state !== 'vanish') { const nx = p.x + dir; if (nx >= 0 && nx <= 2) p.x = nx; }
+  },
+
+  // 0x810D554: hop around, then play a song (effect by version).
+  Trumpy(e, api) {
+    const P = AI.Trumpy, s = api.s, v = e.variant;
+    const allies = () => s.enemies.filter(o => o !== e && o.hp > 0 && !o.kind);
+    switch (e.state) {
+      case 'idle':
+        if (--e.think > 0) return;
+        e.hops = (e.hops || 0) + 1;
+        {
+          const free = []; for (let x = 3; x < 6; x++) for (let y = 0; y < 3; y++) if (!api.at(x, y)) free.push([x, y]);
+          if (free.length) [e.x, e.y] = free[Math.floor(api.rng() * free.length)];
+        }
+        if (e.hops <= 3) { e.think = pv(P.hopWait, v); setAnim(e, 'hop'); return; }
+        e.hops = 0; return go(e, 'play', 'play');
+      case 'play': {
+        const T = pv(P.song, v), fx = v === 5 ? 0 : v;
+        if (fx === 0) for (const o of allies()) o.invuln = Math.max(o.invuln || 0, 2);
+        if (fx === 4 && e.stateT === T - 25) for (const o of allies()) { o.hp = o.maxHp; s.effects.push({ kind: 'heal', x: o.x, y: o.y, t: 0 }); }
+        if (e.stateT % 16 === 0) s.effects.push({ kind: 'note', x: e.x, y: e.y, t: 0 });
+        if (e.stateT >= T) { setAnim(e, 'idle'); e.think = P.afterSong.value; go(e, 'idle', null); }
+        return;
+      }
+    }
+  },
+
+  // 0x810D910: slide to line up, then breathe fire ahead.
+  OldStove(e, api) {
+    const P = AI.OldStove, s = api.s, p = s.player, v = e.variant;
+    switch (e.state) {
+      case 'idle':
+        if (--e.think > 0) return;
+        if (p.y === e.y && (e.x === 3 || api.at(e.x - 1, e.y))) return go(e, 'open', 'open');
+        if (p.y === e.y) { e.from = [e.x, e.y]; e.dest = [e.x - 1, e.y]; e.span = 40; return go(e, 'slide', null); } // close in along the row
+        { const ny = e.y + Math.sign(p.y - e.y); if (!api.at(e.x, ny)) { e.from = [e.x, e.y]; e.dest = [e.x, ny]; e.span = 24; return go(e, 'slide', null); } }
+        e.think = 30; return;
+      case 'slide': {
+        const T = Math.round(e.span / pv(P.slideSpeed, v)), k = Math.min(1, e.stateT / T);
+        e.drawX = e.from[0] + (e.dest[0] - e.from[0]) * k; e.drawY = e.from[1] + (e.dest[1] - e.from[1]) * k;
+        if (k >= 1) { if (!api.at(...e.dest)) [e.x, e.y] = e.dest; e.drawX = e.x; e.drawY = e.y; e.think = 1; go(e, 'idle', null); }
+        return;
+      }
+      case 'open':
+        if (e.stateT >= P.windup.value) { e.flame = [[e.x - 1, e.y]]; go(e, 'breathe', 'breathe'); }
+        return;
+      case 'breathe':
+        api.hitPlayerCells(e.flame, pv(P.damage, v));
+        if (e.stateT >= pv(P.flameTicks, v)) { e.flame = null; setAnim(e, 'close'); e.think = pv(P.after, v); go(e, 'idle', null); }
+        return;
+    }
+  },
+
+  // 0x810E120: one candle at a time marks MegaMan's panel, then a flame strikes it.
+  HauntedCandle(e, api) {
+    const P = AI.HauntedCandle, s = api.s, p = s.player, v = e.variant;
+    switch (e.state) {
+      case 'idle':
+        if (--e.think > 0) return;
+        if (!api.turnFree(e)) { e.think = 10; return; }
+        api.takeTurn(e); e.target = [p.x, p.y]; e.highlight = [[e.target]]; return go(e, 'aim', 'aim');
+      case 'aim':
+        if (e.stateT >= pv(P.mark, v)) {
+          e.highlight = null; setAnim(e, 'strike');
+          s.hazards.push({ kind: 'estrike', x: e.target[0], y: e.target[1], hit: s.tick + 1, damage: pv(P.damage, v), elem: 'fire', owner: e.id });
+          go(e, 'after', null);
+        }
+        return;
+      case 'after':
+        if (e.stateT === 20) setAnim(e, 'idle');
+        if (e.stateT >= P.after.value) { api.endTurn(e); e.think = P.interval.value; go(e, 'idle', null); }
+        return;
+    }
+  },
 
   // 0x810A550: swim to MegaMan's row, sonar mark down the row, hold, torpedo.
   Piranha(e, api) {
@@ -313,5 +429,6 @@ const BEHAVIOUR = {
 export function stepVirus(e, api) {
   e.animT++; e.stateT++;
   if (e.flash) e.flash--;
+  if (e.invuln > 0) e.invuln--;
   BEHAVIOUR[e.family](e, api);
 }

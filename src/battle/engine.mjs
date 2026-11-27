@@ -108,7 +108,7 @@ export function elementMultiplier(attack, defend) {
 }
 
 function hitEnemy(s, e, damage, extra = {}) {
-  if (!e || e.hp <= 0 || e.airborne) return;
+  if (!e || e.hp <= 0 || e.airborne || e.invuln > 0) return; // invuln: e.g. Trumpy's song
   if (e.guard) { e.guardHit = true; s.events.push({ type: 'guard', target: e.id }); s.effects.push({ kind: 'guard', x: e.x, y: e.y, t: 0 }); return; }
   damage *= elementMultiplier(extra.element, e.element);
   e.hp = Math.max(e.sturdy ? 1 : 0, e.hp - damage);
