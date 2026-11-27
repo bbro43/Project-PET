@@ -225,3 +225,27 @@ test('Shooter (odd version) sweeps its crosshair one panel per shot', () => {
   for (let i = 0; i < 600 && xs.length < 5; i++) { step(s, {}); for (const f of s.effects) if (f.kind === 'shot' && f.t === 1) xs.push(f.x); }
   assert.deepEqual(xs, [2, 1, 0, 1, 2]);
 });
+
+for (const fam of ['Piranha', 'Heady', 'Swordy', 'KillerEye', 'Quaker']) {
+  test(`${fam} (every version) attacks MegaMan within 30 seconds`, () => {
+    for (let v = 0; v < 6; v++) {
+      const s = start({ seed: 30 + v, enemies: formation(fam, v, 1) });
+      let hit = false;
+      for (let i = 0; i < 1800 && !hit; i++) {
+        s.player.hp = 1000; s.player.invuln = 0;
+        // stand where most attacks reach: in the virus's row, at the front of MegaMan's area
+        const e = s.enemies[0]; if (e && i % 60 === 0) { s.player.y = e.y; s.player.x = 2; }
+        step(s, {}); hit = s.events.some(ev => ev.type === 'playerHit');
+      }
+      assert.ok(hit, `${fam} version ${v}`);
+    }
+  });
+}
+
+test('Quaker shockwave speed and damage come from its tables', () => {
+  const s = start({ seed: 40, enemies: formation('Quaker', 2, 1) });
+  s.player.invuln = 1e9;
+  let w = null;
+  for (let i = 0; i < 600 && !w; i++) { step(s, {}); w = s.hazards.find(h => h.kind === 'wave'); }
+  assert.equal(w.step, 11); assert.equal(w.damage, 100);
+});

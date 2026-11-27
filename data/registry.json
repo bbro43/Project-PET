@@ -2368,6 +2368,227 @@
      "confidence": "visual-candidate"
     }
    }
+  },
+  "piranha": {
+   "label": "Piranha (BN6 virus, AI 2)",
+   "sources": {
+    "bn6f": {
+     "offset": "242E94",
+     "compression": "lz77",
+     "bytes": 13328,
+     "sha256": "bfa0cc3c93608c391e97699fccc4149d90c53b5f77e3f52a3b736f6e3fd5166a",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "242E94",
+     "compression": "lz77",
+     "bytes": 13328,
+     "sha256": "bfa0cc3c93608c391e97699fccc4149d90c53b5f77e3f52a3b736f6e3fd5166a",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "aim": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "lock": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "charge": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "fire": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "end": {
+     "seq": 6,
+     "confidence": "visual-candidate"
+    },
+    "torpedo": {
+     "seq": 7,
+     "confidence": "visual-candidate"
+    },
+    "mark": {
+     "seq": 8,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "heady": {
+   "label": "Heady (BN6 virus, AI 3)",
+   "sources": {
+    "bn6f": {
+     "offset": "244164",
+     "compression": "none",
+     "bytes": 5192,
+     "sha256": "67d071e7a3c67e1d299690cb4c9f7cb64804dbf4517c6c540e3858893e6f64fd",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "244164",
+     "compression": "none",
+     "bytes": 5192,
+     "sha256": "67d071e7a3c67e1d299690cb4c9f7cb64804dbf4517c6c540e3858893e6f64fd",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "drop": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "drop2": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "face": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "head": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "swordy": {
+   "label": "Swordy (BN6 virus, AI 4)",
+   "sources": {
+    "bn6f": {
+     "offset": "2455B0",
+     "compression": "lz77",
+     "bytes": 11824,
+     "sha256": "51c9bc24a9d2a4a61849747a34b173d895d81fd47f4f2ee288424c188113c3f6",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2455B0",
+     "compression": "lz77",
+     "bytes": 11824,
+     "sha256": "51c9bc24a9d2a4a61849747a34b173d895d81fd47f4f2ee288424c188113c3f6",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "ready": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "ready2": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    },
+    "slash": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "slash2": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "step": {
+     "seq": 5,
+     "confidence": "visual-candidate"
+    },
+    "long": {
+     "seq": 7,
+     "confidence": "visual-candidate"
+    },
+    "wide": {
+     "seq": 10,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "killereye": {
+   "label": "KillerEye (BN6 virus, AI 5)",
+   "sources": {
+    "bn6f": {
+     "offset": "246A24",
+     "compression": "none",
+     "bytes": 8096,
+     "sha256": "3fb62f8c87de93881a8c39070bed9e4f8d571344b5f0335801e5c9575f21d8c2",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "246A24",
+     "compression": "none",
+     "bytes": 8096,
+     "sha256": "3fb62f8c87de93881a8c39070bed9e4f8d571344b5f0335801e5c9575f21d8c2",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "open": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "scan": {
+     "seq": 3,
+     "confidence": "visual-candidate"
+    },
+    "beam": {
+     "seq": 4,
+     "confidence": "visual-candidate"
+    },
+    "close": {
+     "seq": 6,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "quaker": {
+   "label": "Quaker (BN6 virus, AI 6)",
+   "sources": {
+    "bn6f": {
+     "offset": "2489C8",
+     "compression": "lz77",
+     "bytes": 7108,
+     "sha256": "7ec56b47b9e44a91b634002a74ade460e60af4ac207f8087ccebd054d91ce8eb",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2489C8",
+     "compression": "lz77",
+     "bytes": 7108,
+     "sha256": "7ec56b47b9e44a91b634002a74ade460e60af4ac207f8087ccebd054d91ce8eb",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    },
+    "jump": {
+     "seq": 1,
+     "confidence": "visual-candidate"
+    },
+    "slam": {
+     "seq": 2,
+     "confidence": "visual-candidate"
+    }
+   }
   }
  },
  "tables": {

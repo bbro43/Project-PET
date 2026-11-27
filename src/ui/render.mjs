@@ -67,6 +67,16 @@ export function render(g, s, bank) {
   g.fillStyle = bg; g.fillRect(0, 0, 240, 160);
   panels(g);
 
+  // Virus overlays: Piranha's sonar mark, KillerEye's scan line and beam.
+  for (const e of s.enemies) if (e.hp > 0) {
+    if (e.mark) { const [ax, ay] = anchor(e.mark.fx, e.y); sprite(g, bank, 'piranha', 'mark', s.tick, ax, ay, (g, x, y) => { g.strokeStyle = '#fff'; g.strokeRect(x - 6, y - 12, 12, 8); }, 0, true); }
+    if (e.scan) for (const [x, y] of e.scan) { g.fillStyle = 'rgba(255,80,80,.25)'; g.fillRect(x * PANEL_W + 3, FIELD_Y + y * PANEL_H + 3, PANEL_W - 6, PANEL_H - 9); }
+    if (e.beam && e.beam.length) {
+      const [x0, y0] = anchor(e.x - 0.5, e.y), [x1, y1] = anchor(e.beam[e.beam.length - 1][0] - 0.5, e.beam[e.beam.length - 1][1]);
+      g.strokeStyle = (s.tick >> 1) & 1 ? '#ff5050' : '#ffd0d0'; g.lineWidth = 4; g.beginPath(); g.moveTo(x0, y0 - 18); g.lineTo(x1, y1 - 18); g.stroke();
+    }
+  }
+
   // ElecMan panel storm: chosen panels flash (the game uses object_highlightPanel, a panel colour flash).
   for (const e of s.enemies) if (e.hp > 0 && e.highlight) {
     const on = (s.tick >> 2) & 1;
@@ -248,6 +258,7 @@ export function render(g, s, bank) {
       sprite(g, bank, 'circusman', 'handr', 0, ax, ay - 30 * (1 - k), '#fff', 0, true);
     }
     if (h.kind === 'hoop') { const [ax, ay] = anchor(h.x, h.y); sprite(g, bank, 'circusman', 'hoop', s.tick - h.start, ax, ay, '#f84', 0, true); }
+    if (h.kind === 'bolt') { const [ax, ay] = anchor(h.fx, h.y); sprite(g, bank, h.sprite, h.seq, s.tick, ax, ay, (g, x, y) => { g.fillStyle = '#cde'; g.fillRect(x - 8, y - 12, 16, 6); }, 0, true); }
     if (h.kind === 'portal' && s.tick >= h.start) {
       const [ax, ay] = anchor(h.x, h.y), lunge = s.tick >= h.hit;
       if (s.tick < h.hit) { g.fillStyle = 'rgba(176,96,255,.35)'; g.fillRect(ax - PANEL_W / 2 + 2, ay - 14, PANEL_W - 4, 16); }

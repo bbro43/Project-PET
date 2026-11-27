@@ -339,6 +339,13 @@ function stepHazards(s) {
       s.effects.push({ kind: 'rockbreak', x: h.x, y: h.y, t: 0 });
       return false;
     }
+    if (h.kind === 'bolt') { // a projectile flying along a row (virus torpedoes, Heady's head)
+      if (!s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
+      h.fx += h.dx; h.x = Math.round(h.fx);
+      if (h.until && s.tick >= h.until) return false;
+      if (h.x === p.x && h.y === p.y && p.state !== 'vanish' && !h.hit) { h.hit = true; hitPlayer(s, h.damage); if (!h.keep) return false; }
+      return h.fx > -1.5;
+    }
     if (h.kind === 'twister') { // ElementMan's basic tornado: forward 5 panels, 2 rows across, back 6 panels
       if (!s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
       const d = Math.max(0, (s.tick - h.start) * h.speed), [l0, l1, l2] = h.legs;
