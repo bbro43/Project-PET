@@ -40,6 +40,9 @@ const placeholderEnemyNavi = (g, x, y) => {
   g.fillStyle = '#c04040'; g.fillRect(x - 8, y - 36, 16, 32);
   g.fillStyle = '#ffd0d0'; g.fillRect(x - 5, y - 32, 10, 8);
 };
+const placeholderCoil = (g, x, y) => {
+  g.fillStyle = '#9aa'; g.fillRect(x - 4, y - 24, 8, 22); g.fillStyle = '#e44'; g.fillRect(x - 3, y - 27, 6, 4);
+};
 const placeholderVirus = (g, x, y) => {
   g.fillStyle = '#e0c020'; g.beginPath(); g.arc(x, y - 6, 10, Math.PI, 0); g.fill();
   g.fillStyle = '#333'; g.fillRect(x - 10, y - 6, 20, 6);
@@ -57,6 +60,17 @@ export function render(g, s, bank) {
   bg.addColorStop(0, '#062048'); bg.addColorStop(1, '#0f4a7a');
   g.fillStyle = bg; g.fillRect(0, 0, 240, 160);
   panels(g);
+
+  // ElecMan panel storm: chosen panels flash (the game uses object_highlightPanel, a panel colour flash).
+  for (const e of s.enemies) if (e.hp > 0 && e.highlight) {
+    const on = (s.tick >> 2) & 1;
+    e.highlight.forEach((group, gi) => {
+      for (const [x, y] of group) {
+        g.fillStyle = gi === 0 ? (on ? 'rgba(255,240,80,.85)' : 'rgba(255,255,255,.55)') : 'rgba(255,230,90,.45)';
+        g.fillRect(x * PANEL_W + 3, FIELD_Y + y * PANEL_H + 3, PANEL_W - 6, PANEL_H - 9);
+      }
+    });
+  }
 
   // Hazards under actors.
   const wave = bank?.get('shockwave');
@@ -82,9 +96,11 @@ export function render(g, s, bank) {
   }
   for (const e of s.enemies) {
     if (e.hp <= 0) continue;
-    const [ax, ay] = anchor(e.x, e.y);
-    draw.push({ y: e.y, fn: () => {
-      sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, e.kind === 'navi' ? placeholderEnemyNavi : placeholderVirus, e.palette, e.kind === 'navi');
+    const [ax, ay] = anchor(e.drawX ?? e.x, e.drawY ?? e.y);
+    const fallback = e.kind === 'navi' ? placeholderEnemyNavi : e.kind === 'coil' ? placeholderCoil : placeholderVirus;
+    draw.push({ y: e.drawY ?? e.y, fn: () => {
+      sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, fallback, e.palette, e.kind === 'navi');
+      if (e.kind === 'coil' && e.discharge > 0 && !bank?.has('eleccoil')) { g.strokeStyle = '#80f0ff'; g.lineWidth = 2; g.beginPath(); g.moveTo(ax, FIELD_Y); g.lineTo(ax, FIELD_Y + 3 * PANEL_H); g.stroke(); }
       if (e.guard) { g.fillStyle = 'rgba(200,230,255,.7)'; g.fillRect(ax - 18, ay - 34, 3, 28); }
       if (e.flash) { g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(ax - 14, ay - 26, 28, 26); g.globalCompositeOperation = 'source-over'; }
       text(g, String(e.hp), ax, ay + 6, '#fff', 'center');
@@ -92,11 +108,25 @@ export function render(g, s, bank) {
   }
   draw.sort((a, b) => a.y - b.y).forEach(d => d.fn());
 
-  // ElecMan ThunderBolt marker (drawn as a flashing panel outline; the game's marker sprite isn't mapped yet)
-  for (const e of s.enemies) if (e.hp > 0 && e.target?.kind === 'marker') {
-    const px = e.target.x * PANEL_W, py = FIELD_Y + e.target.y * PANEL_H;
-    g.strokeStyle = (e.target.t >> 2) & 1 ? '#ffe040' : '#fff'; g.lineWidth = 2;
-    g.strokeRect(px + 2, py + 2, PANEL_W - 4, PANEL_H - 6);
+  // ElecMan charge sparkle at his hand
+  const aura = bank?.get('elecaura');
+  for (const f of s.effects) if (f.kind === 'aura' && f.t < (f.life ?? 30)) {
+    const e = s.enemies.find(o => o.id === f.owner);
+    if (!e || e.hp <= 0) continue;
+    const [ax, ay] = anchor(e.drawX ?? e.x, e.drawY ?? e.y);
+    if (aura) { const fr = frameAt(aura.spark, f.t); g.drawImage(fr.image, Math.round(ax - 14 - fr.originX), Math.round(ay - 26 - fr.originY)); }
+    else { g.fillStyle = (f.t >> 1) & 1 ? '#fff' : '#ffe040'; g.beginPath(); g.arc(ax - 14, ay - 26, 3, 0, 7); g.fill(); }
+  }
+  // ElecMan row lightning (object type3 0x1E), from his hand toward MegaMan
+  for (const h of s.hazards) if (h.kind === 'rowbolt') {
+    const [ax, ay] = anchor(h.x, h.y);
+    const img = bank?.get('elecbolt') && frameAt(bank.get('elecbolt').horizontal, s.tick - h.start).image;
+    if (img) { g.save(); g.translate(Math.round(ax - 12), 0); g.scale(-1, 1); g.drawImage(img, 0, Math.round(ay - 22 - img.height / 2)); g.restore(); }
+    else { g.strokeStyle = '#ffd040'; g.lineWidth = 3; g.beginPath(); g.moveTo(ax - 12, ay - 22); for (let x = ax - 24; x > -10; x -= 10) g.lineTo(x, ay - 22 + (((x / 10) | 0) & 1 ? -5 : 5)); g.stroke(); }
+  }
+  for (const f of s.effects) if (f.kind === 'spark' && f.t < 8) {
+    const [ax, ay] = anchor(f.x, f.y);
+    g.fillStyle = f.t & 2 ? '#ffffff' : '#fff070'; g.beginPath(); g.arc(ax, ay - 16, 10 - f.t, 0, 7); g.fill();
   }
   const bolt = bank?.get('elecbolt');
   for (const f of s.effects) {
@@ -116,13 +146,24 @@ export function render(g, s, bank) {
         g.stroke();
       }
     }
-    if (f.kind === 'slash' && f.t < 10) {
-      const cells = { wide: [[-1, -1], [-1, 0], [-1, 1]], long: [[-1, 0], [-2, 0]], both: [[-1, -1], [-1, 0], [-1, 1], [-2, 0]], sword: [[-1, 0]] }[f.area];
-      g.strokeStyle = 'rgba(255,140,230,.9)'; g.lineWidth = 3;
-      for (const [dx, dy] of cells) {
-        const [ax, ay] = anchor(f.x + dx, f.y + dy);
-        if (f.y + dy < 0 || f.y + dy > 2) continue;
-        g.beginPath(); g.arc(ax + 10, ay - 12, 14, Math.PI * 0.6, Math.PI * 1.4); g.stroke();
+    if (f.kind === 'slash' && f.t < 14) {
+      const fx = bank?.get('swordfx');
+      if (fx) { // game slash sprite, mirrored for an enemy swinging left
+        const seq = { wide: ['wide'], long: ['long'], both: ['wide', 'long'], sword: ['sword'] }[f.area];
+        const [ax, ay] = anchor(f.x - 1, f.y);
+        for (const k of seq) {
+          const fr = frameAt(fx[k], f.t);
+          g.save(); g.translate(Math.round(ax + 20), 0); g.scale(-1, 1);
+          g.drawImage(fr.image, -fr.originX, Math.round(ay - 12 - fr.originY)); g.restore();
+        }
+      } else if (f.t < 10) {
+        const cells = { wide: [[-1, -1], [-1, 0], [-1, 1]], long: [[-1, 0], [-2, 0]], both: [[-1, -1], [-1, 0], [-1, 1], [-2, 0]], sword: [[-1, 0]] }[f.area];
+        g.strokeStyle = 'rgba(255,140,230,.9)'; g.lineWidth = 3;
+        for (const [dx, dy] of cells) {
+          const [ax, ay] = anchor(f.x + dx, f.y + dy);
+          if (f.y + dy < 0 || f.y + dy > 2) continue;
+          g.beginPath(); g.arc(ax + 10, ay - 12, 14, Math.PI * 0.6, Math.PI * 1.4); g.stroke();
+        }
       }
     }
     if (f.kind === 'guard' && f.t < 10) {
@@ -131,7 +172,7 @@ export function render(g, s, bank) {
     }
   }
   const target = bank?.get('target');
-  for (const e of s.enemies) if (e.hp > 0 && e.target && e.target.kind !== 'marker') {
+  for (const e of s.enemies) if (e.hp > 0 && e.target) {
     const [ax, ay] = anchor(e.target.x, e.target.y);
     if (target) {
       const f = frameAt(target[e.target.locked ? 'lock' : 'search'], e.target.locked ? e.stateT : e.target.t);
@@ -176,7 +217,7 @@ export function render(g, s, bank) {
   }
   if (s.mode === 'survival') text(g, `WAVE ${s.wave}`, 237, 12, '#ffe070', 'right');
   // Enemy names, top right (BN style list)
-  if (s.mode !== 'survival') s.enemies.filter(e => e.hp > 0).forEach((e, i) => text(g, e.name, 237, 12 + i * 9, '#fff', 'right'));
+  if (s.mode !== 'survival') s.enemies.filter(e => e.hp > 0 && e.kind !== 'coil').forEach((e, i) => text(g, e.name, 237, 12 + i * 9, '#fff', 'right'));
   const banner = { win: 'ENEMY DELETED!', lose: 'MegaMan deleted…', wave: `WAVE ${s.wave} CLEAR` }[s.phase];
   if (banner) {
     g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, 50, 240, 22);

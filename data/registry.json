@@ -300,9 +300,21 @@
         "point": {
           "seq": 21,
           "confidence": "visual-candidate"
+        },
+        "ready": {
+          "seq": 15,
+          "confidence": "visual-candidate"
+        },
+        "dash": {
+          "seq": 16,
+          "confidence": "visual-candidate"
+        },
+        "strike": {
+          "seq": 17,
+          "confidence": "visual-candidate"
         }
       },
-      "note": "AI sets CurAnim 0x12, 0x14, 0x15 (18, 20, 21) in its attacks, read from the ElecMan AI code."
+      "note": "AI sets CurAnim 0x12/0x13 (charge, charged), 0x14/0x15 (summon, point), 0xF/0x10/0x11 (dash ready, dash, strike); read from the ElecMan AI code."
     },
     "protoman": {
       "label": "ProtoMan (BN6)",
@@ -384,6 +396,104 @@
         },
         "vertical": {
           "seq": 1,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "eleccoil": {
+      "label": "ElecMan coil (object type3 0x19)",
+      "note": "sprite_load(0x80, 0x10, 0x13). Sequences: 0 spawn, 1 idle, 2 discharge (column lightning).",
+      "sources": {
+        "bn6f": {
+          "offset": "35E264",
+          "compression": "none",
+          "bytes": 4543,
+          "sha256": "ec0cea6c2142c39bb1754bac06aee6cdbcf28a123dbf0909e3b275f84492a706",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "35D7DC",
+          "compression": "none",
+          "bytes": 4543,
+          "sha256": "ec0cea6c2142c39bb1754bac06aee6cdbcf28a123dbf0909e3b275f84492a706",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "appear": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "idle": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "discharge": {
+          "seq": 2,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "elecaura": {
+      "label": "ElecMan charge sparkle (object type4 0x31 param 5)",
+      "note": "sprite_load(0x80, 0x10, 0x11).",
+      "sources": {
+        "bn6f": {
+          "offset": "35C794",
+          "compression": "none",
+          "bytes": 662,
+          "sha256": "3c5701be2d358f0ed11d294810fab921cfaf7bdc6b72c5e7d08922884bd120d8",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "35BD0C",
+          "compression": "none",
+          "bytes": 662,
+          "sha256": "3c5701be2d358f0ed11d294810fab921cfaf7bdc6b72c5e7d08922884bd120d8",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "spark": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "swordfx": {
+      "label": "Sword slash effect (effect objects 0x25/0x27 → sprite list 0xC index 0x14)",
+      "note": "Shape-to-sequence mapping (wide 0, long 1, sword 2) is visual; effect table 0x80E0398 lists animations 3 and 0 for ids 0x25/0x27.",
+      "sources": {
+        "bn6f": {
+          "offset": "30F144",
+          "compression": "none",
+          "bytes": 8513,
+          "sha256": "b57c66f623f940821a2694b3822d0bc5db65ec321c1818aada47bb9e80aa78d5",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "30E6BC",
+          "compression": "none",
+          "bytes": 8513,
+          "sha256": "b57c66f623f940821a2694b3822d0bc5db65ec321c1818aada47bb9e80aa78d5",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "wide": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "long": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "sword": {
+          "seq": 2,
+          "confidence": "visual-candidate"
+        },
+        "big": {
+          "seq": 3,
           "confidence": "visual-candidate"
         }
       }

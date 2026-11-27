@@ -13,43 +13,91 @@ test('Navi HP and names come from the ROM tables', () => {
   assert.equal(s.enemies[0].element, 'elec');
 });
 
-test('ElecMan ThunderBolt marks MegaMan\'s panel and strikes it after 30 frames', () => {
-  for (let seed = 1; seed < 60; seed++) {
-    const s = start('ElecMan', 0, seed);
+function findState(navi, variant, wanted, setup = () => {}) {
+  for (let seed = 1; seed < 200; seed++) {
+    const s = start(navi, variant, seed);
+    setup(s);
     const e = s.enemies[0];
-    let marked = null;
-    for (let i = 0; i < 2000 && !marked; i++) { step(s, {}); if (e.state === 'thunderbolt') marked = { ...e.target }; }
-    if (!marked) continue;
-    const hp = s.player.hp;
-    run(s, NAVI_AI.ElecMan.thunderboltDelay.value);
-    assert.equal(s.player.hp, hp - 40);
-    return;
+    for (let i = 0; i < 4000; i++) { step(s, {}); if (e.state === wanted) return { s, e }; }
   }
-  assert.fail('ElecMan never used ThunderBolt');
+  throw new Error('state ' + wanted + ' never reached');
+}
+
+test('ElecMan row lightning: 30-frame aura, then hits MegaMan in his row for 72 frames', () => {
+  const { s, e } = findState('ElecMan', 0, 'bolt', s => { s.player.invuln = 1e9; });
+  s.player.invuln = 0; s.player.y = e.y;
+  run(s, NAVI_AI.ElecMan.boltCharge.value - e.stateT - 1);
+  assert.equal(s.player.hp, 100);
+  run(s, 1);
+  assert.equal(s.player.hp, 60, 'base ElecMan bolt damage 40');
 });
 
-test('ElecMan ThunderBolt can be dodged by leaving the marked panel', () => {
-  for (let seed = 1; seed < 60; seed++) {
-    const s = start('ElecMan', 0, seed);
-    const e = s.enemies[0];
-    for (let i = 0; i < 2000 && e.state !== 'thunderbolt'; i++) step(s, {});
-    if (e.state !== 'thunderbolt' || e.stateT > 2) continue;
-    run(s, 2, { dir: s.player.y === 0 ? 'down' : 'up' });
-    run(s, 40);
-    assert.equal(s.player.hp, 100);
-    return;
-  }
-  assert.fail('no ThunderBolt observed');
+test('ElecMan row lightning misses MegaMan in another row', () => {
+  const { s, e } = findState('ElecMan', 0, 'bolt', s => { s.player.invuln = 1e9; });
+  s.player.invuln = 0; s.player.y = (e.y + 1) % 3;
+  run(s, 80);
+  assert.equal(s.player.hp, 100);
 });
 
-test('ElecMan stays in his own area and is hit by the buster', () => {
-  const s = start('ElecMan');
-  for (let i = 0; i < 3000; i++) {
-    step(s, { a: i % 20 < 2 });
+test('ElecMan places a coil in MegaMan\'s area every 4th decision; coil HP from ROM', () => {
+  const { s, e } = findState('ElecMan', 0, 'coilswap', s => { s.player.invuln = 1e9; });
+  run(s, 40);
+  const coils = s.enemies.filter(c => c.kind === 'coil' && c.hp > 0);
+  assert.equal(coils.length, 1);
+  assert.ok(coils[0].x <= 2, 'coil is on MegaMan\'s side');
+  assert.equal(coils[0].hp, 15);
+});
+
+test('coils discharge down their column when ElecMan fires from their row', () => {
+  for (let seed = 1; seed < 300; seed++) {
+    const s = start('ElecMan', 0, seed);
+    s.player.invuln = 1e9;
     const e = s.enemies[0];
-    assert.ok(e.x >= 3 && e.x <= 5);
+    let ok = false;
+    for (let i = 0; i < 6000 && !ok; i++) {
+      step(s, {});
+      ok = s.hazards.some(h => h.kind === 'colbolt');
+    }
+    if (!ok) continue;
+    const h = s.hazards.find(h => h.kind === 'colbolt');
+    const coil = s.enemies.find(c => c.id === h.owner);
+    assert.equal(coil.y, e.y);
+    s.player.invuln = 0; s.player.x = h.x; s.player.y = (coil.y + 1) % 3;
+    step(s, {});
+    assert.ok(s.player.hp < 100, 'column lightning hits MegaMan anywhere in that column');
+    return;
   }
-  assert.ok(s.enemies[0].hp < 900);
+  assert.fail('no coil discharge observed');
+});
+
+test('ElecMan panel storm highlights groups then strikes them in order', () => {
+  const { s, e } = findState('ElecMan', 0, 'storm', s => { s.player.invuln = 1e9; });
+  run(s, 30);
+  const groups = e.storm.groups.map(g => g.map(c => c.join(',')));
+  assert.equal(e.storm.rounds, 3);
+  assert.ok(groups.every(g => g.length >= 1 && g.length <= 3));
+  let strikes = 0;
+  for (let i = 0; i < 200 && e.state === 'storm'; i++) { step(s, {}); }
+  assert.notEqual(e.state, 'storm');
+});
+
+test('ElecMan dash strike lines up, dashes to MegaMan and hits for 80', () => {
+  const { s, e } = findState('ElecMan', 0, 'dashaura', s => { s.player.invuln = 1e9; });
+  s.player.invuln = 0;
+  assert.equal(e.y, s.player.y);
+  for (let i = 0; i < 200 && e.state !== 'return'; i++) step(s, {});
+  assert.equal(s.player.hp, 20);
+  assert.ok(e.x >= 3, 'warped back to his side');
+});
+
+test('coils disappear when ElecMan is deleted and do not block the win', () => {
+  const { s, e } = findState('ElecMan', 0, 'coilswap', s => { s.player.invuln = 1e9; });
+  run(s, 40);
+  e.hp = 1;
+  s.player.y = e.y; s.player.x = 0;
+  s.enemies.filter(c => c.kind === 'coil').forEach(c => { c.x = 2; c.y = (e.y + 1) % 3; });
+  step(s, { a: true }); step(s, {}); step(s, {});
+  assert.equal(s.phase, 'win');
 });
 
 test('ProtoMan steps in front of MegaMan and his WideSword covers the column', () => {
@@ -105,4 +153,12 @@ test('ProtoMan EX guards and counters a buster shot', () => {
 test('Navi battles are deterministic', () => {
   const play = () => { const s = start('ProtoMan', 2, 99); for (let i = 0; i < 3000; i++) step(s, { a: i % 7 === 0, dir: ['up', null, 'down', null][i % 4] }); return JSON.stringify([s.enemies, s.player.hp]); };
   assert.equal(play(), play());
+});
+
+test('attacks stop drawing when the battle ends', () => {
+  const { s } = findState('ElecMan', 0, 'bolt', s => { s.player.invuln = 1e9; });
+  s.player.invuln = 0; s.player.hp = 1; s.player.y = s.enemies[0].y;
+  run(s, 40);
+  assert.equal(s.phase, 'lose');
+  assert.equal(s.hazards.length, 0);
 });

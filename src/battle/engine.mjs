@@ -3,7 +3,7 @@
 // Input: { dir: 'up'|'down'|'left'|'right'|null, a: held bool, b: pressed bool, l: pressed bool }
 import { val, CHIPS, TEST_FOLDER, WEAKNESS } from '../../data/rules.mjs';
 import { createVirus, stepVirus, virusName, PLAYABLE_FAMILIES } from './viruses.mjs';
-import { createNavi, stepNavi, naviVariants, PLAYABLE_NAVIS } from './navis.mjs';
+import { createNavi, stepNavi, stepCoil, naviVariants, PLAYABLE_NAVIS } from './navis.mjs';
 export { PLAYABLE_FAMILIES, virusName, PLAYABLE_NAVIS, naviVariants };
 
 // Single CPU Navi battle (Navi starts on the middle panel of the enemy area).
@@ -118,7 +118,7 @@ function hitEnemy(s, e, damage, extra = {}) {
     if (nx <= 5 && !at(s, nx, e.y)) e.x = nx;
   }
   if (e.hp === 0) {
-    s.deleted++;
+    if (e.kind !== 'coil') s.deleted++;
     s.events.push({ type: 'delete', target: e.id });
     s.effects.push({ kind: 'delete', x: e.x, y: e.y, t: 0 });
     if (s.turns[e.family] === e.id) delete s.turns[e.family];
@@ -205,6 +205,9 @@ function virusApi(s) {
     hitPlayerAt(x, y, damage) { if (p.x === x && p.y === y && p.state !== 'vanish') hitPlayer(s, damage); },
     hitPlayerCells(cells, damage) { if (p.state !== 'vanish' && cells.some(([x, y]) => p.x === x && p.y === y)) hitPlayer(s, damage); },
     rng: () => rng(s),
+    coils: owner => s.enemies.filter(c => c.kind === 'coil' && c.owner === owner.id && c.hp > 0),
+    addEnemy(o) { o.id = s.nextId++; s.enemies.push(o); return o; },
+    removeEnemy(o, how) { if (o.hp <= 0) return; o.hp = 0; s.effects.push({ kind: how === 'explode' ? 'blast' : 'delete', x: o.x, y: o.y, t: 0 }); },
     spawnWave(e, x, y, stepTicks) { s.hazards.push({ kind: 'wave', owner: e.id, family: e.family, x, y, dir: -1, step: stepTicks, next: s.tick + stepTicks, damage: e.damage, start: s.tick }); },
     turnFree(e) { const t = s.turns[e.family]; return t === undefined || t === e.id || !s.enemies.some(o => o.id === t && o.hp > 0); },
     takeTurn(e) { s.turns[e.family] = e.id; },
@@ -222,6 +225,11 @@ function stepHazards(s) {
       if (!alive && s.turns[h.family] === h.owner) delete s.turns[h.family];
       return alive;
     }
+    if (h.kind === 'rowbolt' || h.kind === 'colbolt') {
+      const hit = h.kind === 'rowbolt' ? p.y === h.y && p.x < h.x : p.x === h.x;
+      if (hit && p.state !== 'vanish') hitPlayer(s, h.damage);
+      return s.tick < h.until;
+    }
     if (h.kind === 'bomb') {
       if (s.tick < h.land) return true;
       if (h.tx <= 5) hitEnemy(s, at(s, h.tx, h.y), h.damage);
@@ -230,6 +238,13 @@ function stepHazards(s) {
     }
     return false;
   });
+}
+
+// Battle over: stop lingering attacks so nothing stays frozen on screen.
+function endBattleEffects(s) {
+  s.hazards = [];
+  s.effects = s.effects.filter(f => f.kind === 'delete' || f.kind === 'blast');
+  for (const e of s.enemies) { e.highlight = null; e.target = null; }
 }
 
 // ---------- main step ----------
@@ -247,13 +262,14 @@ export function step(s, input = {}) {
   if (input.l && s.gauge >= val('customGaugeTicks') && s.player.state === 'idle') { openCustom(s); return s; }
   stepPlayer(s, input);
   const api = virusApi(s);
-  for (const e of s.enemies) if (e.hp > 0) (e.kind === 'navi' ? stepNavi : stepVirus)(e, api);
+  for (const e of [...s.enemies]) if (e.hp > 0) (e.kind === 'navi' ? stepNavi : e.kind === 'coil' ? stepCoil : stepVirus)(e, api);
+  s.enemies = s.enemies.filter(e => e.hp > 0 || e.kind !== 'coil');
   stepHazards(s);
   s.effects = s.effects.filter(f => ++f.t < 24);
-  if (s.player.hp <= 0) { s.phase = 'lose'; s.events.push({ type: 'lose' }); }
-  else if (s.enemies.every(e => e.hp <= 0)) {
+  if (s.player.hp <= 0) { s.phase = 'lose'; s.events.push({ type: 'lose' }); endBattleEffects(s); }
+  else if (s.enemies.every(e => e.hp <= 0 || e.kind === 'coil')) {
     if (s.mode === 'survival') { s.phase = 'wave'; s.phaseT = 0; s.events.push({ type: 'waveClear', wave: s.wave }); }
-    else { s.phase = 'win'; s.events.push({ type: 'win' }); }
+    else { s.phase = 'win'; s.events.push({ type: 'win' }); endBattleEffects(s); }
   }
   return s;
 }
