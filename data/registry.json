@@ -1330,6 +1330,105 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "groundman": {
+      "label": "GroundMan (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "2B0690",
+          "compression": "none",
+          "bytes": 41259,
+          "sha256": "11003ce415f3e7c78fadfe7bfa59791c1994db25aa7c2dae7d18279071971c41",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "2B0690",
+          "compression": "none",
+          "bytes": 41259,
+          "sha256": "11003ce415f3e7c78fadfe7bfa59791c1994db25aa7c2dae7d18279071971c41",
+          "confidence": "rom-verified"
+        }
+      },
+      "note": "AI animation ids 0x11-0x16 map to sequences directly; the drill clones in 0xB use this sprite too (sequences 23/24).",
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "tank": {
+          "seq": 17,
+          "confidence": "visual-candidate"
+        },
+        "tankrun": {
+          "seq": 18,
+          "confidence": "visual-candidate"
+        },
+        "drillup": {
+          "seq": 19,
+          "confidence": "visual-candidate"
+        },
+        "drills": {
+          "seq": 20,
+          "confidence": "visual-candidate"
+        },
+        "missile": {
+          "seq": 21,
+          "confidence": "visual-candidate"
+        },
+        "missilefly": {
+          "seq": 22,
+          "confidence": "visual-candidate"
+        },
+        "clone": {
+          "seq": 23,
+          "confidence": "visual-candidate"
+        },
+        "clonefly": {
+          "seq": 24,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "rock": {
+      "label": "Falling rock (object type3 0x80, sprite 0x10/0x05)",
+      "sources": {
+        "bn6f": {
+          "offset": "3547A4",
+          "compression": "none",
+          "bytes": 1380,
+          "sha256": "ce001170f943642b391807fdacbb9ac9be2e995d8a19d7bd68283a7879e04eb8",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "353D1C",
+          "compression": "none",
+          "bytes": 1380,
+          "sha256": "ce001170f943642b391807fdacbb9ac9be2e995d8a19d7bd68283a7879e04eb8",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "fall": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "break": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {

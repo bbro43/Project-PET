@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -808,6 +808,111 @@ function tenguman(e, api) {
   function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
 }
 
+// ======================= GroundMan =======================
+// Decision 0x80F9D94: 2 moves, then drill pop-up 0xA twice, then drill missiles 0xB / drill tank 0xC in turn.
+function groundman(e, api) {
+  const P = NAVI_AI.GroundMan, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const [VAN, APP] = P.warpTicks.value;
+  const wait = t => { go(e, 'idle', 'idle'); e.think = Math.max(1, t); };
+  const free = (x, y) => x >= 3 && x <= 5 && y >= 0 && y <= 2 && (!api.at(x, y) || api.at(x, y) === e);
+  const RUN = 8 / 40; // panels per frame while flying / driving (40 frames to cross)
+  switch (e.state) {
+    case 'idle':
+      if (--e.think > 0) return;
+      return decide();
+    case 'vanish':
+      if (e.stateT >= VAN) { [e.x, e.y] = e.dest; e.drawX = e.x; e.drawY = e.y; go(e, 'appear', 'appear'); }
+      return;
+    case 'appear':
+      if (e.stateT >= APP) { const a = e.after; e.after = null; if (a) return a(); wait(pv(P.moveWait, v)); }
+      return;
+    // ---- 0xA: burrow, MegaMan's panel lights up, drills burst out of it
+    case 'burrow':
+      if (e.stateT === 1) e.airborne = true;
+      if (e.stateT === VAN) { e.hidden = true; e.popAt = [p.x, p.y]; e.highlight = [[e.popAt]]; }
+      if (e.stateT >= VAN + pv(P.popMark, v)) {
+        e.highlight = null; e.hidden = false; e.airborne = false;
+        [e.x, e.y] = e.popAt; e.drawX = e.x; e.drawY = e.y; e.popAt = null;
+        s.effects.push({ kind: 'shake', t: 0 });
+        go(e, 'popped', 'drillup');
+      }
+      return;
+    case 'popped':
+      if (e.stateT <= 14) api.hitPlayerCells([[e.x, e.y]], pv(P.popDamage, v));
+      if (e.stateT === P.popHold.value) setAnim(e, 'drills');
+      if (e.stateT >= P.popHold.value + 20) return goHome(pv(P.popWait, v));
+      return;
+    // ---- 0xB: GroundMan and two drill clones line up, then fly down their rows
+    case 'missiles':
+      if (e.stateT >= pv(P.missileAim, v)) {
+        setAnim(e, 'missilefly'); e.fx = e.x; e.airborne = false;
+        for (const c of e.clones) c.flying = true;
+        go(e, 'fly', 'missilefly');
+      }
+      return;
+    case 'fly':
+    case 'drive': {
+      e.fx -= RUN; e.drawX = e.fx; e.x = Math.round(e.fx);
+      e.airborne = e.x < 0;
+      const dmg = e.state === 'fly' ? pv(P.missileDamage, v) : pv(P.tankDamage, v);
+      if (e.x >= 0) api.hitPlayerCells([[e.x, e.y]], dmg);
+      if (e.fx <= -1.5) {
+        if (e.state === 'fly') { clearClones(); return goHome(pv(P.missileWait, v)); }
+        e.rounds = pv(P.rockRounds, v); e.hidden = true; return go(e, 'rocks', null);
+      }
+      return;
+    }
+    // ---- 0xC: transform, rev up, drive down the row, then rocks rain on MegaMan
+    case 'tank':
+      if (e.stateT === P.tankCharge.value[0]) setAnim(e, 'tankrun');
+      if (e.stateT >= P.tankCharge.value[0] + P.tankCharge.value[1]) { e.fx = e.x; go(e, 'drive', 'tankrun'); }
+      return;
+    case 'rocks':
+      if (e.stateT % P.rockGap.value === 1) {
+        const cells = [[p.x, p.y]];
+        const around = [];
+        for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
+          const x = p.x + dx, y = p.y + dy;
+          if ((dx || dy) && x >= 0 && x <= 2 && y >= 0 && y <= 2) around.push([x, y]);
+        }
+        while (cells.length < pv(P.rockCount, v) && around.length) cells.push(around.splice(Math.floor(api.rng() * around.length), 1)[0]);
+        for (const [x, y] of cells) s.hazards.push({ kind: 'rock', x, y, start: s.tick, land: s.tick + P.rockFall.value, damage: pv(P.rockDamage, v), owner: e.id });
+        if (--e.rounds <= 0) e.rocksDone = s.tick + P.rockFall.value;
+      }
+      if (e.rocksDone && s.tick >= e.rocksDone) { e.rocksDone = null; e.hidden = false; return goHome(pv(P.tankWait, v)); }
+      return;
+  }
+
+  function decide() {
+    if (e.homeSet === undefined) { e.homeSet = [e.homeX, e.homeY]; e.clones = []; }
+    if (m.c4 < 2) { m.c4++; return warp(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], null); }
+    m.c4 = 0;
+    e.homeSet = [e.x, e.y];
+    if (m.c5 < 2) { m.c5++; return go(e, 'burrow', 'vanish'); }
+    m.c5 = 0;
+    const was = m.c6; m.c6 ^= 1;
+    if (was === 0) {
+      const [[gx, gy], ...clones] = P.missilePatterns.value[Math.floor(api.rng() * 4)];
+      return warp([6 - gx, gy - 1], () => {
+        clearClones();
+        for (const [cx, cy] of clones) {
+          const c = { kind: 'missile', fx: 6 - cx, y: cy - 1, start: s.tick, flying: false, damage: pv(P.missileDamage, v), owner: e.id };
+          e.clones.push(c); s.hazards.push(c);
+        }
+        go(e, 'missiles', 'missile');
+      });
+    }
+    const spot = free(5, p.y) ? [5, p.y] : [e.x, e.y];
+    return warp(spot, () => go(e, 'tank', 'tank'));
+  }
+  function clearClones() { s.hazards = s.hazards.filter(h => !e.clones.includes(h)); e.clones = []; }
+  function goHome(t) {
+    const home = free(...e.homeSet) ? e.homeSet : (pick(freeEnemyPanels(e, api), api) || [5, 1]);
+    e.airborne = false; e.hidden = false; e.dest = home; e.after = () => wait(t); go(e, 'vanish', 'vanish');
+  }
+  function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
+}
+
 const AREAS = {
   wide: [[-1, -1], [-1, 0], [-1, 1]],
   long: [[-1, 0], [-2, 0]],
@@ -923,7 +1028,7 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, ProtoMan: protoman };
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, TomahawkMan: tomahawkman, TenguMan: tenguman, GroundMan: groundman, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;

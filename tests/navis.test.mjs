@@ -497,3 +497,52 @@ test('TenguMan cannot be hit while flying off the field and comes back to his pa
   assert.deepEqual([e.x, e.y], home);
   assert.ok(!e.airborne);
 });
+
+test('GroundMan names and HP from the ROM tables', () => {
+  const vs = naviVariants('GroundMan');
+  assert.ok(vs[0].name.startsWith('Ground') || vs[0].name.startsWith('Grnd'), vs[0].name);
+  assert.equal(start('GroundMan').enemies[0].sprite, 'groundman');
+});
+
+test('GroundMan attack order from the ROM: pop-up, pop-up, missiles, pop-up, pop-up, tank', () => {
+  const s = start('GroundMan'), e = s.enemies[0];
+  s.player.invuln = 1e9;
+  const seen = [];
+  for (let i = 0; i < 20000 && seen.length < 6; i++) {
+    const was = e.state; step(s, {});
+    if (was !== e.state && ['burrow', 'missiles', 'tank'].includes(e.state)) seen.push(e.state);
+  }
+  assert.deepEqual(seen, ['burrow', 'burrow', 'missiles', 'burrow', 'burrow', 'tank']);
+});
+
+test('GroundMan drill pop-up: MegaMan\'s panel lights up, then drills burst out of it for 60', () => {
+  const { s, e } = findState('GroundMan', 0, 'burrow', s => { s.player.invuln = 1e9; });
+  s.player.invuln = 0;
+  run(s, NAVI_AI.GroundMan.warpTicks.value[0]);
+  assert.deepEqual(e.highlight[0][0], [s.player.x, s.player.y]);
+  assert.ok(e.hidden && e.airborne);
+  run(s, NAVI_AI.GroundMan.popMark.value[0] + 1);
+  assert.equal(s.player.hp, 40);
+  assert.deepEqual([e.x, e.y], [s.player.x, s.player.y]);
+});
+
+test('GroundMan drill missiles: he and two clones from a ROM pattern fly down three rows', () => {
+  const { s, e } = findState('GroundMan', 0, 'missiles', s => { s.player.invuln = 1e9; });
+  assert.equal(e.clones.length, 2);
+  const rows = [e.y, ...e.clones.map(c => c.y)];
+  assert.equal(new Set(rows).size, 3);
+  s.player.invuln = 0; s.player.x = 1; s.player.y = e.clones[0].y;
+  for (let i = 0; i < 120 && s.player.hp === 100; i++) step(s, {});
+  assert.equal(s.player.hp, 10, 'base missile damage 90');
+});
+
+test('GroundMan drill tank drives down the row, then rocks fall with the first on MegaMan', () => {
+  const { s, e } = findState('GroundMan', 0, 'rocks', s => { s.player.invuln = 1e9; });
+  s.player.invuln = 0; s.player.hp = s.player.maxHp = 500;
+  run(s, 2);
+  const rocks = s.hazards.filter(h => h.kind === 'rock');
+  assert.equal(rocks.length, NAVI_AI.GroundMan.rockCount.value[0]);
+  assert.ok(rocks.some(r => r.x === s.player.x && r.y === s.player.y));
+  run(s, NAVI_AI.GroundMan.rockFall.value);
+  assert.equal(s.player.hp, 440, 'base rock damage 60');
+});

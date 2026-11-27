@@ -250,6 +250,19 @@ function stepHazards(s) {
       if (!h.locked && s.tick >= h.until) h.locked = true;
       return true;
     }
+    if (h.kind === 'missile') { // GroundMan's drill clones: wait, then fly down their row
+      if (!s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
+      if (h.flying) h.fx -= 0.2;
+      const x = Math.round(h.fx);
+      if (h.flying && x === p.x && h.y === p.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      return h.fx > -1.5;
+    }
+    if (h.kind === 'rock') {
+      if (s.tick < h.land) return true;
+      if (p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      s.effects.push({ kind: 'rockbreak', x: h.x, y: h.y, t: 0 });
+      return false;
+    }
     if (h.kind === 'tornado') { // TenguMan's tornadoes drift a panel at a time
       if (s.tick >= h.until || !s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
       const k = Math.floor((s.tick - h.start) / h.step);

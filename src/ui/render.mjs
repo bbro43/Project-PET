@@ -175,6 +175,27 @@ export function render(g, s, bank) {
     else { g.strokeStyle = '#aff'; g.lineWidth = 2; for (let i = 0; i < 4; i++) { g.beginPath(); g.ellipse(ax, ay - 6 - i * 8, 4 + i * 3, 3, 0, 0, 7); g.stroke(); } }
   }
 
+  // GroundMan: drill clones and falling rocks
+  const rock = bank?.get('rock');
+  for (const h of s.hazards) {
+    if (h.kind === 'missile') {
+      const [ax, ay] = anchor(h.fx, h.y);
+      sprite(g, bank, 'groundman', h.flying ? 'clonefly' : 'clone', s.tick - h.start, ax, ay, '#f90', 0, true);
+    }
+    if (h.kind === 'rock') {
+      const [ax, ay] = anchor(h.x, h.y), k = Math.min(1, (s.tick - h.start) / (h.land - h.start));
+      g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(ax, ay - 2, 6 + 6 * k, 3, 0, 0, 7); g.fill();
+      const y = ay - 8 - (1 - k) * 120;
+      if (rock) { const f = frameAt(rock.fall, s.tick - h.start); g.drawImage(f.image, Math.round(ax - f.originX), Math.round(y - f.originY)); }
+      else { g.fillStyle = '#987'; g.beginPath(); g.arc(ax, y, 8, 0, 7); g.fill(); }
+    }
+  }
+  for (const f of s.effects) if (f.kind === 'rockbreak' && f.t < 10) {
+    const [ax, ay] = anchor(f.x, f.y);
+    if (rock) { const fr = frameAt(rock.break, f.t); g.drawImage(fr.image, Math.round(ax - fr.originX), Math.round(ay - 8 - fr.originY)); }
+    else { g.fillStyle = '#a98'; for (let i = 0; i < 4; i++) g.fillRect(ax - 10 + i * 6, ay - 10 - f.t, 4, 4); }
+  }
+
   // Hazards under actors.
   const wave = bank?.get('shockwave');
   for (const h of s.hazards) {
@@ -198,7 +219,7 @@ export function render(g, s, bank) {
     draw.push({ y: p.y, fn: () => sprite(g, bank, 'megaman', p.anim, p.animT, ax, ay, placeholderNavi) });
   }
   for (const e of s.enemies) {
-    if (e.hp <= 0) continue;
+    if (e.hp <= 0 || e.hidden) continue;
     const [ax, ay0] = anchor(e.drawX ?? e.x, e.drawY ?? e.y);
     const ay = ay0 - (e.z || 0);
     const fallback = e.kind === 'navi' ? placeholderEnemyNavi : e.kind === 'coil' ? placeholderCoil : placeholderVirus;
