@@ -17,12 +17,17 @@ function panels(g) {
   }
 }
 
-function sprite(g, bank, key, anim, t, x, y, fallback, palette = 0) {
+// Navi sprites face right (player side); the game mirrors them for the enemy side.
+function sprite(g, bank, key, anim, t, x, y, fallback, palette = 0, flip = false) {
   const seqs = bank?.get(key, palette);
   const frames = seqs?.[anim] || seqs?.idle;
   if (frames) {
     const f = frameAt(frames, t);
-    g.drawImage(f.image, Math.round(x - f.originX), Math.round(y - f.originY));
+    if (flip) {
+      g.save(); g.translate(Math.round(x), 0); g.scale(-1, 1);
+      g.drawImage(f.image, -f.originX, Math.round(y - f.originY));
+      g.restore();
+    } else g.drawImage(f.image, Math.round(x - f.originX), Math.round(y - f.originY));
   } else fallback(g, x, y);
 }
 
@@ -79,7 +84,7 @@ export function render(g, s, bank) {
     if (e.hp <= 0) continue;
     const [ax, ay] = anchor(e.x, e.y);
     draw.push({ y: e.y, fn: () => {
-      sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, e.kind === 'navi' ? placeholderEnemyNavi : placeholderVirus, e.palette);
+      sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, e.kind === 'navi' ? placeholderEnemyNavi : placeholderVirus, e.palette, e.kind === 'navi');
       if (e.guard) { g.fillStyle = 'rgba(200,230,255,.7)'; g.fillRect(ax - 18, ay - 34, 3, 28); }
       if (e.flash) { g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(ax - 14, ay - 26, 28, 26); g.globalCompositeOperation = 'source-over'; }
       text(g, String(e.hp), ax, ay + 6, '#fff', 'center');
@@ -100,7 +105,10 @@ export function render(g, s, bank) {
       if (bolt) {
         const img = frameAt(bolt[f.kind === 'bolt-v' ? 'vertical' : 'horizontal'], f.t).image;
         if (f.kind === 'bolt-v') g.drawImage(img, Math.round(ax - img.width / 2), Math.round(ay - img.height));
-        else g.drawImage(img, Math.round(ax + 20 - img.width), Math.round(ay - 16 - img.height / 2));
+        else { // drawn for a right-facing caster; mirror so the hand end sits at ElecMan
+          g.save(); g.translate(Math.round(ax + 20), 0); g.scale(-1, 1);
+          g.drawImage(img, 0, Math.round(ay - 16 - img.height / 2)); g.restore();
+        }
       } else {
         g.strokeStyle = '#ffe860'; g.lineWidth = 3; g.beginPath();
         if (f.kind === 'bolt-v') { g.moveTo(ax, 0); g.lineTo(ax - 5, ay - 30); g.lineTo(ax + 4, ay - 18); g.lineTo(ax, ay); }
