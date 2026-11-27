@@ -312,8 +312,7 @@ export function render(g, s, bank) {
       const [ax, ay] = anchor(h.x, h.y);
       if (wave) {
         const speed = h.step >= 26 ? 'slow' : h.step >= 17 ? 'medium' : 'fast';
-        const f = frameAt(wave[speed], s.tick - h.start);
-        g.drawImage(f.image, Math.round(ax - f.originX), Math.round(ay - f.originY));
+        sprite(g, bank, 'shockwave', speed, s.tick - h.start, ax, ay, () => {}, 0, !h.fromPlayer); // travels toward MegaMan
         continue;
       }
       g.fillStyle = '#d8f4ff';
@@ -335,7 +334,7 @@ export function render(g, s, bank) {
     if (e.hover && bank?.get(e.sprite)?.shadow) sprite(g, bank, e.sprite, 'shadow', 0, ax + 30, ay0, () => {}, e.palette, true); // under his talons
     else if (e.z > 0) { g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(ax, ay0 - 2, e.hover ? 30 : 10, e.hover ? 8 : 4, 0, 0, 7); g.fill(); }
     draw.push({ y: e.drawY ?? e.y, fn: () => {
-      sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, fallback, e.palette, e.kind === 'navi' || !!e.flip);
+      sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, fallback, e.palette, e.kind !== 'coil' || !!e.flip); // ROM sprites face right; Navis and viruses face MegaMan
       if (e.kind === 'coil' && e.discharge > 0 && !bank?.has('eleccoil')) { g.strokeStyle = '#80f0ff'; g.lineWidth = 2; g.beginPath(); g.moveTo(ax, FIELD_Y); g.lineTo(ax, FIELD_Y + 3 * PANEL_H); g.stroke(); }
       if (e.guard) { g.fillStyle = 'rgba(200,230,255,.7)'; g.fillRect(ax - 18, ay - 34, 3, 28); }
       if (e.flash) { g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(ax - 14, ay - 26, 28, 26); g.globalCompositeOperation = 'source-over'; }
