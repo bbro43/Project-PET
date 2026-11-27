@@ -257,6 +257,10 @@ function stepHazards(s) {
       if (!h.locked && s.tick >= h.until) h.locked = true;
       return true;
     }
+    if (h.kind === 'estrike') { // ElementMan: a lit panel, then an elemental strike on it
+      if (s.tick === h.hit && p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      return s.tick < h.hit + 12;
+    }
     if (h.kind === 'hoop') return s.tick < h.until && s.enemies.some(e => e.id === h.owner && e.hp > 0);
     if (h.kind === 'lion') { // CircusMan's lion runs down the row through the hoop
       const k = Math.floor((s.tick - h.start) / h.step);

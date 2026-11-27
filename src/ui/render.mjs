@@ -255,6 +255,19 @@ export function render(g, s, bank) {
     if (f.kind === 'press' && f.t < 14) for (const y of [0, 2]) { const [ax, ay] = anchor(f.x, y); sprite(g, bank, 'judgeman', f.t < 6 ? 'press' : 'pressshut', f.t, ax, ay + (y === 0 ? 1 : -1) * f.t * 2, '#88f', 0, true); }
   }
 
+  // ElementMan strikes: lit panel, then an element-coloured burst (tower sprite for the basic one)
+  for (const h of s.hazards) if (h.kind === 'estrike') {
+    const [ax, ay] = anchor(h.x, h.y);
+    if (s.tick < h.hit) { g.fillStyle = 'rgba(255,240,120,.45)'; g.fillRect(ax - PANEL_W / 2 + 2, ay - 14, PANEL_W - 4, 16); continue; }
+    const t = s.tick - h.hit;
+    if (h.elem === 'none') { sprite(g, bank, 'elementman', 'tower', t, ax, ay, '#a7d', 0, false); continue; }
+    const col = { fire: '#ff7030', aqua: '#80d8ff', elec: '#fff060', wood: '#70e060' }[h.elem];
+    g.fillStyle = col; g.globalAlpha = 1 - t / 12;
+    if (h.elem === 'elec') g.fillRect(ax - PANEL_W / 2, ay - 18, PANEL_W, 6);
+    else { g.beginPath(); g.moveTo(ax - 10, ay); g.lineTo(ax, ay - 26 - t); g.lineTo(ax + 10, ay); g.fill(); }
+    g.globalAlpha = 1;
+  }
+
   // Hazards under actors.
   const wave = bank?.get('shockwave');
   for (const h of s.hazards) {

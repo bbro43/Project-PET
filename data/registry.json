@@ -1869,6 +1869,64 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "elementman": {
+      "label": "ElementMan (BN6)",
+      "sources": {
+        "bn6f": {
+          "offset": "2DD9A8",
+          "compression": "lz77",
+          "bytes": 22568,
+          "sha256": "6e1807a009dc061794bc2206db750bf448777f97bf9ead91412d057dacb4a237",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "2DD9A8",
+          "compression": "lz77",
+          "bytes": 22568,
+          "sha256": "6e1807a009dc061794bc2206db750bf448777f97bf9ead91412d057dacb4a237",
+          "confidence": "rom-verified"
+        }
+      },
+      "note": "LZ77-compressed, 20 sequences: body 0-8, element ring 9-17, rising tower 18/19. The attack objects (type3 0x8D-0x90, type4 0x57) use other sprites not yet registered.",
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "cast": {
+          "seq": 5,
+          "confidence": "visual-candidate"
+        },
+        "castloop": {
+          "seq": 6,
+          "confidence": "visual-candidate"
+        },
+        "push": {
+          "seq": 7,
+          "confidence": "visual-candidate"
+        },
+        "ring": {
+          "seq": 9,
+          "confidence": "visual-candidate"
+        },
+        "tower": {
+          "seq": 18,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {

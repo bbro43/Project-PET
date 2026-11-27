@@ -753,3 +753,33 @@ test('JudgeMan summons a law book (ROM HP) at the front of MegaMan\'s row; it do
   e.hp = 0; step(s, {});
   assert.equal(s.phase, 'win');
 });
+
+test('ElementMan names and HP from the ROM tables', () => {
+  const vs = naviVariants('ElementMan');
+  assert.equal(vs[0].name, 'ElmntMan', 'ROM abbreviation');
+  assert.equal(start('ElementMan').enemies[0].sprite, 'elementman');
+});
+
+test('ElementMan cycle: towers, then an element change after 3 attacks; the new element changes his weakness', () => {
+  const s = start('ElementMan'), e = s.enemies[0];
+  s.player.invuln = 1e9;
+  const seen = [];
+  for (let i = 0; i < 20000 && seen.length < 8; i++) { const was = e.state; step(s, {}); if (was !== e.state && ['tower', 'change', 'fire', 'aqua', 'elec', 'wood'].includes(e.state)) seen.push(e.state); }
+  assert.deepEqual(seen.slice(0, 4), ['tower', 'tower', 'tower', 'change']);
+  assert.ok(['fire', 'aqua', 'elec', 'wood'].includes(e.element));
+  assert.ok(seen.slice(4).some(k => k === e.element || ['fire', 'aqua', 'elec', 'wood'].includes(k)), 'uses an element attack after changing');
+});
+
+test('ElementMan tower strikes the panel MegaMan stood on', () => {
+  const { s, e } = findState('ElementMan', 0, 'tower', s => { s.player.invuln = 1e9; });
+  s.player.invuln = 0;
+  run(s, NAVI_AI.ElementMan.towerMark.value + 1);
+  assert.equal(s.player.hp, 40, 'base tower damage 60');
+});
+
+test('ElementMan fire: five bursts on MegaMan\'s panel', () => {
+  const { s, e } = findState('ElementMan', 0, 'fire', s => { s.player.invuln = 1e9; });
+  const strikes = new Set();
+  for (let i = 0; i < 200 && e.state === 'fire'; i++) { step(s, {}); for (const h of s.hazards) if (h.kind === 'estrike') strikes.add(h); }
+  assert.equal(strikes.size, 5);
+});
