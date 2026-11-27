@@ -1,4 +1,4 @@
-# Project PET — status (updated 27 Nov 2026, app 0.35.0 / assets 38)
+# Project PET — status (updated 27 Nov 2026, app 0.36.0 / assets 39)
 
 Legend: **Done** = implemented and tested · **Partial** = works but incomplete or using unverified values · **Pending** = not started · **Unverified** = claim without fresh evidence.
 
@@ -16,9 +16,9 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 | Asset registry | Partial | BN6: MegaMan, Mettaur, Champy, Gunner, ShockWave, crosshair (both versions). Sprite offsets + stats for all 29 BN6 virus families. BN4/BN5 not mapped |
 | Sequence roles (MegaMan, Mettaur) | Unverified | Visual candidates; runtime trace pending |
 | Battle engine core | Partial | 60 Hz deterministic; 6×3 field, areas, move, buster, charge, flinch + invincibility, custom gauge, chip select rules, queue. Several timings unverified (data/rules.mjs) |
-| BattleChips | Partial | 10 chips (Cannon family, AirShot, Sword family, MiniBomb, Recovery). No chip art/icons yet |
+| BattleChips | Partial | All 411 BN6 chips (names, codes, damage, element, class, MB) and the starting folder from the ROM; chip pictures and icons decoded on device; custom screen with Add; gauge timing from the ROM (documentation/audit/2026-11-27-bn6-chips.md). Effects in for the starting folder's chips except AreaGrab / WhiCapsl; the rest pending (Phase 2) |
 | Panel types | Partial | Cracked/broken (+ repair), poison, holy, grass, ice (slide, freeze), volcano eruptions decoded and playable; ROM panel graphics + palette animations decoded on device and pixel-matched (0.35.0); Field option in the menu (documentation/audit/2026-11-27-bn6-panels.md). Roads not modelled yet |
-| Folder editor | Pending | Test folder only (not the canonical BN6 default) |
+| Folder editor | Pending | The game's starting folder is used |
 | Virus battles | Done (BN6) | All 29 BN6 families decoded from the ROM, all 6 versions each: Mettaur, Piranha, Heady, Swordy, KillerEye, Quaker, Catack, Champy, WindBox, Trumpy, OldStove, HauntedCandle, Kettle, Puffy, StarFish, Dragon, ScareCrow, PulseBulb, BigHat, BombCorn, Shrubby, HoneyBomber, Gunner, FighterPlane, DarkMech, SnakeArm, Armadillo, Cragger, Nightmare (documentation/audit/2026-11-27-bn6-virus-ai.md); some timings estimated. Paralysis (DarkMech's elec ball) added in 0.33.0, length unverified |
 | Endless survival | Partial | Random Mettaur/Champy/Gunner waves up to Ω; composition non-canonical |
 | Navi roster / NetBattle vs CPU Navis | Partial | CPU: HeatMan and SlashMan (all three attacks each decoded), EraseMan (move, scythe, eye-marker beam, battle-start dark portals decoded), ChargeMan (dash, train patterns and big charge decoded; inner loop of the big charge estimated), SpoutMan (bomb, hose, sprinkler decoded), TomahawkMan (throw, swing, chop, battle-start totem and eagle decoded), TenguMan (nose, tornado patterns, dash and its ROM paths decoded), GroundMan (pop-up, missiles, tank + rocks decoded), DustMan (junk, scrap shots, vacuum decoded), BlastMan (punch, fireball, fire storm patterns decoded), DiveMan (swim, torpedoes, big wave, battle-start mines decoded), CircusMan (clap, lion hoop, tent trap decoded), JudgeMan (whip, book press, law book decoded), ElementMan (decision, element cycle and palettes, basic tornado, timings and damage decoded; aqua attacks leave ice, wood leaves grass; element attack shapes estimated). All 16 BN6 Navis in the AI table are playable as CPU opponents. Bosses: Colonel, Bass, Cybeast Gregar and Cybeast Falzar (decision logic, damage and timings decoded; attack shapes estimated; each Cybeast fills the enemy area, and its sprite comes from its own version's ROM), ElecMan (all four attacks + coils decoded) and ProtoMan (both phases, guard, targets decoded) with ROM stats, damage and timings (documentation/audit/2026-11-27-bn6-navi-ai.md). Data: Sprite blocks located for 19 BN6 Navis + Beast/Cross forms (sprite table) and 35 BN4/BN5 Navis (matched to the owner's reference sprites): data/navi-sprites.json. No sequence roles or AI yet |
@@ -41,4 +41,4 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 ## Next checkpoint
 1. BN5/BN4 Navis (sprites located; AI not decoded yet). Smaller leftovers: road panel movement, TomahawkMan's eagle-to-axe during his chop.
 2. Trace timings in an emulator (glide speeds, hit frames, custom gauge, charge, invincibility).
-3. Chip table and icons from the ROM; folder editor; Navi Customizer.
+3. Chips Phase 2: effects in batches by family (area stealing for AreaGrab); folder editor; Navi Customizer.

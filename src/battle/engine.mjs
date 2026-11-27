@@ -1,11 +1,18 @@
 // Deterministic fixed-tick Battle Network battle simulation (BN6 ruleset).
 // No rendering, DOM or timing here: the client feeds one input object per tick.
 // Input: { dir: 'up'|'down'|'left'|'right'|null, a: held bool, b: pressed bool, l: pressed bool }
-import { val, CHIPS, TEST_FOLDER, WEAKNESS, PANELS } from '../../data/rules.mjs';
+import { val, CHIP_BEHAVIOUR, WEAKNESS, PANELS } from '../../data/rules.mjs';
+import CHIPDATA from '../../data/bn6-chips.mjs';
 import { createVirus, stepVirus, virusName, PLAYABLE_FAMILIES } from './viruses.mjs';
 import { createNavi, stepNavi, stepCoil, naviVariants, PLAYABLE_NAVIS } from './navis.mjs';
 import { createPanels, stepPanels, panelHit, standable, crackPanel, breakPanel, setPanel, panelType, FIELDS } from './panels.mjs';
 export { FIELDS };
+
+// ROM chip data by name; the default folder is the game's starting folder (FolderTable entry 0).
+export const CHIP_DATA = {};
+for (const c of CHIPDATA.chips) if (c.name && !CHIP_DATA[c.name]) CHIP_DATA[c.name] = c;
+export const DEFAULT_FOLDER = CHIPDATA.folders[0].map(([id, code]) => [CHIPDATA.chips[id].name, code]);
+export const chipBehaviour = name => CHIP_BEHAVIOUR[name] || (/^Recov\d+$/.test(name) ? { ...CHIP_BEHAVIOUR.Recov, heal: +name.slice(5) } : null);
 export { PLAYABLE_FAMILIES, virusName, PLAYABLE_NAVIS, naviVariants };
 
 // Single CPU Navi battle (Navi starts on the middle panel of the enemy area).
@@ -33,7 +40,7 @@ export function survivalWave(n, pickFamily = i => PLAYABLE_FAMILIES[i % PLAYABLE
   return Array.from({ length: count }, (_, i) => [pickFamily(n + i), variant]);
 }
 
-export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0, 1), seed = 1, folder = TEST_FOLDER, field = 'normal' } = {}) {
+export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0, 1), seed = 1, folder = DEFAULT_FOLDER, field = 'normal' } = {}) {
   const s = {
     tick: 0, seed: seed >>> 0, mode, wave: 1, deleted: 0,
     phase: 'custom', phaseT: 0, gauge: 0, events: [],
@@ -43,8 +50,8 @@ export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0,
       holdT: 0, charge: 0, prevA: false, invuln: 0, chip: null,
     },
     enemies: [], hazards: [], effects: [], nextId: 1, turns: {},
-    folder: folder.map(([name, code], i) => ({ id: i, name, code })),
-    draw: [], hand: [], picked: [], queue: [],
+    folder: folder.map(([name, code], i) => ({ id: i, chip: CHIP_DATA[name]?.id ?? 0, name, code })),
+    draw: [], hand: [], picked: [], queue: [], handBonus: 0, busterUp: 0,
   };
   s.panels = createPanels(field, () => rng(s));
   s.draw = shuffle(s, s.folder.slice());
@@ -75,7 +82,9 @@ function spawn(s, list) {
 }
 
 function refillHand(s) {
-  while (s.hand.length < val('handSize') && s.draw.length) s.hand.push(s.draw.shift());
+  const size = Math.min(val('maxHand'), val('handSize') + s.handBonus);
+  while (s.hand.length < size && s.draw.length) s.hand.push(s.draw.shift());
+  s.handBonus = 0;
 }
 
 // ---------- custom screen ----------
@@ -91,9 +100,22 @@ export function pick(s, index) { if (s.phase === 'custom' && canPick(s, index)) 
 export function unpick(s) { if (s.phase === 'custom') s.picked.pop(); }
 export function confirmCustom(s) {
   if (s.phase !== 'custom') return;
-  s.queue = s.picked.map(i => s.hand[i]);
+  // Atk+10 style chips add their damage to the attack chip picked before them.
+  s.queue = [];
+  for (const c of s.picked.map(i => ({ ...s.hand[i], bonus: 0 }))) {
+    const b = chipBehaviour(c.name);
+    if (b?.kind === 'plus') { const prev = s.queue[s.queue.length - 1]; if (prev) prev.bonus += CHIP_DATA[c.name].damage; continue; }
+    s.queue.push(c);
+  }
   s.hand = s.hand.filter((_, i) => !s.picked.includes(i));
   s.picked = [];
+  s.phase = 'battle'; s.phaseT = 0; s.gauge = 0;
+}
+// ADD: no chips this turn; the next custom screen draws 5 more.
+export function addCustom(s) {
+  if (s.phase !== 'custom') return;
+  s.picked = []; s.queue = [];
+  s.handBonus = val('addBonus');
   s.phase = 'battle'; s.phaseT = 0; s.gauge = 0;
 }
 function openCustom(s) {
@@ -155,13 +177,24 @@ const frontX = (e, y) => e.cells ? Math.min(...e.cells.filter(c => c[1] === y).m
 const rowTarget = (s, x, y) => s.enemies.filter(e => e.hp > 0 && !e.airborne && (e.cells ? e.cells.some(c => c[1] === y) : e.y === y) && frontX(e, y) > x).sort((a, b) => frontX(a, y) - frontX(b, y))[0];
 
 function useChip(s, chip) {
-  const p = s.player, def = CHIPS[chip.name];
+  const p = s.player, def = chipBehaviour(chip.name), data = CHIP_DATA[chip.name] || { damage: 0, element: 'none' };
+  s.events.push({ type: 'chip', name: chip.name, ready: !!def });
+  if (!def || def.kind === 'plus') { s.effects.push({ kind: 'note', x: p.x, y: p.y, t: 0 }); return; } // effect not implemented yet
+  const damage = data.damage + (chip.bonus || 0), element = data.element === 'none' ? undefined : data.element;
   p.state = 'chip'; p.stateT = 0; p.chip = { ...chip, lock: def.lock }; setAnim(p, def.anim);
-  s.events.push({ type: 'chip', name: chip.name });
-  if (def.kind === 'shot') hitEnemy(s, rowTarget(s, p.x, p.y), def.damage, { push: def.push, element: def.element });
-  else if (def.kind === 'slash') for (const [dx, dy] of def.area) hitEnemy(s, at(s, p.x + dx, p.y + dy), def.damage, { element: def.element });
-  else if (def.kind === 'throw') s.hazards.push({ kind: 'bomb', owner: 'player', x: p.x, y: p.y, tx: p.x + def.range, land: s.tick + def.flight, start: s.tick, damage: def.damage });
-  else if (def.kind === 'heal') { p.hp = Math.min(p.maxHp, p.hp + def.heal); s.events.push({ type: 'heal', amount: def.heal }); }
+  if (def.kind === 'shot') hitEnemy(s, rowTarget(s, p.x, p.y), damage, { push: def.push, element });
+  else if (def.kind === 'slash') for (const [dx, dy] of def.area) hitEnemy(s, at(s, p.x + dx, p.y + dy), damage, { element });
+  else if (def.kind === 'throw') s.hazards.push({ kind: 'bomb', owner: 'player', x: p.x, y: p.y, tx: p.x + def.range, land: s.tick + def.flight, start: s.tick, damage });
+  else if (def.kind === 'heal') { p.hp = Math.min(p.maxHp, p.hp + def.heal); s.events.push({ type: 'heal', amount: def.heal }); s.effects.push({ kind: 'heal', x: p.x, y: p.y, t: 0 }); }
+  else if (def.kind === 'vulcan') for (let k = 0; k < def.hits; k++) s.hazards.push({ kind: 'pvulcan', owner: 'player', y: p.y, from: p.x, at: s.tick + k * def.gap, damage, element });
+  else if (def.kind === 'busterup') { s.busterUp++; s.events.push({ type: 'busterUp', level: 1 + s.busterUp }); }
+  else if (def.kind === 'crack') {
+    const x = p.x + 1, y = p.y;
+    if (x <= 5 && standable(s, x, y) && !at(s, x, y)) {
+      setPanel(s, x, y, 'broken'); s.effects.push({ kind: 'panelbreak', x, y, t: 0 });
+      s.hazards.push({ kind: 'crackshot', owner: 'player', fx: x, x, y, speed: def.speed, damage, element });
+    }
+  }
 }
 
 // ---------- player ----------
@@ -221,7 +254,7 @@ function stepPlayer(s, input) {
     p.holdT = 0; p.charge = 0;
     if (full) {
       p.state = 'buster'; p.stateT = 0; setAnim(p, 'buster');
-      hitEnemy(s, rowTarget(s, p.x, p.y), val('chargeShotDamage'));
+      hitEnemy(s, rowTarget(s, p.x, p.y), val('chargeShotDamage') * (1 + s.busterUp));
       s.events.push({ type: 'chargeShot' });
       return;
     }
@@ -229,7 +262,7 @@ function stepPlayer(s, input) {
   if (input.b && s.queue.length) { useChip(s, s.queue.shift()); return; }
   if (pressedA) {
     p.state = 'buster'; p.stateT = 0; setAnim(p, 'buster');
-    hitEnemy(s, rowTarget(s, p.x, p.y), val('busterDamage'));
+    hitEnemy(s, rowTarget(s, p.x, p.y), val('busterDamage') + s.busterUp);
     return;
   }
   const d = DIRS[input.dir];
@@ -269,6 +302,19 @@ function stepHazards(s) {
   const p = s.player;
   s.hazards = s.hazards.filter(h => {
     s.attacker = h.owner !== undefined ? s.enemies.find(e => e.id === h.owner) : null;
+    if (h.kind === 'pvulcan') { // Vulcan: one shot per gap; each also hits the panel behind its target
+      if (s.tick < h.at) return true;
+      const t = rowTarget(s, h.from, h.y);
+      if (t) { hitEnemy(s, t, h.damage, { element: h.element }); const b = at(s, t.x + 1, h.y); if (b && b !== t) hitEnemy(s, b, h.damage, { element: h.element }); }
+      s.effects.push({ kind: 'shot', x: t ? t.x : 5, y: h.y, t: 0 });
+      return false;
+    }
+    if (h.kind === 'crackshot') { // CrakShot: the lifted panel slides down the row and hits the first enemy
+      h.fx += h.speed; h.x = Math.round(h.fx);
+      const e = at(s, h.x, h.y);
+      if (e) { hitEnemy(s, e, h.damage, { element: h.element }); s.effects.push({ kind: 'blast', x: h.x, y: h.y, t: 0 }); return false; }
+      return h.fx < 6;
+    }
     if (h.kind === 'volcano') { // volcano eruption (object type3 0x07): bubbles, then a flame column hits whoever stands there
       if (s.tick >= h.hit && s.tick < h.until && panelType(s, h.x, h.y) === 'volcano') {
         if (p.x === h.x && p.y === h.y && p.state !== 'vanish' && !h.done.includes('p')) { h.done.push('p'); hitPlayer(s, h.damage, { element: 'none' }); }

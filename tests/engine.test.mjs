@@ -421,3 +421,60 @@ test('sprites come from imported ROMs in order Gregar, Falzar, Colonel, ProtoMan
   assert.deepEqual(pickSources(reg, ['bn4bm', 'bn5tp', 'bn6f']),
     { megaman: 'bn6f', falzar: 'bn6f', bn5only: 'bn5tp', bn4only: 'bn4bm' });
 });
+
+import { DEFAULT_FOLDER, CHIP_DATA, addCustom } from '../src/battle/engine.mjs';
+
+test('default folder is the game\'s starting folder, chips carry ROM damage', () => {
+  assert.equal(DEFAULT_FOLDER.length, 30);
+  assert.deepEqual(DEFAULT_FOLDER.slice(0, 5), [['Cannon', 'A'], ['Cannon', 'A'], ['Cannon', 'B'], ['Cannon', 'B'], ['AirShot', '*']]);
+  assert.equal(CHIP_DATA.Cannon.damage, 40); assert.equal(CHIP_DATA.Sword.damage, 80); assert.equal(CHIP_DATA.MiniBomb.damage, 50);
+  assert.deepEqual(CHIP_DATA.Cannon.codes, ['A', 'B', 'C', '*']);
+});
+
+test('Atk+10 adds 10 to the attack chip picked before it', () => {
+  const s = createBattle({ seed: 4, enemies: formation('Mettaur', 2, 1) });
+  s.hand = [{ name: 'Cannon', code: 'A' }, { name: 'Atk+10', code: '*' }];
+  pick(s, 0); pick(s, 1); confirmCustom(s);
+  assert.equal(s.queue.length, 1);
+  const e = s.enemies[0], hp = e.hp; s.player.y = e.y;
+  step(s, { b: true });
+  assert.equal(hp - e.hp, 50);
+});
+
+test('Add: no chips this turn, 10 in hand next turn', () => {
+  const s = createBattle({ seed: 9 });
+  addCustom(s);
+  assert.equal(s.phase, 'battle'); assert.equal(s.queue.length, 0);
+  s.player.invuln = 1e9; s.enemies[0].think = 1e9;
+  run(s, {}, val('customGaugeTicks')); step(s, { l: true });
+  assert.equal(s.phase, 'custom'); assert.equal(s.hand.length, 10);
+});
+
+test('Vulcan1: three shots, each also hitting the panel behind its target', () => {
+  const s = createBattle({ seed: 4, enemies: formation('Mettaur', 2, 2) });
+  s.hand = [{ name: 'Vulcan1', code: 'D' }]; pick(s, 0); confirmCustom(s);
+  const [a, b] = s.enemies; a.x = 3; a.y = 1; b.x = 4; b.y = 1; a.think = b.think = 1e9; s.player.y = 1; s.player.invuln = 1e9;
+  const ha = a.hp, hb = b.hp;
+  step(s, { b: true }); run(s, {}, 30);
+  assert.equal(ha - a.hp, 30); assert.equal(hb - b.hp, 30);
+});
+
+test('CrakShot breaks the panel in front and sends it into the first enemy in the row', () => {
+  const s = createBattle({ seed: 4, enemies: formation('Mettaur', 2, 1) });
+  s.hand = [{ name: 'CrakShot', code: 'A' }]; pick(s, 0); confirmCustom(s);
+  const e = s.enemies[0]; e.think = 1e9; s.player.y = e.y; s.player.invuln = 1e9; const hp = e.hp;
+  step(s, { b: true }); run(s, {}, 40);
+  assert.equal(s.panels[e.y][2].type, 'broken'); assert.equal(hp - e.hp, 60);
+});
+
+test('BusterUp raises the buster by 1; chips without an effect yet do nothing', () => {
+  const s = createBattle({ seed: 4, enemies: formation('Mettaur', 2, 1) });
+  s.hand = [{ name: 'BusterUp', code: '*' }, { name: 'AreaGrab', code: 'S' }]; pick(s, 0); pick(s, 1); confirmCustom(s);
+  const e = s.enemies[0]; e.think = 1e9; s.player.y = e.y; s.player.invuln = 1e9;
+  step(s, { b: true }); run(s, {}, 30);
+  assert.equal(s.busterUp, 1);
+  step(s, { b: true }); run(s, {}, 5);
+  assert.ok(s.events.length >= 0); assert.equal(s.player.state === 'chip' && s.player.chip?.name === 'AreaGrab', false);
+  const hp = e.hp; step(s, { a: true }); step(s, {}); run(s, {}, 2);
+  assert.equal(hp - e.hp, 2);
+});

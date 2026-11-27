@@ -4025,5 +4025,23 @@
     "confidence": "rom-verified"
    }
   }
+ },
+ "chipart": {
+  "label": "Chip icons (16×16) and pictures (56×48) via ChipDataArr pointers; icon palette from the in-battle icon loader (0x802707C)",
+  "note": "ChipDataArr record (0x2C bytes) + 0x20: icon tiles, picture tiles (7×6 tiles, raw 4bpp), picture palette. Icons: 2×2 tiles, shared palette.",
+  "sources": {
+   "bn6f": {
+    "table": "21DA8",
+    "count": 411,
+    "iconPalette": "72CF94",
+    "confidence": "rom-verified"
+   },
+   "bn6g": {
+    "table": "21DA8",
+    "count": 411,
+    "iconPalette": "72AED0",
+    "confidence": "rom-verified"
+   }
+  }
  }
 }

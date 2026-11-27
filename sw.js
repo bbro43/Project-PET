@@ -7,8 +7,8 @@ const cacheName = prefixes[1] + app + ':assets-' + assets;
 const shell = [
   '', 'index.html', 'release.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
   'src/ui/app.mjs', 'src/ui/render.mjs', 'src/battle/engine.mjs', 'src/battle/viruses.mjs', 'src/battle/navis.mjs', 'src/battle/panels.mjs',
-  'src/rom/gba.mjs', 'src/rom/zip.mjs', 'src/rom/lz77.mjs', 'src/rom/sprite.mjs', 'src/rom/store.mjs', 'src/rom/bank.mjs', 'src/rom/field.mjs',
-  'data/rules.mjs', 'data/registry.json', 'data/bn6-viruses.mjs',
+  'src/rom/gba.mjs', 'src/rom/zip.mjs', 'src/rom/lz77.mjs', 'src/rom/sprite.mjs', 'src/rom/store.mjs', 'src/rom/bank.mjs', 'src/rom/field.mjs', 'src/rom/chips.mjs',
+  'data/rules.mjs', 'data/registry.json', 'data/bn6-viruses.mjs', 'data/bn6-chips.mjs',
   'prototype/', 'prototype/index.html', 'prototype/client.mjs', 'prototype/shared/combat.mjs',
 ];
 

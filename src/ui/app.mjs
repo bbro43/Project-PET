@@ -1,6 +1,5 @@
-import { createBattle, step, pick, unpick, confirmCustom, canPick, formation, PLAYABLE_FAMILIES, virusName, PLAYABLE_NAVIS, naviVariants, naviBattle } from '../battle/engine.mjs';
+import { createBattle, step, pick, unpick, confirmCustom, addCustom, CHIP_DATA, chipBehaviour, canPick, formation, PLAYABLE_FAMILIES, virusName, PLAYABLE_NAVIS, naviVariants, naviBattle } from '../battle/engine.mjs';
 import BN6 from '../../data/bn6-viruses.mjs';
-import { CHIPS } from '../../data/rules.mjs';
 import { identify, extractRoms, sha1Hex } from '../rom/gba.mjs';
 import { saveRom, loadRom, listRoms } from '../rom/store.mjs';
 import { buildBank, pickSources, SOURCE_ORDER } from '../rom/bank.mjs';
@@ -70,7 +69,7 @@ async function loadBank() {
     try {
       // Every imported ROM is a source; each sprite comes from the first ROM in SOURCE_ORDER that has it.
       const list = await listRoms().catch(() => []);
-      const picked = pickSources(registry, list.map(r => r.id)), need = new Set([...Object.values(picked), ...(picked.$field ? [picked.$field] : [])]);
+      const picked = pickSources(registry, list.map(r => r.id)), need = new Set([...Object.values(picked), picked.$field, picked.$chipart].filter(Boolean));
       const roms = {};
       for (const r of list) if (need.has(r.id)) { const o = await loadRom(r.id); if (o) roms[r.id] = new Uint8Array(o.bytes); }
       bank = buildBank(roms, registry);
@@ -165,22 +164,49 @@ function frame(now) {
 }
 
 // ---------- custom screen ----------
+// Chip icons and pictures are decoded from the ROM (bank.chips); without one, text only.
+let focus = 0;
+function chipCanvas(img, w, h) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  if (img) c.getContext('2d').drawImage(img, 0, 0);
+  return c;
+}
+function showInfo(c) {
+  const d = c && CHIP_DATA[c.name], pic = $('#chip-pic').getContext('2d');
+  pic.clearRect(0, 0, 56, 48);
+  if (!c) { $('#chip-name').textContent = ''; $('#chip-stats').textContent = ''; $('#chip-note').textContent = ''; return; }
+  const img = bank?.chips?.picture(d?.id);
+  if (img) pic.drawImage(img, 0, 0);
+  $('#chip-name').textContent = `${c.name} ${c.code}`;
+  const parts = [];
+  if (d?.damage && chipBehaviour(c.name)?.kind !== 'busterup') parts.push(d.damage);
+  if (d && d.element !== 'none') parts.push(d.element);
+  if (d) parts.push(`${d.mb} MB`, d.class);
+  $('#chip-stats').textContent = parts.join(' · ');
+  $('#chip-note').textContent = chipBehaviour(c.name) ? '' : 'Effect not in yet';
+}
 function showCustom() {
   $('#custom').hidden = state.phase !== 'custom';
   if (state.phase !== 'custom') return;
   $('#hand').replaceChildren(...state.hand.map((c, i) => {
     const b = document.createElement('button');
-    const def = CHIPS[c.name];
-    b.innerHTML = `<b>${c.name}</b><span>${def.damage ?? '+' + def.heal}</span><span>${c.code}</span>`;
+    const icon = bank?.chips?.icon(CHIP_DATA[c.name]?.id);
+    if (icon) b.append(chipCanvas(icon, 16, 16));
+    else { const n = document.createElement('b'); n.textContent = c.name; b.append(n); }
+    const code = document.createElement('span'); code.textContent = c.code; b.append(code);
     b.className = state.picked.includes(i) ? 'picked' : '';
     b.disabled = !state.picked.includes(i) && !canPick(state, i);
-    b.addEventListener('click', () => { pick(state, i); showCustom(); });
+    b.title = c.name;
+    b.addEventListener('click', () => { focus = i; pick(state, i); showCustom(); });
+    b.addEventListener('pointerenter', () => showInfo(c));
     return b;
   }));
-  $('#queue').textContent = state.picked.length ? 'Selected: ' + state.picked.map(i => `${state.hand[i].name} ${state.hand[i].code}`).join(', ') : 'Pick chips, or press OK with none.';
+  showInfo(state.hand[Math.min(focus, state.hand.length - 1)]);
+  $('#queue').textContent = state.picked.length ? 'Selected: ' + state.picked.map(i => `${state.hand[i].name} ${state.hand[i].code}`).join(', ') : 'Pick chips, press OK, or Add for 5 more next turn.';
 }
 $('#undo').addEventListener('click', () => { unpick(state); showCustom(); });
-$('#ok').addEventListener('click', () => { confirmCustom(state); showCustom(); });
+$('#ok').addEventListener('click', () => { focus = 0; confirmCustom(state); showCustom(); });
+$('#add').addEventListener('click', () => { focus = 0; addCustom(state); showCustom(); });
 
 // ---------- controls ----------
 function press(k) { held.add(k); pressed.add(k); document.querySelectorAll(`[data-k="${k}"]`).forEach(b => b.classList.add('held')); }

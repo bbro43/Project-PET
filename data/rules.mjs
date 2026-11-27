@@ -20,7 +20,9 @@ export const RULES = {
   moveAppearTicks: v(4, 'rom-verified', 'candidate appear sequence 3 = 1+1+1+1'),
   flinchTicks: v(28, 'rom-verified', 'candidate flinch sequence 1 = 4+2+2+2+2+4+5+3 (fits observed hitstun feel; trace pending)'),
   invincibleTicks: v(120, 'unverified', 'post-hit invincibility'),
-  customGaugeTicks: v(512, 'unverified', 'time for custom gauge to fill'),
+  customGaugeTicks: v(512, 'rom-verified', 'gauge 0x4000, +0x20 a frame (0x801BE70, 0x801DFB8); FastGauge 0x40 / SlowGauge 0x10 (0x80141A0)'),
+  addBonus: v(5, 'recalled', 'ADD: no chips this turn, 5 more next turn'),
+  maxHand: v(10, 'recalled'),
   handSize: v(5, 'recalled', 'Custom 1 draws 5 chips'),
   maxSelect: v(5, 'recalled'),
   folderSize: v(30, 'recalled'),
@@ -28,30 +30,26 @@ export const RULES = {
 
 export const val = key => RULES[key].value;
 
-// Chips: damage values are the commonly published BN6 numbers (recalled).
-export const CHIPS = {
-  Cannon:    { damage: 40, kind: 'shot', element: 'none', anim: 'cannon', lock: 30, confidence: 'recalled' },
-  HiCannon:  { damage: 60, kind: 'shot', element: 'none', anim: 'cannon', lock: 30, confidence: 'recalled' },
-  MegCannon: { damage: 80, kind: 'shot', element: 'none', anim: 'cannon', lock: 30, confidence: 'recalled' },
-  AirShot:   { damage: 20, kind: 'shot', element: 'wind', anim: 'buster', push: true, lock: 16, confidence: 'recalled' },
-  Sword:     { damage: 80, kind: 'slash', area: [[1, 0]], element: 'sword', anim: 'slash', lock: 24, confidence: 'recalled' },
-  WideSwrd:  { damage: 80, kind: 'slash', area: [[1, -1], [1, 0], [1, 1]], element: 'sword', anim: 'slash', lock: 24, confidence: 'recalled' },
-  LongSwrd:  { damage: 100, kind: 'slash', area: [[1, 0], [2, 0]], element: 'sword', anim: 'slash', lock: 24, confidence: 'recalled' },
-  MiniBomb:  { damage: 50, kind: 'throw', range: 3, element: 'none', anim: 'throw', lock: 22, flight: 30, confidence: 'recalled' },
-  Recov30:   { heal: 30, kind: 'heal', element: 'none', anim: 'idle', lock: 10, confidence: 'recalled' },
-  Recov50:   { heal: 50, kind: 'heal', element: 'none', anim: 'idle', lock: 10, confidence: 'recalled' },
+// Chips: names, codes, damage, element, class and MB come from the ROM (data/bn6-chips.mjs).
+// CHIP_BEHAVIOUR says what each chip does in battle; chips not listed here can be picked but do nothing yet.
+// Families share a behaviour; the number in a Recov name is its heal.
+export const CHIP_BEHAVIOUR = {
+  Cannon:   { kind: 'shot', anim: 'cannon', lock: 30, confidence: 'recalled' },
+  HiCannon: { kind: 'shot', anim: 'cannon', lock: 30, confidence: 'recalled' },
+  'M-Cannon': { kind: 'shot', anim: 'cannon', lock: 30, confidence: 'recalled' },
+  AirShot:  { kind: 'shot', push: true, anim: 'buster', lock: 16, confidence: 'recalled' },
+  Vulcan1:  { kind: 'vulcan', hits: 3, gap: 6, anim: 'buster', lock: 30, confidence: 'recalled', note: 'each shot also hits the panel behind its target' },
+  Vulcan2:  { kind: 'vulcan', hits: 4, gap: 6, anim: 'buster', lock: 36, confidence: 'recalled' },
+  Vulcan3:  { kind: 'vulcan', hits: 5, gap: 6, anim: 'buster', lock: 42, confidence: 'recalled' },
+  Sword:    { kind: 'slash', area: [[1, 0]], anim: 'slash', lock: 24, confidence: 'recalled' },
+  WideSwrd: { kind: 'slash', area: [[1, -1], [1, 0], [1, 1]], anim: 'slash', lock: 24, confidence: 'recalled' },
+  LongSwrd: { kind: 'slash', area: [[1, 0], [2, 0]], anim: 'slash', lock: 24, confidence: 'recalled' },
+  MiniBomb: { kind: 'throw', range: 3, flight: 30, anim: 'throw', lock: 22, confidence: 'recalled' },
+  CrakShot: { kind: 'crack', anim: 'throw', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
+  Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },
+  BusterUp: { kind: 'busterup', anim: 'idle', lock: 20, confidence: 'recalled', note: 'lockout 20 from the ROM' },
+  'Atk+10': { kind: 'plus', confidence: 'recalled', note: 'added to the attack chip picked before it' },
 };
-
-// Starter folder for testing only — NOT the canonical BN6 default folder.
-export const TEST_FOLDER = [
-  ['Cannon', 'A'], ['Cannon', 'A'], ['Cannon', 'B'], ['Cannon', 'B'], ['Cannon', 'C'],
-  ['HiCannon', 'C'], ['HiCannon', 'D'], ['MegCannon', 'E'],
-  ['AirShot', '*'], ['AirShot', '*'], ['AirShot', '*'],
-  ['Sword', 'S'], ['Sword', 'S'], ['Sword', 'L'], ['WideSwrd', 'L'], ['WideSwrd', 'S'], ['LongSwrd', 'L'], ['LongSwrd', 'E'],
-  ['MiniBomb', 'B'], ['MiniBomb', 'B'], ['MiniBomb', 'L'], ['MiniBomb', 'E'], ['MiniBomb', '*'],
-  ['Recov30', 'A'], ['Recov30', 'B'], ['Recov30', 'L'], ['Recov50', 'A'], ['Recov50', 'L'],
-  ['Cannon', 'L'], ['HiCannon', 'L'],
-];
 
 // Element weakness (attacker element → element it deals double damage to).
 // Panel types (PanelData.Type, 0x800C380 per-panel update; flags table 0x3007924).

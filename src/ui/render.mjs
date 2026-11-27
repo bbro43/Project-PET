@@ -509,6 +509,12 @@ export function render(g, s, bank) {
       if (burning) g.fillRect(x - 8, y - 40, 16, 40); else { g.beginPath(); g.ellipse(x, y - 4, 8, 3, 0, 0, 7); g.fill(); }
     });
   }
+  // CrakShot: the lifted panel slides down the row
+  for (const h of s.hazards) if (h.kind === 'crackshot') {
+    const [cx, cy] = anchor(h.fx, h.y);
+    if (bank?.field) g.drawImage(bank.field.panel(2, 0, h.y + 1, s.tick), Math.round(cx - 16), Math.round(cy - 26), 32, 19);
+    else { g.fillStyle = '#e08a70'; g.fillRect(cx - 16, cy - 26, 32, 18); }
+  }
   // DarkMech elec ball (sprite 0x10/0x16); FighterPlane bombs flash their panel, then burst (sprite 0x10/0x26)
   for (const h of s.hazards) {
     if (h.kind === 'elecball') {

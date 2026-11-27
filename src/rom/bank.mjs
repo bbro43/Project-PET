@@ -3,6 +3,7 @@
 import { lz77 } from './lz77.mjs';
 import { openBlock, sequenceFrames, decodeFrame } from './sprite.mjs';
 import { buildField } from './field.mjs';
+import { buildChipArt } from './chips.mjs';
 
 function toCanvas(f) {
   const canvas = document.createElement('canvas');
@@ -31,8 +32,10 @@ export const SOURCE_ORDER = ['bn6g', 'bn6f', 'bn5tc', 'bn5tp', 'bn4rs', 'bn4bm']
 export function pickSources(registry, imported, order = SOURCE_ORDER) {
   const ids = [...order.filter(id => imported.includes(id)), ...imported.filter(id => !order.includes(id))];
   const pick = {};
-  const field = ids.find(id => registry.field?.sources[id]); // battle field panels
-  if (field) Object.defineProperty(pick, '$field', { value: field, enumerable: false });
+  for (const part of ['field', 'chipart']) { // battle field panels, chip icons and pictures
+    const id = ids.find(id => registry[part]?.sources[id]);
+    if (id) Object.defineProperty(pick, '$' + part, { value: id, enumerable: false });
+  }
   for (const [key, sprite] of Object.entries(registry.sprites)) {
     const id = ids.find(id => sprite.sources[id]);
     if (id) pick[key] = id;
@@ -49,9 +52,10 @@ export function buildBank(roms, registry, order = SOURCE_ORDER) {
   }
   return {
     field: from.$field ? buildField(roms[from.$field], registry.field.sources[from.$field]) : null,
+    chips: from.$chipart ? buildChipArt(roms[from.$chipart], registry.chipart.sources[from.$chipart]) : null,
     has: key => key in blocks,
     sourceOf: key => from[key] || null,
-    sources: [...new Set([...Object.values(from), ...(from.$field ? [from.$field] : [])])],
+    sources: [...new Set([...Object.values(from), from.$field, from.$chipart].filter(Boolean))],
     get(key, palette = 0) {
       const id = key + ':' + palette;
       if (cache.has(id)) return cache.get(id);

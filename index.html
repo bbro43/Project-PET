@@ -52,9 +52,14 @@ button.held { background: #3b5f99; }
 #custom { position: absolute; left: 0; right: 0; top: env(safe-area-inset-top); display: flex; justify-content: center; }
 #custom .panel { width: min(100vw, 560px); background: rgba(8, 26, 60, .96); border: 2px solid #5aa0ff; border-radius: 10px; margin: .3rem; padding: .5rem; }
 #hand { display: grid; grid-template-columns: repeat(5, 1fr); gap: .35rem; margin: .4rem 0; }
-#hand button { min-height: 64px; padding: .2rem; font-size: .8rem; line-height: 1.1; display: flex; flex-direction: column; justify-content: center; }
+#hand button { min-height: 58px; padding: .2rem; font-size: .8rem; line-height: 1.1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+#hand button canvas { width: 32px; height: 32px; image-rendering: pixelated; }
 #hand button.picked { background: #2f6d3c; border-color: #8be09b; }
 #hand b { font-size: .95rem; }
+#chip-info { display: flex; gap: .6rem; align-items: center; min-height: 100px; }
+#chip-info canvas { width: 112px; height: 96px; image-rendering: pixelated; border: 2px solid #5aa0ff; border-radius: 4px; background: #000; flex: none; }
+#chip-info .name { font-weight: bold; font-size: 1.05rem; }
+#chip-info .muted { font-size: .8rem; }
 #queue { min-height: 1.4em; font-size: .85rem; }
 </style>
 <div id="splash" role="status" aria-live="polite">
@@ -131,9 +136,10 @@ button.held { background: #3b5f99; }
   <div id="custom" hidden>
     <div class="panel">
       <div class="row" style="justify-content:space-between"><b>CUSTOM</b><span class="muted">Same code or same name</span></div>
+      <div id="chip-info"><canvas id="chip-pic" width="56" height="48"></canvas><div><div class="name" id="chip-name"></div><div id="chip-stats"></div><div class="muted" id="chip-note"></div></div></div>
       <div id="hand"></div>
       <div id="queue"></div>
-      <div class="row" style="justify-content:flex-end"><button id="undo" type="button">Undo</button><button id="ok" type="button">OK</button></div>
+      <div class="row" style="justify-content:flex-end"><button id="undo" type="button">Undo</button><button id="add" type="button">Add</button><button id="ok" type="button">OK</button></div>
     </div>
   </div>
   <div class="shoulders"><button data-k="l">L</button><button id="quit" type="button">Menu</button><button data-k="r">R</button></div>
