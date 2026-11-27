@@ -1,18 +1,17 @@
 // Deterministic fixed-tick Battle Network battle simulation (BN6 ruleset).
 // No rendering, DOM or timing here: the client feeds one input object per tick.
 // Input: { dir: 'up'|'down'|'left'|'right'|null, a: held bool, b: pressed bool, l: pressed bool }
-import { val, CHIPS, TEST_FOLDER, VIRUSES, METTAUR } from '../../data/rules.mjs';
+import { val, CHIPS, TEST_FOLDER, WEAKNESS } from '../../data/rules.mjs';
+import { createVirus, stepVirus, virusName, PLAYABLE_FAMILIES } from './viruses.mjs';
+export { PLAYABLE_FAMILIES, virusName };
 
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const SLOTS = [[4, 1], [5, 0], [5, 2], [3, 1], [4, 0], [4, 2]];
 
-export const FORMATIONS = {
-  'met1': { label: 'Mettaur', enemies: ['Mettaur'] },
-  'met2': { label: 'Mettaur ×2', enemies: ['Mettaur', 'Mettaur'] },
-  'met3': { label: 'Mettaur ×3', enemies: ['Mettaur', 'Mettaur', 'Mettaur'] },
-  'met2x3': { label: 'Mettaur2 ×3', enemies: ['Mettaur2', 'Mettaur2', 'Mettaur2'] },
-  'met3x3': { label: 'Mettaur3 ×3', enemies: ['Mettaur3', 'Mettaur3', 'Mettaur3'] },
-};
+// A formation is a list of [family, variant] pairs (up to 3 for now).
+export function formation(family, variant, count) {
+  return Array.from({ length: count }, () => [family, variant]);
+}
 
 function rng(state) {
   let t = (state.seed = (state.seed + 0x6D2B79F5) >>> 0);
@@ -21,27 +20,28 @@ function rng(state) {
   return ((t ^ t >>> 14) >>> 0) / 4294967296;
 }
 
-export function survivalWave(n) {
+// Endless survival composition (non-canonical): more viruses, then stronger variants.
+export function survivalWave(n, pickFamily = i => PLAYABLE_FAMILIES[i % PLAYABLE_FAMILIES.length]) {
   const count = Math.min(3, 1 + Math.floor((n - 1) / 2));
-  const type = n >= 7 ? 'Mettaur3' : n >= 4 ? 'Mettaur2' : 'Mettaur';
-  return Array.from({ length: count }, () => type);
+  const variant = Math.min(3, Math.floor((n - 1) / 3));
+  return Array.from({ length: count }, (_, i) => [pickFamily(n + i), variant]);
 }
 
-export function createBattle({ mode = 'virus', formation = 'met1', seed = 1, folder = TEST_FOLDER } = {}) {
+export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0, 1), seed = 1, folder = TEST_FOLDER } = {}) {
   const s = {
-    tick: 0, seed: seed >>> 0, mode, formation, wave: 1, deleted: 0,
+    tick: 0, seed: seed >>> 0, mode, wave: 1, deleted: 0,
     phase: 'custom', phaseT: 0, gauge: 0, events: [],
     player: {
       x: 1, y: 1, hp: val('megamanHp'), maxHp: val('megamanHp'),
       state: 'idle', stateT: 0, anim: 'idle', animT: 0, dest: null,
       holdT: 0, charge: 0, prevA: false, invuln: 0, chip: null,
     },
-    enemies: [], hazards: [], effects: [], nextId: 1, turn: null,
+    enemies: [], hazards: [], effects: [], nextId: 1, turns: {},
     folder: folder.map(([name, code], i) => ({ id: i, name, code })),
     draw: [], hand: [], picked: [], queue: [],
   };
   s.draw = shuffle(s, s.folder.slice());
-  spawn(s, mode === 'survival' ? survivalWave(1) : FORMATIONS[formation].enemies);
+  spawn(s, mode === 'survival' ? survivalWave(1, k => pickSurvival(s, k)) : enemies);
   refillHand(s);
   return s;
 }
@@ -54,14 +54,16 @@ function shuffle(s, list) {
   return list;
 }
 
-function spawn(s, types) {
-  s.enemies = types.map((type, i) => {
-    const def = VIRUSES[type];
+function pickSurvival(s) { return PLAYABLE_FAMILIES[Math.floor(rng(s) * PLAYABLE_FAMILIES.length)]; }
+
+function spawn(s, list) {
+  s.enemies = list.map(([family, variant], i) => {
     const [x, y] = SLOTS[i];
-    return { id: s.nextId++, type, sprite: def.sprite, x, y, hp: def.hp, maxHp: def.hp, waveDamage: def.wave,
-      state: 'idle', stateT: 0, anim: 'idle', animT: 0, think: 30 + i * 20, flash: 0 };
+    const e = createVirus(family, variant, x, y, s.nextId++);
+    e.think = 30 + i * 20;
+    return e;
   });
-  s.hazards = []; s.turn = null;
+  s.hazards = []; s.turns = {};
 }
 
 function refillHand(s) {
@@ -94,8 +96,13 @@ function openCustom(s) {
 // ---------- combat helpers ----------
 const at = (s, x, y) => s.enemies.find(e => e.hp > 0 && e.x === x && e.y === y);
 
+export function elementMultiplier(attack, defend) {
+  return attack && WEAKNESS[attack] === defend ? 2 : 1;
+}
+
 function hitEnemy(s, e, damage, extra = {}) {
   if (!e || e.hp <= 0) return;
+  damage *= elementMultiplier(extra.element, e.element);
   e.hp = Math.max(0, e.hp - damage);
   e.flash = 4;
   s.effects.push({ kind: 'hit', x: e.x, y: e.y, t: 0, damage });
@@ -108,7 +115,7 @@ function hitEnemy(s, e, damage, extra = {}) {
     s.deleted++;
     s.events.push({ type: 'delete', target: e.id });
     s.effects.push({ kind: 'delete', x: e.x, y: e.y, t: 0 });
-    if (s.turn === e.id) s.turn = null;
+    if (s.turns[e.family] === e.id) delete s.turns[e.family];
   }
 }
 
@@ -128,8 +135,8 @@ function useChip(s, chip) {
   const p = s.player, def = CHIPS[chip.name];
   p.state = 'chip'; p.stateT = 0; p.chip = { ...chip, lock: def.lock }; setAnim(p, def.anim);
   s.events.push({ type: 'chip', name: chip.name });
-  if (def.kind === 'shot') hitEnemy(s, rowTarget(s, p.x, p.y), def.damage, { push: def.push });
-  else if (def.kind === 'slash') for (const [dx, dy] of def.area) hitEnemy(s, at(s, p.x + dx, p.y + dy), def.damage);
+  if (def.kind === 'shot') hitEnemy(s, rowTarget(s, p.x, p.y), def.damage, { push: def.push, element: def.element });
+  else if (def.kind === 'slash') for (const [dx, dy] of def.area) hitEnemy(s, at(s, p.x + dx, p.y + dy), def.damage, { element: def.element });
   else if (def.kind === 'throw') s.hazards.push({ kind: 'bomb', owner: 'player', x: p.x, y: p.y, tx: p.x + def.range, land: s.tick + def.flight, start: s.tick, damage: def.damage });
   else if (def.kind === 'heal') { p.hp = Math.min(p.maxHp, p.hp + def.heal); s.events.push({ type: 'heal', amount: def.heal }); }
 }
@@ -184,27 +191,17 @@ function stepPlayer(s, input) {
 }
 
 // ---------- viruses ----------
-function stepEnemy(s, e) {
-  e.animT++; e.stateT++;
-  if (e.flash) e.flash--;
+function virusApi(s) {
   const p = s.player;
-  if (e.state === 'attack') {
-    if (e.stateT === METTAUR.waveSpawnTick.value) {
-      s.hazards.push({ kind: 'wave', owner: e.id, x: e.x - 1, y: e.y, dir: -1, next: s.tick + METTAUR.waveStepTicks.value, damage: e.waveDamage });
-    }
-    if (e.stateT >= METTAUR.attackTicks.value) { e.state = 'idle'; e.stateT = 0; setAnim(e, 'idle'); e.think = METTAUR.thinkTicks.value; }
-    return;
-  }
-  if (--e.think > 0) return;
-  if (e.y !== p.y) {
-    const ny = e.y + Math.sign(p.y - e.y);
-    if (!at(s, e.x, ny)) e.y = ny;
-    e.think = METTAUR.thinkTicks.value;
-    return;
-  }
-  const busy = s.turn !== null && s.turn !== e.id && s.enemies.some(o => o.id === s.turn && o.hp > 0);
-  if (METTAUR.takeTurns.value && busy) { e.think = 10; return; }
-  s.turn = e.id; e.state = 'attack'; e.stateT = 0; setAnim(e, 'attack');
+  return {
+    s,
+    at: (x, y) => at(s, x, y),
+    hitPlayerAt(x, y, damage) { if (p.x === x && p.y === y && p.state !== 'vanish') hitPlayer(s, damage); },
+    spawnWave(e, x, y, stepTicks) { s.hazards.push({ kind: 'wave', owner: e.id, family: e.family, x, y, dir: -1, step: stepTicks, next: s.tick + stepTicks, damage: e.damage, start: s.tick }); },
+    turnFree(e) { const t = s.turns[e.family]; return t === undefined || t === e.id || !s.enemies.some(o => o.id === t && o.hp > 0); },
+    takeTurn(e) { s.turns[e.family] = e.id; },
+    endTurn(e) { if (s.turns[e.family] === e.id) delete s.turns[e.family]; },
+  };
 }
 
 function stepHazards(s) {
@@ -212,9 +209,9 @@ function stepHazards(s) {
   s.hazards = s.hazards.filter(h => {
     if (h.kind === 'wave') {
       if (p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
-      if (s.tick >= h.next) { h.x += h.dir; h.next = s.tick + METTAUR.waveStepTicks.value; }
+      if (s.tick >= h.next) { h.x += h.dir; h.next = s.tick + h.step; }
       const alive = h.x >= 0;
-      if (!alive && s.turn === h.owner) s.turn = null;
+      if (!alive && s.turns[h.family] === h.owner) delete s.turns[h.family];
       return alive;
     }
     if (h.kind === 'bomb') {
@@ -234,14 +231,15 @@ export function step(s, input = {}) {
   s.phaseT++;
   if (s.phase === 'custom') return s;
   if (s.phase === 'wave') {
-    if (s.phaseT >= 90) { s.wave++; spawn(s, survivalWave(s.wave)); openCustom(s); }
+    if (s.phaseT >= 90) { s.wave++; spawn(s, survivalWave(s.wave, k => pickSurvival(s, k))); openCustom(s); }
     return s;
   }
   s.tick++;
   s.gauge = Math.min(val('customGaugeTicks'), s.gauge + 1);
   if (input.l && s.gauge >= val('customGaugeTicks') && s.player.state === 'idle') { openCustom(s); return s; }
   stepPlayer(s, input);
-  for (const e of s.enemies) if (e.hp > 0) stepEnemy(s, e);
+  const api = virusApi(s);
+  for (const e of s.enemies) if (e.hp > 0) stepVirus(e, api);
   stepHazards(s);
   s.effects = s.effects.filter(f => ++f.t < 24);
   if (s.player.hp <= 0) { s.phase = 'lose'; s.events.push({ type: 'lose' }); }

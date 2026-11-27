@@ -10,34 +10,256 @@
     "megaman": {
       "label": "MegaMan.EXE (base)",
       "sources": {
-        "bn6f": { "offset": "1D8000", "compression": "none", "bytes": 29728, "sha256": "3c170c2acb1147931db572baf9e67507cb99e7d9ef972d7eeb7d056796079db6", "confidence": "rom-verified" },
-        "bn6g": { "offset": "1D8000", "compression": "none", "bytes": 29728, "sha256": "3c170c2acb1147931db572baf9e67507cb99e7d9ef972d7eeb7d056796079db6", "confidence": "rom-verified" }
+        "bn6f": {
+          "offset": "1D8000",
+          "compression": "none",
+          "bytes": 29728,
+          "sha256": "3c170c2acb1147931db572baf9e67507cb99e7d9ef972d7eeb7d056796079db6",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "1D8000",
+          "compression": "none",
+          "bytes": 29728,
+          "sha256": "3c170c2acb1147931db572baf9e67507cb99e7d9ef972d7eeb7d056796079db6",
+          "confidence": "rom-verified"
+        }
       },
       "sequences": {
-        "idle": { "seq": 0, "confidence": "visual-candidate" },
-        "flinch": { "seq": 1, "confidence": "visual-candidate" },
-        "appear": { "seq": 3, "confidence": "visual-candidate" },
-        "vanish": { "seq": 4, "confidence": "visual-candidate" },
-        "buster": { "seq": 9, "confidence": "visual-candidate" },
-        "charge-hold": { "seq": 10, "confidence": "visual-candidate" },
-        "throw": { "seq": 5, "confidence": "visual-candidate" },
-        "slash": { "seq": 6, "confidence": "visual-candidate" },
-        "cannon": { "seq": 8, "confidence": "visual-candidate" }
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "buster": {
+          "seq": 9,
+          "confidence": "visual-candidate"
+        },
+        "charge-hold": {
+          "seq": 10,
+          "confidence": "visual-candidate"
+        },
+        "throw": {
+          "seq": 5,
+          "confidence": "visual-candidate"
+        },
+        "slash": {
+          "seq": 6,
+          "confidence": "visual-candidate"
+        },
+        "cannon": {
+          "seq": 8,
+          "confidence": "visual-candidate"
+        }
       }
     },
     "mettaur": {
       "label": "Mettaur",
       "sources": {
-        "bn6f": { "offset": "241EC4", "compression": "lz77", "bytes": 10224, "sha256": "911026111060efa7f1368db25c14f1970e9c7b8e522cf1299f7e36f3414e7690", "confidence": "rom-verified" },
-        "bn6g": { "offset": "241EC4", "compression": "lz77", "bytes": 10224, "sha256": "911026111060efa7f1368db25c14f1970e9c7b8e522cf1299f7e36f3414e7690", "confidence": "rom-verified" }
+        "bn6f": {
+          "offset": "241EC4",
+          "compression": "lz77",
+          "bytes": 10224,
+          "sha256": "911026111060efa7f1368db25c14f1970e9c7b8e522cf1299f7e36f3414e7690",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "241EC4",
+          "compression": "lz77",
+          "bytes": 10224,
+          "sha256": "911026111060efa7f1368db25c14f1970e9c7b8e522cf1299f7e36f3414e7690",
+          "confidence": "rom-verified"
+        }
       },
       "sequences": {
-        "idle": { "seq": 0, "confidence": "visual-candidate" },
-        "attack": { "seq": 1, "confidence": "visual-candidate" },
-        "hide": { "seq": 2, "confidence": "visual-candidate" },
-        "hidden": { "seq": 3, "confidence": "visual-candidate" },
-        "unhide": { "seq": 4, "confidence": "visual-candidate" }
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "attack": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "hide": {
+          "seq": 2,
+          "confidence": "visual-candidate"
+        },
+        "hidden": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "unhide": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        }
+      },
+      "note": "Variant palettes: slot = variant index (0 base, 1 \"2\", 2 \"3\", 3 Ω, 4 Rare, 5 Rare2); visually confirmed."
+    },
+    "champy": {
+      "label": "Champy",
+      "note": "Variant palettes = variant index.",
+      "sources": {
+        "bn6f": {
+          "offset": "249C7C",
+          "compression": "lz77",
+          "bytes": 12760,
+          "sha256": "9e717f77133b5ef60b86f997c3a848cf453d56def717624f5ceb7c49bcdce708",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "249C7C",
+          "compression": "lz77",
+          "bytes": 12760,
+          "sha256": "9e717f77133b5ef60b86f997c3a848cf453d56def717624f5ceb7c49bcdce708",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "ready": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "uppercut": {
+          "seq": 2,
+          "confidence": "visual-candidate"
+        },
+        "guard": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "punch": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        }
       }
+    },
+    "gunner": {
+      "label": "Gunner",
+      "note": "Variant palettes = variant index.",
+      "sources": {
+        "bn6f": {
+          "offset": "25BFC4",
+          "compression": "lz77",
+          "bytes": 5324,
+          "sha256": "e60ad8b95ad00aa0cf764ac4b52aee06bab67a9c08f4e784a85724b8612edc9e",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "25BFC4",
+          "compression": "lz77",
+          "bytes": 5324,
+          "sha256": "e60ad8b95ad00aa0cf764ac4b52aee06bab67a9c08f4e784a85724b8612edc9e",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "aim": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "fire": {
+          "seq": 2,
+          "confidence": "visual-candidate"
+        },
+        "recover": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "shockwave": {
+      "label": "ShockWave (SHOCKWAVE_B1)",
+      "note": "Sprite ID 0xB1 in the flat sprite table; offsets differ by version, bytes identical.",
+      "sources": {
+        "bn6f": {
+          "offset": "3536BC",
+          "compression": "none",
+          "bytes": 4324,
+          "sha256": "4c03b4471607841b1a2b6340aed88c072c5d43fba787cfb20605a915ff6ec680",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "352C34",
+          "compression": "none",
+          "bytes": 4324,
+          "sha256": "4c03b4471607841b1a2b6340aed88c072c5d43fba787cfb20605a915ff6ec680",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "slow": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "medium": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "fast": {
+          "seq": 2,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "target": {
+      "label": "Gunner crosshair (MACHINE_GUN_TARGET_D5)",
+      "note": "Sprite ID 0xD5; offsets differ by version, bytes identical.",
+      "sources": {
+        "bn6f": {
+          "offset": "372F34",
+          "compression": "none",
+          "bytes": 887,
+          "sha256": "d215902fa463572acd54853fd3359a2aa00ac2b3f85bc3b9d3d9990f8f2c9265",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "3724AC",
+          "compression": "none",
+          "bytes": 887,
+          "sha256": "d215902fa463572acd54853fd3359a2aa00ac2b3f85bc3b9d3d9990f8f2c9265",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "search": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "lock": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        }
+      }
+    }
+  },
+  "tables": {
+    "note": "BN6 sprite pointer table (flat sprite ID index, bit 31 = LZ77) and virus stats tables; see tools/extract_bn6_viruses.py",
+    "bn6f": {
+      "spritePointers": "31CEC",
+      "virusStats": "109150"
+    },
+    "bn6g": {
+      "spritePointers": "31CEC",
+      "virusStats": "10A478"
     }
   }
 }

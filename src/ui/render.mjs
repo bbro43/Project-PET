@@ -17,8 +17,8 @@ function panels(g) {
   }
 }
 
-function sprite(g, bank, key, anim, t, x, y, fallback) {
-  const seqs = bank?.[key];
+function sprite(g, bank, key, anim, t, x, y, fallback, palette = 0) {
+  const seqs = bank?.get(key, palette);
   const frames = seqs?.[anim] || seqs?.idle;
   if (frames) {
     const f = frameAt(frames, t);
@@ -50,9 +50,16 @@ export function render(g, s, bank) {
   panels(g);
 
   // Hazards under actors.
+  const wave = bank?.get('shockwave');
   for (const h of s.hazards) {
     if (h.kind === 'wave') {
       const [ax, ay] = anchor(h.x, h.y);
+      if (wave) {
+        const speed = h.step >= 26 ? 'slow' : h.step >= 17 ? 'medium' : 'fast';
+        const f = frameAt(wave[speed], s.tick - h.start);
+        g.drawImage(f.image, Math.round(ax - f.originX), Math.round(ay - f.originY));
+        continue;
+      }
       g.fillStyle = '#d8f4ff';
       g.beginPath(); g.moveTo(ax - 12, ay); g.lineTo(ax - 2, ay - 16); g.lineTo(ax + 4, ay); g.fill();
       g.beginPath(); g.moveTo(ax + 2, ay); g.lineTo(ax + 9, ay - 10); g.lineTo(ax + 12, ay); g.fill();
@@ -68,13 +75,24 @@ export function render(g, s, bank) {
     if (e.hp <= 0) continue;
     const [ax, ay] = anchor(e.x, e.y);
     draw.push({ y: e.y, fn: () => {
-      sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, placeholderVirus);
+      sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, placeholderVirus, e.palette);
       if (e.flash) { g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(ax - 14, ay - 26, 28, 26); g.globalCompositeOperation = 'source-over'; }
       text(g, String(e.hp), ax, ay + 6, '#fff', 'center');
     } });
   }
   draw.sort((a, b) => a.y - b.y).forEach(d => d.fn());
 
+  const target = bank?.get('target');
+  for (const e of s.enemies) if (e.hp > 0 && e.target) {
+    const [ax, ay] = anchor(e.target.x, e.target.y);
+    if (target) {
+      const f = frameAt(target[e.target.locked ? 'lock' : 'search'], e.target.locked ? e.stateT : e.target.t);
+      g.drawImage(f.image, Math.round(ax - f.originX), Math.round(ay - 12 - f.originY));
+    } else {
+      g.strokeStyle = e.target.locked ? '#ff5050' : '#80ff40'; g.lineWidth = 1;
+      g.beginPath(); g.arc(ax, ay - 12, 8, 0, 7); g.moveTo(ax - 10, ay - 12); g.lineTo(ax + 10, ay - 12); g.moveTo(ax, ay - 22); g.lineTo(ax, ay - 2); g.stroke();
+    }
+  }
   for (const h of s.hazards) if (h.kind === 'bomb') {
     const k = Math.min(1, (s.tick - h.start) / (h.land - h.start));
     const [sx, sy] = anchor(h.x, h.y), [tx, ty] = anchor(h.tx, h.y);
@@ -83,7 +101,8 @@ export function render(g, s, bank) {
   }
   for (const f of s.effects) {
     const [ax, ay] = anchor(f.x, f.y);
-    const r = f.kind === 'blast' ? 4 + f.t : f.kind === 'delete' ? f.t : 6 - f.t / 4;
+    if (f.kind === 'shot' && f.t > 6) continue;
+    const r = f.kind === 'blast' ? 4 + f.t : f.kind === 'delete' ? f.t : f.kind === 'shot' ? 3 + f.t : 6 - f.t / 4;
     if (r <= 0) continue;
     g.strokeStyle = f.kind === 'delete' ? '#fff' : '#ffe070'; g.lineWidth = 2;
     g.beginPath(); g.arc(ax, ay - 14, r, 0, 7); g.stroke();
@@ -108,6 +127,8 @@ export function render(g, s, bank) {
     text(g, `${c.name} ${c.code}` + (s.queue.length > 1 ? `  +${s.queue.length - 1}` : ''), 3, 156, '#fff');
   }
   if (s.mode === 'survival') text(g, `WAVE ${s.wave}`, 237, 12, '#ffe070', 'right');
+  // Enemy names, top right (BN style list)
+  if (s.mode !== 'survival') s.enemies.filter(e => e.hp > 0).forEach((e, i) => text(g, e.name, 237, 12 + i * 9, '#fff', 'right'));
   const banner = { win: 'ENEMY DELETED!', lose: 'MegaMan deleted…', wave: `WAVE ${s.wave} CLEAR` }[s.phase];
   if (banner) {
     g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, 50, 240, 22);
@@ -119,7 +140,7 @@ export function render(g, s, bank) {
 export function preview(g, bank, key) {
   g.clearRect(0, 0, g.canvas.width, g.canvas.height);
   g.imageSmoothingEnabled = false;
-  const f = bank?.[key]?.idle?.[0];
+  const f = bank?.get(key)?.idle?.[0];
   if (f) g.drawImage(f.image, Math.round(32 - f.originX), Math.round(56 - f.originY));
   else placeholderNavi(g, 32, 56);
 }

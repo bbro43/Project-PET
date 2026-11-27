@@ -8,3 +8,5 @@ Continue Project PET from the existing bbro43/Project-PET repository. Read every
 - Tests: `node --test tests/*.test.mjs`. ROM checks: `ROM_DIR=<folder of .gba> node --test tests/rom.local.test.mjs`.
 - Every rule value in data/rules.mjs carries confidence: rom-verified / recalled / unverified. Upgrade only with evidence.
 - Status and coverage: documentation/STATUS.md.
+- Reference: the public dism-exe/bn6f disassembly matches our Falzar ROM (SHA-1 0676ecd4…) and is the best source for table locations and AI code. Use it to locate data, then read values from the ROM. Don't copy its data files into this repo.
+- data/bn6-viruses.mjs is generated: `python3 tools/extract_bn6_viruses.py <BN6 ROM> > data/bn6-viruses.mjs`.

@@ -1,4 +1,5 @@
-import { createBattle, step, pick, unpick, confirmCustom, canPick, FORMATIONS } from '../battle/engine.mjs';
+import { createBattle, step, pick, unpick, confirmCustom, canPick, formation, PLAYABLE_FAMILIES, virusName } from '../battle/engine.mjs';
+import BN6 from '../../data/bn6-viruses.mjs';
 import { CHIPS } from '../../data/rules.mjs';
 import { identify, extractRoms, sha1Hex } from '../rom/gba.mjs';
 import { saveRom, loadRom, listRoms } from '../rom/store.mjs';
@@ -12,8 +13,16 @@ const prefs = JSON.parse(localStorage.getItem(PREFS) || '{}');
 const savePrefs = () => { try { localStorage.setItem(PREFS, JSON.stringify(prefs)); } catch {} };
 
 $('#version').textContent = `App ${release.app} · Asset pack ${release.assets}`;
-for (const [id, f] of Object.entries(FORMATIONS)) $('#formation').add(new Option(f.label, id));
-for (const id of ['navi', 'mode', 'formation']) {
+for (const f of PLAYABLE_FAMILIES) $('#family').add(new Option(f, f));
+function fillVariants() {
+  const f = $('#family').value, keep = $('#variant').value;
+  $('#variant').replaceChildren(...BN6.families[f].variants.map((v, i) => new Option(`${virusName(f, i)} · HP ${v.hp}`, i)));
+  $('#variant').value = keep && keep < 6 ? keep : 0;
+}
+if (prefs.family) $('#family').value = prefs.family;
+fillVariants();
+$('#family').addEventListener('change', fillVariants);
+for (const id of ['navi', 'mode', 'family', 'variant', 'count']) {
   if (prefs[id]) $('#' + id).value = prefs[id];
   $('#' + id).addEventListener('change', () => { prefs[id] = $('#' + id).value; savePrefs(); syncMenu(); });
 }
@@ -45,7 +54,7 @@ async function loadBank() {
   if (id) {
     try {
       const rec = await loadRom(id);
-      bank = await buildBank(new Uint8Array(rec.bytes), id, registry);
+      bank = buildBank(new Uint8Array(rec.bytes), id, registry);
       $('#navi-note').textContent = `Sprites decoded from ${rec.title}.`;
     } catch (err) {
       console.error(err);
@@ -97,7 +106,8 @@ const screen = $('#screen').getContext('2d');
 
 function start() {
   const mode = $('#mode').value;
-  state = createBattle({ mode, formation: $('#formation').value, seed: (Date.now() & 0x7fffffff) });
+  const enemies = formation($('#family').value, +$('#variant').value, +$('#count').value);
+  state = createBattle({ mode, enemies, seed: (Date.now() & 0x7fffffff) });
   $('#menu').hidden = true; $('#battle').hidden = false;
   showCustom();
   last = performance.now(); acc = 0;

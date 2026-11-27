@@ -53,17 +53,37 @@ export const TEST_FOLDER = [
   ['Cannon', 'L'], ['HiCannon', 'L'],
 ];
 
-// Viruses. HP/attack are recalled BN values; behaviour timings partly from animations.
-export const VIRUSES = {
-  Mettaur:  { sprite: 'mettaur', hp: 40,  wave: 10, confidence: 'recalled' },
-  Mettaur2: { sprite: 'mettaur', hp: 80,  wave: 30, confidence: 'recalled', note: 'drawn with Mettaur palette until variant palettes are traced' },
-  Mettaur3: { sprite: 'mettaur', hp: 120, wave: 50, confidence: 'recalled', note: 'drawn with Mettaur palette until variant palettes are traced' },
-};
+// Element weakness (attacker element → element it deals double damage to).
+export const WEAKNESS = { aqua: 'fire', elec: 'aqua', wood: 'elec', fire: 'wood' };
+export const WEAKNESS_CONFIDENCE = 'recalled';
 
-export const METTAUR = {
-  attackTicks: v(38, 'rom-verified', 'candidate attack sequence 1 total'),
-  waveSpawnTick: v(24, 'unverified', 'tick within attack when the shockwave leaves'),
-  waveStepTicks: v(8, 'unverified', 'ticks per panel for ShockWave travel'),
-  thinkTicks: v(40, 'unverified', 'pause between moves/attacks'),
-  takeTurns: v(true, 'recalled', 'only one Mettaur attacks at a time'),
+// Virus AI parameters. HP/element/damage come from data/bn6-viruses.mjs (rom-verified).
+// Arrays are indexed by variant (0 base, 1 "2", 2 "3", 3 Ω, 4 Rare, 5 Rare2).
+export const AI = {
+  Mettaur: {
+    thinkTicks: v([30, 24, 18, 12, 18, 12], 'rom-verified', 'per-variant byte table 0x109F46 read by the Mettaur AI; used here as the pause between actions (role inferred)'),
+    attackTicks: v(38, 'rom-verified', 'attack sequence 1 total'),
+    waveSpawnTick: v(30, 'unverified', 'inferred: pickaxe reaches the ground after frames 1+1+1+3+8+4+9+3'),
+    waveStepTicks: v([26, 17, 12, 12, 17, 12], 'unverified', 'inferred: one loop of ShockWave sequence slow/medium/fast per panel'),
+    takeTurns: v(true, 'recalled', 'only one Mettaur attacks at a time'),
+  },
+  Champy: {
+    thinkTicks: v(70, 'unverified'),
+    readyTicks: v(10, 'rom-verified', 'ready sequence 1 = 5+5'),
+    punchTicks: v(15, 'rom-verified', 'punch sequence 4 = 3+2+2+5+3'),
+    punchHitTick: v(7, 'unverified', 'fist extends on frame 3'),
+    returnTicks: v(20, 'unverified'),
+    behaviour: v('warps to the panel in front of MegaMan, punches, warps home', 'recalled'),
+  },
+  Gunner: {
+    thinkTicks: v(60, 'unverified'),
+    aimTicks: v(24, 'rom-verified', 'aim sequence 1 = 2+2+20'),
+    trackTicks: v(90, 'unverified', 'crosshair follows MegaMan before locking'),
+    trackStepTicks: v(14, 'unverified', 'crosshair panel step while tracking (search loop is 7+7)'),
+    lockTicks: v(10, 'rom-verified', 'lock sequence 1 = 5+5'),
+    shots: v(3, 'unverified'),
+    shotEveryTicks: v(5, 'unverified', 'fire loop 1+1+1+2+2+1+1+1+2+2 = 14 ticks'),
+    recoverTicks: v(8, 'rom-verified', 'recover sequence 3 = 4+4'),
+    behaviour: v('crosshair tracks MegaMan, locks on, Gunner fires a burst at that panel', 'recalled'),
+  },
 };

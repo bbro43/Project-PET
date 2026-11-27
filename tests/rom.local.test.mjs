@@ -37,3 +37,19 @@ test('registry sprite blocks match ROM bytes and decode cleanly', { skip: !dir &
   }
   assert.ok(checked > 0, 'no registry entries matched the supplied ROMs');
 });
+
+test('bn6-viruses.mjs sprite hashes match both BN6 ROMs', { skip: !dir && 'ROM_DIR not set' }, async () => {
+  const { default: BN6 } = await import('../data/bn6-viruses.mjs');
+  let checked = 0;
+  for (const f of readdirSync(dir).filter(f => /\.gba$/i.test(f))) {
+    const rom = new Uint8Array(readFileSync(join(dir, f)));
+    if (!['bn6f', 'bn6g'].includes(identify(rom)?.id)) continue;
+    for (const [name, fam] of Object.entries(BN6.families)) {
+      if (fam.sprite.compression !== 'lz77') continue;
+      const bytes = lz77(rom, parseInt(fam.sprite.offset, 16));
+      assert.equal(createHash('sha256').update(bytes).digest('hex'), fam.sprite.sha256, name);
+      checked++;
+    }
+  }
+  assert.ok(checked > 0);
+});

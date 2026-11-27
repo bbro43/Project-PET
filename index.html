@@ -84,7 +84,11 @@ button.held { background: #3b5f99; }
         <option value="virus">Virus Battle</option>
         <option value="survival">Endless Survival</option>
       </select></label>
-      <label id="formation-wrap">Viruses <select id="formation"></select></label>
+      <span id="formation-wrap" class="row">
+        <label>Virus <select id="family"></select></label>
+        <label>Type <select id="variant"></select></label>
+        <label>Count <select id="count"><option>1</option><option>2</option><option selected>3</option></select></label>
+      </span>
       <button id="start" type="button">Start</button>
     </div>
     <p class="muted" style="margin:.5rem 0 0">Controls: D-pad move · A buster (hold to charge) · B use chip · L/R open Custom when the gauge is full.<br>Keyboard: arrows · X = A · Z = B · A/S = L/R.</p>
