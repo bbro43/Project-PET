@@ -311,7 +311,7 @@ export function render(g, s, bank) {
     if (h.kind === 'wave') {
       const [ax, ay] = anchor(h.x, h.y);
       if (wave) {
-        const speed = h.step >= 26 ? 'slow' : h.step >= 17 ? 'medium' : 'fast';
+        const speed = h.step >= 20 ? 'slow' : h.step >= 10 ? 'medium' : 'fast'; // type3 0x16 animation 0 / 1 / 2 (22 / 16-11 / 6 frames per panel)
         sprite(g, bank, 'shockwave', speed, s.tick - h.start, ax, ay, () => {}, 0, !h.fromPlayer); // travels toward MegaMan
         continue;
       }

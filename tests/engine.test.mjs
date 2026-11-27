@@ -151,6 +151,7 @@ test('element weakness doubles damage', () => {
 test('Champy warps in front of MegaMan, punches, then returns home', () => {
   const s = start({ seed: 11, enemies: formation('Champy', 0, 1) });
   const c = s.enemies[0];
+  s.player.y = c.y; // Champy only acts when MegaMan is in its row
   let warped = null, hit = false;
   for (let i = 0; i < 400 && !hit; i++) {
     step(s, {});
@@ -159,7 +160,7 @@ test('Champy warps in front of MegaMan, punches, then returns home', () => {
   }
   assert.deepEqual(warped, [s.player.x + 1, s.player.y]);
   assert.ok(hit);
-  assert.equal(s.player.hp, 100 - 50);
+  assert.equal(s.player.hp, 100 - 20); // table 0x810CDAE
   run(s, {}, 60);
   assert.deepEqual([c.x, c.y], [c.homeX, c.homeY]);
 });
@@ -190,8 +191,10 @@ test('Gunner crosshair tracks MegaMan, locks, and fires a 3-shot burst', () => {
 test('Gunner burst misses when MegaMan leaves the locked panel', () => {
   const s = start({ seed: 12, enemies: formation('Gunner', 0, 1) });
   const g = s.enemies[0];
-  for (let i = 0; i < 600 && g.state !== 'lock'; i++) step(s, {});
-  run(s, { dir: 'up' }, 2);
+  s.player.y = g.y;
+  for (let i = 0; i < 600 && !(g.target && g.target.lockAt !== undefined); i++) step(s, {});
+  assert.ok(g.target && g.target.lockAt !== undefined, 'crosshair reached MegaMan');
+  run(s, { dir: s.player.y > 0 ? 'up' : 'down' }, 2);
   run(s, {}, 40);
   assert.equal(s.player.hp, 100);
 });
@@ -199,7 +202,26 @@ test('Gunner burst misses when MegaMan leaves the locked panel', () => {
 test('different virus families attack independently', () => {
   const s = start({ seed: 13, enemies: [['Mettaur', 0], ['Gunner', 0]] });
   s.player.invuln = 1e9;
-  let both = false;
-  for (let i = 0; i < 1200 && !both; i++) { step(s, {}); both = s.turns.Mettaur !== undefined && s.turns.Gunner !== undefined; }
-  assert.ok(both);
+  const [m, g] = s.enemies; s.player.y = g.y;
+  let mAtk = false, gFire = false;
+  for (let i = 0; i < 1200 && !(mAtk && gFire); i++) { step(s, {}); mAtk ||= m.state === 'attack'; gFire ||= g.state === 'fire'; }
+  assert.ok(mAtk && gFire);
+});
+
+test('Mettaur2 waits its turn hidden under its helmet (guarded); shockwave speed by version', () => {
+  const s = start({ seed: 21, enemies: formation('Mettaur', 1, 2) });
+  s.player.invuln = 1e9;
+  let guarded = false, wave = null;
+  for (let i = 0; i < 600 && !(guarded && wave); i++) { step(s, {}); guarded ||= s.enemies.some(e => e.guard); wave ||= s.hazards.find(h => h.kind === 'wave'); }
+  assert.ok(guarded, 'the waiting Mettaur hides');
+  assert.equal(wave.step, 16, 'Mettaur2 wave: 16 frames per panel (0x80C6B00)');
+  assert.equal(wave.damage, 30, 'Mettaur2 damage 30 (0x8109F28)');
+});
+
+test('Shooter (odd version) sweeps its crosshair one panel per shot', () => {
+  const s = start({ seed: 22, enemies: formation('Gunner', 1, 1) });
+  s.player.invuln = 1e9;
+  const g = s.enemies[0], xs = [];
+  for (let i = 0; i < 600 && xs.length < 5; i++) { step(s, {}); for (const f of s.effects) if (f.kind === 'shot' && f.t === 1) xs.push(f.x); }
+  assert.deepEqual(xs, [2, 1, 0, 1, 2]);
 });

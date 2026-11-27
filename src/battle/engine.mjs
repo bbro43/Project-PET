@@ -218,7 +218,7 @@ function virusApi(s) {
     coils: owner => s.enemies.filter(c => c.kind === 'coil' && c.owner === owner.id && c.hp > 0),
     addEnemy(o) { o.id = s.nextId++; s.enemies.push(o); return o; },
     removeEnemy(o, how) { if (o.hp <= 0) return; o.hp = 0; s.effects.push({ kind: how === 'explode' ? 'blast' : 'delete', x: o.x, y: o.y, t: 0 }); },
-    spawnWave(e, x, y, stepTicks) { s.hazards.push({ kind: 'wave', owner: e.id, family: e.family, x, y, dir: -1, step: stepTicks, next: s.tick + stepTicks, damage: e.damage, start: s.tick }); },
+    spawnWave(e, x, y, stepTicks, damage = e.damage) { s.hazards.push({ kind: 'wave', owner: e.id, family: e.family, x, y, dir: -1, step: stepTicks, next: s.tick + stepTicks, damage, start: s.tick }); },
     turnFree(e) { const t = s.turns[e.family]; return t === undefined || t === e.id || !s.enemies.some(o => o.id === t && o.hp > 0); },
     takeTurn(e) { s.turns[e.family] = e.id; },
     endTurn(e) { if (s.turns[e.family] === e.id) delete s.turns[e.family]; },

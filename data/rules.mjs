@@ -60,31 +60,39 @@ export const WEAKNESS_CONFIDENCE = 'recalled';
 // Virus AI parameters. HP/element/damage come from data/bn6-viruses.mjs (rom-verified).
 // Arrays are indexed by variant (0 base, 1 "2", 2 "3", 3 Ω, 4 Rare, 5 Rare2).
 export const AI = {
-  Mettaur: {
-    thinkTicks: v([30, 24, 18, 12, 18, 12], 'rom-verified', 'per-variant byte table 0x109F46 read by the Mettaur AI; used here as the pause between actions (role inferred)'),
-    attackTicks: v(38, 'rom-verified', 'attack sequence 1 total'),
-    waveSpawnTick: v(30, 'unverified', 'inferred: pickaxe reaches the ground after frames 1+1+1+3+8+4+9+3'),
-    waveStepTicks: v([26, 17, 12, 12, 17, 12], 'unverified', 'inferred: one loop of ShockWave sequence slow/medium/fast per panel'),
-    takeTurns: v(true, 'recalled', 'only one Mettaur attacks at a time'),
+  // Virus AI table 0x8109050 (index = AI byte × 4). Per-version tables have 6 entries: base, 2, 3, SP, Rare, Rare2.
+  Mettaur: { // ForMettaur 0x8109EF4, decision 0x8109FD6
+    decision: v('one Mettaur acts at a time (turn token 0x800AA06); on its turn it waits 30 frames the first time, steps one row toward MegaMan until level with him, then swings; the others wait (versions above the base hide under their helmet, guarding)', 'rom-verified', 'states 0x810A004 / 0x810A080 / 0x810A126'),
+    firstWait: v(30, 'rom-verified', 'Param4 = 0x1E, action 9'),
+    moveWait: v([30, 24, 18, 12, 18, 12], 'rom-verified', 'table 0x8109F46 (wait after a row step)'),
+    moveTicks: v([3, 3], 'rom-verified', 'vanish 3 / appear 3 (0x8109D08 / 0x8109D70)'),
+    attackTicks: v(64, 'rom-verified', '0xB: animation 1 for 0x40'),
+    waveSpawnTick: v(37, 'rom-verified', 'shockwave spawned when the timer reaches 0x1B'),
+    afterAttack: v(40, 'rom-verified', '0xB state 4: 0x28 frames, then the turn passes on'),
+    waveStepTicks: v([22, 16, 11, 6, 16, 6], 'rom-verified', 'type3 0x16 table 0x80C6B00: frames per panel by version'),
+    damage: v([10, 30, 50, 70, 50, 100], 'rom-verified', 'table 0x8109F28'),
+    hideTicks: v([34, 53], 'rom-verified', '0xC: helmet down (animation 2) 0x22, guarded (animation 3) until its turn, back up (animation 4) 0x35'),
   },
-  Champy: {
-    thinkTicks: v(70, 'unverified'),
-    readyTicks: v(10, 'rom-verified', 'ready sequence 1 = 5+5'),
-    punchTicks: v(15, 'rom-verified', 'punch sequence 4 = 3+2+2+5+3'),
-    punchHitTick: v(7, 'unverified', 'fist extends on frame 3'),
-    returnTicks: v(20, 'unverified'),
-    behaviour: v('warps to the panel in front of MegaMan, punches, warps home', 'recalled'),
+  Champy: { // table 0x810CD60, decision 0x810CE1A
+    decision: v('only when MegaMan is in its row and the panel in front of him is free: vanish, reappear in front of him, punch, return home; versions SP and up follow with a second punch from a new spot', 'rom-verified', 'decision 0x810CE1A, attack 0xB 0x810C9B8'),
+    postWait: v([30, 18, 18, 12, 18, 6], 'rom-verified', 'table 0x810CDA8 (action 9 after an attack)'),
+    vanishWait: v([8, 1, 1, 1, 1, 1], 'rom-verified', 'table 0x810CDA2 minus 10 (min 1)'),
+    appearTicks: v(13, 'rom-verified', '0xB state 4: 0x0D'),
+    readyTicks: v([21, 18, 12, 6, 6, 6], 'rom-verified', 'table 0x810CD96, read as the pause before the punch'),
+    punchTicks: v(15, 'rom-verified', 'punch animation length (sequence 2)'),
+    punchHitTick: v(3, 'rom-verified', 'hit spawned on frame 3 of the punch (0x810CB2A)'),
+    secondHitTick: v(5, 'rom-verified', 'second punch (animation 4) hits on frame 5 (0x810CC0A)'),
+    holdTicks: v([42, 24, 12, 6, 6, 6], 'rom-verified', 'table 0x810CD9C: hold after punching, and again after returning'),
+    damage: v([20, 30, 50, 80, 30, 90], 'rom-verified', 'table 0x810CDAE'),
   },
-  Gunner: {
-    thinkTicks: v(60, 'unverified'),
-    aimTicks: v(24, 'rom-verified', 'aim sequence 1 = 2+2+20'),
-    trackTicks: v(90, 'unverified', 'crosshair follows MegaMan before locking'),
-    trackStepTicks: v(14, 'unverified', 'crosshair panel step while tracking (search loop is 7+7)'),
-    lockTicks: v(10, 'rom-verified', 'lock sequence 1 = 5+5'),
-    shots: v(3, 'unverified'),
-    shotEveryTicks: v(5, 'unverified', 'fire loop 1+1+1+2+2+1+1+1+2+2 = 14 ticks'),
-    recoverTicks: v(8, 'rom-verified', 'recover sequence 3 = 4+4'),
-    behaviour: v('crosshair tracks MegaMan, locks on, Gunner fires a burst at that panel', 'recalled'),
+  Gunner: { // ForGunner 0x8113078, decision 0x8113124
+    decision: v('even versions (Gunner, Sniper, Rare): when MegaMan is in its row, a crosshair slides down the row from Gunner; on reaching MegaMan it locks, then Gunner fires at that panel. Odd versions (Shooter, SP, Rare2): the crosshair starts on the first panel of MegaMan\'s area and sweeps one panel per shot, bouncing at the edges', 'rom-verified', 'decision 0x8113154 (version & 1), attacks 0xA 0x8112F4E / 0xB 0x8112D9C'),
+    crossSpeed: v([3, 1.3125, 4, 2.3125, 4.3125, 3], 'rom-verified', 'table 0x81130A8 (px per frame, 40 px panels)'),
+    lockTicks: v([24, 24, 12, 12, 12, 12], 'rom-verified', 'table 0x81130C6'),
+    shots: v([3, 5, 3, 7, 3, 7], 'rom-verified', 'table 0x81130D8'),
+    shotGap: v(10, 'rom-verified', '0x8113002: one shot every 0x0A frames'),
+    recoverTicks: v([24, 24, 12, 12, 24, 6], 'rom-verified', 'table 0x81130D2'),
+    damage: v([10, 30, 50, 70, 40, 90], 'rom-verified', 'table 0x81130C0'),
   },
 };
 
