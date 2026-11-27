@@ -173,8 +173,9 @@ export function render(g, s, bank) {
 
   // TenguMan tornadoes
   const torn = bank?.get('tornado');
-  for (const h of s.hazards) if (h.kind === 'tornado' && h.x !== undefined) {
-    const [ax, ay] = anchor(h.x, h.y);
+  for (const h of s.hazards) if ((h.kind === 'tornado' || h.kind === 'twister') && h.x !== undefined) {
+    const [ax, ay] = h.kind === 'twister' ? anchor(h.fx, h.fy) : anchor(h.x, h.y);
+    if (h.kind === 'twister' && (h.fy < -0.5 || h.fy > 2.5)) continue;
     if (torn) { const f = frameAt(torn.spin, s.tick - h.start); g.drawImage(f.image, Math.round(ax - f.originX), Math.round(ay - f.originY)); }
     else { g.strokeStyle = '#aff'; g.lineWidth = 2; for (let i = 0; i < 4; i++) { g.beginPath(); g.ellipse(ax, ay - 6 - i * 8, 4 + i * 3, 3, 0, 0, 7); g.stroke(); } }
   }
@@ -279,9 +280,16 @@ export function render(g, s, bank) {
   // ElementMan strikes: lit panel, then an element-coloured burst (tower sprite for the basic one)
   for (const h of s.hazards) if (h.kind === 'estrike') {
     const [ax, ay] = anchor(h.x, h.y);
-    if (s.tick < h.hit) { g.fillStyle = 'rgba(255,240,120,.45)'; g.fillRect(ax - PANEL_W / 2 + 2, ay - 14, PANEL_W - 4, 16); continue; }
+    if (s.tick < h.hit) {
+      g.fillStyle = 'rgba(255,240,120,.45)'; g.fillRect(ax - PANEL_W / 2 + 2, ay - 14, PANEL_W - 4, 16);
+      if (h.look === 'meteor' && bank?.has('elmeteor')) { const k = (h.hit - s.tick) / Math.max(1, h.hit - (h.start ?? h.hit - 17)); sprite(g, bank, 'elmeteor', 'fall', 0, ax + 30 * k, ay - 4 - 90 * k, () => {}, 1, false); }
+      continue;
+    }
     const t = s.tick - h.hit;
     if (h.elem === 'none') { sprite(g, bank, 'elementman', 'tower', t, ax, ay, '#a7d', 0, false); continue; }
+    if (h.look === 'tower') { sprite(g, bank, 'elementman', 'tower', t, ax, ay, () => {}, 2, true); if (bank?.has('elementman')) continue; }
+    if (h.look === 'meteor' && bank?.has('elmeteor')) { sprite(g, bank, 'elmeteor', 'fall', t, ax, ay - 4, () => {}, 1, false); continue; }
+    if (h.look === 'sparkle' && bank?.has('elsparkle')) { sprite(g, bank, 'elsparkle', 'burst', t, ax, ay - 8, () => {}, 0, false); continue; }
     const col = { fire: '#ff7030', aqua: '#80d8ff', elec: '#fff060', wood: '#70e060', dark: '#b060ff', beast: '#ff9a30', feather: '#ff5060' }[h.elem];
     g.fillStyle = col; g.globalAlpha = 1 - t / 12;
     if (h.elem === 'elec') g.fillRect(ax - PANEL_W / 2, ay - 18, PANEL_W, 6);

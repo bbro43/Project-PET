@@ -479,13 +479,23 @@ test('TenguMan tornadoes: three in MegaMan\'s area from a ROM pattern', () => {
   assert.ok(e.pattern < 4, 'base version uses patterns 0-3');
 });
 
-test('TenguMan dash: path lights up, then he flies down MegaMan\'s row for 60', () => {
-  const { s, e } = findState('TenguMan', 0, 'dashmark', s => { s.player.invuln = 1e9; });
-  assert.equal(e.highlight[0].length, 6);
-  assert.equal(e.y, s.player.y);
-  s.player.invuln = 0;
-  for (let i = 0; i < 80 && s.player.hp === 100; i++) step(s, {});
-  assert.equal(s.player.hp, 40);
+test('TenguMan dash (base version): runs along the top row, or the bottom row when MegaMan is there', () => {
+  for (const [py, row] of [[1, 0], [2, 2]]) {
+    const { s, e } = findState('TenguMan', 0, 'arms', s => { s.player.invuln = 1e9; });
+    s.player.x = 0; s.player.y = py;
+    while (e.state !== 'dashmark') step(s, {});
+    assert.deepEqual(e.highlight[0], [6, 5, 4, 3, 2, 1, 0].filter(x => x <= 5).map(x => [x, row]));
+  }
+});
+
+test('TenguMan dash (EX): diagonal path chosen from MegaMan\'s panel, hits for the dash damage', () => {
+  const { s, e } = findState('TenguMan', 1, 'arms', s => { s.player.invuln = 1e9; });
+  s.player.x = 1; s.player.y = 2; // not on a listed panel → kind 2: from above, down-left
+  while (e.state !== 'dashmark') step(s, {});
+  assert.deepEqual(e.highlight[0], [[3, 0], [2, 1], [1, 2]]);
+  s.player.invuln = 0; s.player.hp = 1000;
+  for (let i = 0; i < 80 && e.state !== 'appear'; i++) step(s, {});
+  assert.equal(1000 - s.player.hp, NAVI_AI.TenguMan.dashDamage.value[1]);
 });
 
 test('TenguMan cannot be hit while flying off the field and comes back to his panel', () => {
@@ -770,11 +780,29 @@ test('ElementMan cycle: towers, then an element change after 3 attacks; the new 
   assert.ok(seen.slice(4).some(k => k === e.element || ['fire', 'aqua', 'elec', 'wood'].includes(k)), 'uses an element attack after changing');
 });
 
-test('ElementMan tower strikes the panel MegaMan stood on', () => {
+test('ElementMan basic tornado: forward 5 panels, across 2 rows, back 6; hits MegaMan in its path', () => {
   const { s, e } = findState('ElementMan', 0, 'tower', s => { s.player.invuln = 1e9; });
-  s.player.invuln = 0;
-  run(s, NAVI_AI.ElementMan.towerMark.value + 1);
-  assert.equal(s.player.hp, 40, 'base tower damage 60');
+  step(s, {});
+  const h = s.hazards.find(h => h.kind === 'twister');
+  assert.ok(h && h.x0 === 5);
+  s.player.x = 0; s.player.y = h.y0; s.player.invuln = 0; s.player.hp = 500;
+  const ys = new Set();
+  for (let i = 0; i < 400 && s.hazards.includes(h); i++) { step(s, {}); ys.add(h.y); }
+  assert.equal(500 - s.player.hp, NAVI_AI.ElementMan.towerDamage.value[0]);
+  assert.ok(ys.has(h.y0 + 2 * h.dy) || h.y0 === 1, 'second leg crosses two rows');
+});
+
+test('ElementMan element change cycles none → wood → fire → elec → aqua with matching palettes', () => {
+  const s = start('ElementMan'), e = s.enemies[0]; s.player.invuln = 1e9;
+  const seen = [];
+  for (let i = 0; i < 4; i++) {
+    e.state = 'idle'; Object.assign(e.mem, { c4: 0, c5: 3 }); e.think = 1;
+    e.mem.c4 = 99; step(s, {}); // force past moves
+    e.state = 'change'; e.stateT = 0;
+    for (let k = 0; k < 80 && e.state === 'change'; k++) step(s, {});
+    seen.push([e.element, e.palette]);
+  }
+  assert.deepEqual(seen, [['wood', 6], ['fire', 2], ['elec', 8], ['aqua', 4]]);
 });
 
 test('ElementMan fire: five bursts on MegaMan\'s panel', () => {

@@ -2318,6 +2318,56 @@
      "confidence": "visual-candidate"
     }
    }
+  },
+  "elmeteor": {
+   "label": "ElementMan aqua attack drop (object type3 0x8D, sprite 0xC/0x31)",
+   "sources": {
+    "bn6f": {
+     "offset": "325C94",
+     "compression": "none",
+     "bytes": 606,
+     "sha256": "2cba66c3675dde8f33b77644f95ccb0ed0a1c9fcec511b2e62c53a1e32a3d330",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "32520C",
+     "compression": "none",
+     "bytes": 606,
+     "sha256": "2cba66c3675dde8f33b77644f95ccb0ed0a1c9fcec511b2e62c53a1e32a3d330",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "fall": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    }
+   }
+  },
+  "elsparkle": {
+   "label": "ElementMan wood attack sparkle (object type3 0x8E, sprite 0x10/0x0F)",
+   "sources": {
+    "bn6f": {
+     "offset": "35B938",
+     "compression": "none",
+     "bytes": 2935,
+     "sha256": "82cf347c4c68707db0adaa5a5a5676fa12eaa9e0c0e943080bce9ba1061fc4e4",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "35AEB0",
+     "compression": "none",
+     "bytes": 2935,
+     "sha256": "82cf347c4c68707db0adaa5a5a5676fa12eaa9e0c0e943080bce9ba1061fc4e4",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "burst": {
+     "seq": 0,
+     "confidence": "visual-candidate"
+    }
+   }
   }
  },
  "tables": {

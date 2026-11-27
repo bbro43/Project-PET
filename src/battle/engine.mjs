@@ -339,6 +339,17 @@ function stepHazards(s) {
       s.effects.push({ kind: 'rockbreak', x: h.x, y: h.y, t: 0 });
       return false;
     }
+    if (h.kind === 'twister') { // ElementMan's basic tornado: forward 5 panels, 2 rows across, back 6 panels
+      if (!s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
+      const d = Math.max(0, (s.tick - h.start) * h.speed), [l0, l1, l2] = h.legs;
+      if (d < l0) { h.fx = h.x0 - d / 40; h.fy = h.y0; }
+      else if (d < l0 + l1) { h.fx = h.x0 - l0 / 40; h.fy = h.y0 + h.dy * (d - l0) / 24; }
+      else if (d < l0 + l1 + l2) { h.fx = h.x0 - l0 / 40 + (d - l0 - l1) / 40; h.fy = h.y0 + h.dy * l1 / 24; }
+      else return false;
+      h.x = Math.round(h.fx); h.y = Math.round(h.fy);
+      if (s.tick >= h.start && p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      return true;
+    }
     if (h.kind === 'tornado') { // TenguMan's tornadoes drift a panel at a time
       if (s.tick >= h.until || !s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
       const k = Math.floor((s.tick - h.start) / h.step);

@@ -763,23 +763,35 @@ function tenguman(e, api) {
     }
     // ---- 0xC: arms up, vanish, path lights up, then he flies across it
     case 'arms':
-      if (e.stateT >= pv(P.dashArms, v)) { e.path = p.y; e.dest = [6, p.y]; go(e, 'dashvanish', 'vanish'); }
+      if (e.stateT >= pv(P.dashArms, v)) {
+        // 0x80F9B4C: the base version runs along the top row (bottom row if MegaMan is there);
+        // stronger versions pick a row or a diagonal from MegaMan's panel.
+        const kind = v === 0 ? (p.y === 2 ? 3 : 0) : (p.x === 0 && p.y === 1) ? 0 : (p.y === 0 && p.x <= 1) ? 1 : 2;
+        const [sx, sy, dy, cols] = P.dashPaths.value.starts[kind];
+        e.dashPath = { sx, sy, dy, cols };
+        go(e, 'dashvanish', 'vanish');
+      }
       return;
     case 'dashvanish':
       if (e.stateT >= VAN) {
-        e.x = 6; e.y = e.path; e.fx = 6; e.drawX = 6; e.drawY = e.y; e.airborne = true;
-        e.highlight = [[0, 1, 2, 3, 4, 5].map(x => [x, e.path])];
+        const { sx, sy, dy, cols } = e.dashPath;
+        e.fx = sx; e.fy = sy; e.drawX = sx; e.drawY = sy; e.airborne = true;
+        const cells = [];
+        for (let i = 0; i <= cols; i++) { const x = sx - i, y = sy + dy * i; if (x >= 0 && x <= 5 && y >= 0 && y <= 2) cells.push([x, y]); }
+        e.highlight = [cells];
         go(e, 'dashmark', 'dash');
       }
       return;
     case 'dashmark':
-      if (e.stateT >= P.dashMark.value) { e.highlight = null; go(e, 'dashfly', 'dash'); }
+      if (e.stateT >= P.dashMark.value) { e.highlight = null; e.hitDone = false; go(e, 'dashfly', 'dash'); }
       return;
     case 'dashfly': {
-      e.fx = 6 - 8 * e.stateT / P.dashTravel.value; e.drawX = e.fx; e.x = Math.round(e.fx);
-      e.airborne = e.x < 0 || e.x > 5;
-      if (e.x >= 0 && e.x <= 5) api.hitPlayerCells([[e.x, e.y]], pv(P.dashDamage, v));
-      if (e.stateT >= P.dashTravel.value) {
+      const { sx, sy, dy, cols } = e.dashPath, per = 40 / pv(P.dashSpeed, v), k = e.stateT / per;
+      e.fx = sx - k; e.fy = sy + dy * k; e.drawX = e.fx; e.drawY = e.fy;
+      const x = Math.round(e.fx), y = Math.round(e.fy);
+      e.airborne = true; // untargetable while dashing (collision region 4 is his attack)
+      if (!e.hitDone && x >= 0 && x <= 2 && x === p.x && y === p.y && p.state !== 'vanish') { e.hitDone = true; api.hitPlayerCells([[x, y]], pv(P.dashDamage, v)); }
+      if (k >= cols) {
         e.airborne = false;
         const home = free(e.homeX, e.homeY) ? [e.homeX, e.homeY] : (pick(freeEnemyPanels(e, api), api) || [5, 1]);
         [e.x, e.y] = home; e.drawX = e.x; e.drawY = e.y; e.moveWait = pv(P.moveWait.value.normal, v); go(e, 'appear', 'appear');
@@ -1326,7 +1338,8 @@ function elementman(e, api) {
   const [VAN, APP] = P.warpTicks.value;
   const wait = t => { go(e, 'idle', 'idle'); e.think = Math.max(1, t); };
   const free = (x, y) => x >= 3 && x <= 5 && y >= 0 && y <= 2 && (!api.at(x, y) || api.at(x, y) === e);
-  const strike = (x, y, delay, damage, kind) => s.hazards.push({ kind: 'estrike', x, y, start: s.tick, hit: s.tick + delay, elem: kind, damage, owner: e.id });
+  const LOOK = { aqua: 'meteor', fire: 'tower', wood: 'sparkle' }; // object sprites: 0xC/0x31 drop, his own tower 18/19, 0x10/0x0F sparkle
+  const strike = (x, y, delay, damage, kind) => s.hazards.push({ kind: 'estrike', x, y, start: s.tick, hit: s.tick + delay, elem: kind, look: LOOK[kind], damage, owner: e.id });
   switch (e.state) {
     case 'idle':
       if (--e.think > 0) return;
@@ -1337,17 +1350,26 @@ function elementman(e, api) {
     case 'appear':
       if (e.stateT >= APP + 8) { const a = e.after; e.after = null; if (a) return a(); wait(pv(P.moveWait, v)); }
       return;
-    case 'change': // 0xA: the element ring spins and he takes a new element
-      if (e.stateT === 30) {
-        const options = ELEMENTS.filter(k => k !== e.element);
-        e.element = pick(options, api); // palette per element not decoded; sprite colours stay
-        s.effects.push({ kind: 'spark', x: e.x, y: e.y, t: 0 });
+    case 'change': { // 0xA: charge, element ring, white flash, then the next element in the cycle and its palette
+      const [a, b, c, d] = P.changeTicks.value;
+      if (e.stateT === a) setAnim(e, 'castloop');
+      if (e.stateT === a + b) e.flash = c; // white flash (sprite_forceWhitePalette)
+      if (e.stateT === a + b + c) {
+        const order = P.elementOrder.value;
+        m.elementIndex = ((m.elementIndex ?? 0) + 1) % order.length;
+        e.element = order[m.elementIndex];
+        e.palette = P.elementPalette.value[e.element];
+        setAnim(e, 'idle');
       }
-      if (e.stateT >= 50) wait(pv(P.moveWait, v));
+      if (e.stateT >= a + b + c + d) wait(pv(P.moveWait, v));
       return;
-    case 'tower': // 0xF: a tower bursts up under MegaMan
-      if (e.stateT === 1) strike(p.x, p.y, P.towerMark.value, pv(P.towerDamage, v), 'none');
-      if (e.stateT >= P.towerMark.value + 20) wait(P.towerWait.value[0]);
+    }
+    case 'tower': // 0xF: a tornado from his back column sweeps out and back (type3 0x90)
+      if (e.stateT === 1) {
+        const row = Math.floor(api.rng() * 3);
+        s.hazards.push({ kind: 'twister', x: 5, y: row, fx: 5, fy: row, x0: 5, y0: row, dy: row === 2 ? -1 : 1, start: s.tick + P.towerMark.value, speed: pv(P.twisterSpeed, v), legs: P.twisterLegs.value, damage: pv(P.towerDamage, v), owner: e.id });
+      }
+      if (e.stateT >= P.towerMark.value + 10) wait(P.towerWait.value[0]);
       return;
     case 'aqua': { // 0xB: icicles on MegaMan's panel, one after another
       const n = e.hp < e.maxHp / 2 ? pv(P.aquaCount.value.lowHp, v) : pv(P.aquaCount.value.normal, v), gap = P.aquaMark.value;
