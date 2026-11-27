@@ -250,6 +250,17 @@ function stepHazards(s) {
       if (!h.locked && s.tick >= h.until) h.locked = true;
       return true;
     }
+    if (h.kind === 'lob') { // SpoutMan water bomb: lands on the panel MegaMan stood on
+      if (s.tick < h.land) return true;
+      if (p.x === h.tx && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      s.effects.push({ kind: 'splash', x: h.tx, y: h.y, t: 0 });
+      return false;
+    }
+    if (h.kind === 'stream') {
+      if (!s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
+      if (h.cells.some(([x, y]) => p.x === x && p.y === y) && p.state !== 'vanish') hitPlayer(s, h.damage);
+      return s.tick < h.until;
+    }
     if (h.kind === 'car') { // ChargeMan's train cars; moved by ChargeMan, hit like his body
       if (!s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
       if (Math.round(h.fx) === p.x && h.y === p.y && p.state !== 'vanish') hitPlayer(s, h.damage);

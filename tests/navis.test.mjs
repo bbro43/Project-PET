@@ -357,3 +357,50 @@ test('ChargeMan train round: cars in the two other rows hit for 30', () => {
   for (let i = 0; i < 300 && s.player.hp === 100; i++) step(s, {});
   assert.equal(s.player.hp, 70);
 });
+
+test('SpoutMan names and HP from the ROM tables', () => {
+  const vs = naviVariants('SpoutMan');
+  assert.equal(vs[0].name.slice(0, 5), 'Spout');
+  const s = start('SpoutMan');
+  assert.equal(s.enemies[0].sprite, 'spoutman');
+  assert.equal(s.enemies[0].element, vs[0].element);
+});
+
+test('SpoutMan water bomb lands on the panel MegaMan stood on', () => {
+  const { s, e } = findState('SpoutMan', 0, 'bomb', s => { s.player.invuln = 1e9; });
+  s.player.invuln = 0;
+  const [aim, hold] = NAVI_AI.SpoutMan.bombAim.value;
+  assert.ok([2, 3].includes(e.x - s.player.x), 'stands 2 or 3 panels ahead of MegaMan');
+  run(s, aim + hold - e.stateT);
+  const lob = s.hazards.find(h => h.kind === 'lob');
+  assert.deepEqual([lob.tx, lob.y], [s.player.x, s.player.y]);
+  run(s, NAVI_AI.SpoutMan.bombFlight.value + 1);
+  assert.equal(s.player.hp, 80);
+});
+
+test('SpoutMan hose: row highlights for 36 frames, then the stream hits MegaMan in that row', () => {
+  const { s, e } = findState('SpoutMan', 0, 'hose', s => { s.player.invuln = 1e9; });
+  s.player.invuln = 0; s.player.x = 1; s.player.y = e.y;
+  run(s, 2);
+  assert.ok(e.highlight && e.highlight[0].length > 0);
+  run(s, NAVI_AI.SpoutMan.hoseAim.value - e.stateT - 1);
+  assert.equal(s.player.hp, 100);
+  run(s, 2);
+  assert.equal(s.player.hp, 60, 'base hose damage 40');
+});
+
+test('SpoutMan hose repeats 2 times at base version, then sprinkler next turn', () => {
+  const { s, e } = findState('SpoutMan', 0, 'hose', s => { s.player.invuln = 1e9; });
+  let streams = 0, sawJump = false;
+  for (let i = 0; i < 4000 && !sawJump; i++) { const n = s.hazards.filter(h => h.kind === 'stream').length; step(s, {}); if (s.hazards.filter(h => h.kind === 'stream').length > n) streams++; if (e.state === 'jump') sawJump = true; }
+  assert.equal(streams, NAVI_AI.SpoutMan.hoseCount.value[0]);
+  assert.ok(sawJump);
+});
+
+test('SpoutMan sprinkler: jumps into MegaMan\'s area and sprays the panels around him', () => {
+  const { s, e } = findState('SpoutMan', 0, 'spin', s => { s.player.invuln = 1e9; s.player.x = 2; s.player.y = 2; });
+  assert.ok(e.x < 3, 'stands in MegaMan\'s area');
+  s.player.invuln = 0; s.player.x = e.x + 1; s.player.y = e.y;
+  for (let i = 0; i < 80 && s.player.hp === 100; i++) step(s, {});
+  assert.equal(s.player.hp, 80);
+});

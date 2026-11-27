@@ -962,6 +962,171 @@
           "confidence": "visual-candidate"
         }
       }
+    },
+    "spoutman": {
+      "label": "SpoutMan (BN6; AquaMan in BN4)",
+      "sources": {
+        "bn6f": {
+          "offset": "296F40",
+          "compression": "none",
+          "bytes": 26836,
+          "sha256": "0a3f3af6fc502db9746d5877e86f7f8e0128f635e97c775914000b4e61af50ed",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "296F40",
+          "compression": "none",
+          "bytes": 26836,
+          "sha256": "0a3f3af6fc502db9746d5877e86f7f8e0128f635e97c775914000b4e61af50ed",
+          "confidence": "rom-verified"
+        }
+      },
+      "note": "AI animation ids 0xF-0x15 map to sequences 15-21 directly.",
+      "sequences": {
+        "idle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "flinch": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "appear": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        },
+        "vanish": {
+          "seq": 4,
+          "confidence": "visual-candidate"
+        },
+        "windup": {
+          "seq": 15,
+          "confidence": "visual-candidate"
+        },
+        "hold": {
+          "seq": 16,
+          "confidence": "visual-candidate"
+        },
+        "jump": {
+          "seq": 17,
+          "confidence": "visual-candidate"
+        },
+        "spin": {
+          "seq": 18,
+          "confidence": "visual-candidate"
+        },
+        "aim": {
+          "seq": 19,
+          "confidence": "visual-candidate"
+        },
+        "throw": {
+          "seq": 20,
+          "confidence": "visual-candidate"
+        },
+        "spray": {
+          "seq": 21,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "bubblebomb": {
+      "label": "SpoutMan water bomb (object type3 0x22, sprite 0x10/0x23)",
+      "sources": {
+        "bn6f": {
+          "offset": "370D6C",
+          "compression": "none",
+          "bytes": 1286,
+          "sha256": "d4fac24e2b59f1702b1ac5481d8549bdde34ceb98b5173164cbb3d484e11e5d8",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "3702E4",
+          "compression": "none",
+          "bytes": 1286,
+          "sha256": "d4fac24e2b59f1702b1ac5481d8549bdde34ceb98b5173164cbb3d484e11e5d8",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "splash": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "fly": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "hosestream": {
+      "label": "SpoutMan hose stream (object type3 0x17, sprite 0x10/0x20)",
+      "sources": {
+        "bn6f": {
+          "offset": "36E034",
+          "compression": "none",
+          "bytes": 2651,
+          "sha256": "56d01841ef616c298980bac54d49d0913c05c9954bf67851b31f96e548c59190",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "36D5AC",
+          "compression": "none",
+          "bytes": 2651,
+          "sha256": "56d01841ef616c298980bac54d49d0913c05c9954bf67851b31f96e548c59190",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "nozzle": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "stream": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "tip": {
+          "seq": 2,
+          "confidence": "visual-candidate"
+        }
+      }
+    },
+    "sprinkler": {
+      "label": "SpoutMan sprinkler spray (object type3 0x29, sprite 0x10/0x22)",
+      "sources": {
+        "bn6f": {
+          "offset": "36EDB8",
+          "compression": "none",
+          "bytes": 8112,
+          "sha256": "ba6187d2d1a9650f3b2da30d9cf9067d18121527aceffd45d12b720920b1dbd7",
+          "confidence": "rom-verified"
+        },
+        "bn6g": {
+          "offset": "36E330",
+          "compression": "none",
+          "bytes": 8112,
+          "sha256": "ba6187d2d1a9650f3b2da30d9cf9067d18121527aceffd45d12b720920b1dbd7",
+          "confidence": "rom-verified"
+        }
+      },
+      "sequences": {
+        "horizontal": {
+          "seq": 0,
+          "confidence": "visual-candidate"
+        },
+        "rising": {
+          "seq": 1,
+          "confidence": "visual-candidate"
+        },
+        "vertical": {
+          "seq": 2,
+          "confidence": "visual-candidate"
+        },
+        "falling": {
+          "seq": 3,
+          "confidence": "visual-candidate"
+        }
+      }
     }
   },
   "tables": {

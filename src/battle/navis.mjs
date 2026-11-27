@@ -4,8 +4,8 @@
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
 
-export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'ProtoMan'];
-const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', ProtoMan: 'protoman' };
+export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'ProtoMan'];
+const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', ProtoMan: 'protoman' };
 const pv = (param, variant) => Array.isArray(param.value) ? param.value[Math.min(variant, param.value.length - 1)] : param.value;
 
 // Variants whose in-game name decodes cleanly (one ProtoMan name uses a glyph not yet mapped).
@@ -533,6 +533,111 @@ function chargeman(e, api) {
   function warp(dest, after) { e.dest = dest; e.after = after; go(e, 'vanish', 'vanish'); }
 }
 
+// ======================= SpoutMan =======================
+// Decision 0x80F7690: moves and water bombs (0xA) until the counter fills, then hose (0xB) / sprinkler (0xC) in turn.
+function spoutman(e, api) {
+  const P = NAVI_AI.SpoutMan, s = api.s, p = s.player, v = e.variant, m = e.mem;
+  const [VAN, APP] = P.warpTicks.value;
+  const wait = t => { go(e, 'idle', 'idle'); e.think = t; };
+  const free = (x, y) => !api.at(x, y) || api.at(x, y) === e;
+  switch (e.state) {
+    case 'idle':
+      if (--e.think > 0) return;
+      return decide();
+    case 'vanish':
+      if (e.stateT >= VAN) { [e.x, e.y] = e.dest; e.drawX = e.x; e.drawY = e.y; go(e, 'appear', 'appear'); }
+      return;
+    case 'appear':
+      if (e.stateT >= APP) { const a = e.after; e.after = null; if (a) return a(); wait(pv(P.moveWait, v)); }
+      return;
+    // ---- 0xA: aim, then lob a water bomb onto MegaMan's panel
+    case 'bomb': {
+      const [aim, hold] = P.bombAim.value;
+      if (e.stateT === aim) setAnim(e, 'throw');
+      if (e.stateT === aim + hold) {
+        s.hazards.push({ kind: 'lob', x0: e.x, y: p.y, tx: p.x, start: s.tick, land: s.tick + P.bombFlight.value, damage: pv(P.bombDamage, v), owner: e.id });
+      }
+      if (e.stateT >= aim + hold + 8) wait(pv(P.attackWait, v));
+      return;
+    }
+    // ---- 0xB: hose along his row, repeated from panels in the same column
+    case 'hose': {
+      const aim = P.hoseAim.value, spray = P.hoseSpray.value;
+      if (e.stateT === 1) {
+        const target = Math.min(p.x, e.x - 1);
+        e.hoseCells = []; for (let x = e.x - 1; x >= target; x--) e.hoseCells.push([x, e.y]);
+        e.highlight = [e.hoseCells];
+      }
+      if (e.stateT === aim) {
+        e.highlight = null; setAnim(e, 'spray');
+        s.hazards.push({ kind: 'stream', y: e.y, x0: e.x, cells: e.hoseCells, start: s.tick, until: s.tick + spray, damage: pv(P.hoseDamage, v), owner: e.id });
+      }
+      if (e.stateT === aim + spray) setAnim(e, 'hold');
+      if (e.stateT >= aim + spray + pv(P.hoseGap, v)) {
+        if (--e.rounds > 0) return warp(hoseRepeat(), () => go(e, 'hose', 'windup'));
+        wait(pv(P.attackWait, v));
+      }
+      return;
+    }
+    // ---- 0xC: jump into MegaMan's area and spin the sprinkler
+    case 'jump':
+      e.z = Math.round(Math.sin(Math.PI * e.stateT / P.sprinklerJump.value) * 40);
+      e.drawX = e.from[0] + (e.dest[0] - e.from[0]) * e.stateT / P.sprinklerJump.value;
+      e.drawY = e.from[1] + (e.dest[1] - e.from[1]) * e.stateT / P.sprinklerJump.value;
+      if (e.stateT === 1) e.airborne = true;
+      if (e.stateT >= P.sprinklerJump.value) {
+        e.z = 0; e.airborne = false; [e.x, e.y] = e.dest; e.drawX = e.x; e.drawY = e.y;
+        e.turns = pv(P.sprinklerTurns, v) * 4; go(e, 'spin', 'spin');
+      }
+      return;
+    case 'spin': {
+      const st = P.sprinklerStep.value;
+      if (e.stateT % st === 1) {
+        const dir = Math.floor(e.stateT / st) % 4; // horizontal, rising, vertical, falling
+        const d = [[[-1, 0], [1, 0]], [[1, -1], [-1, 1]], [[0, -1], [0, 1]], [[-1, -1], [1, 1]]][dir];
+        s.effects.push({ kind: 'sprinkle', x: e.x, y: e.y, dir, t: 0 });
+        api.hitPlayerCells(d.map(([dx, dy]) => [e.x + dx, e.y + dy]), pv(P.sprinklerDamage, v));
+      }
+      if (e.stateT >= e.turns * st) warp(e.homeSet, null, pv(P.attackWait, v));
+      return;
+    }
+  }
+
+  function decide() {
+    if (e.homeSet === undefined) e.homeSet = [e.homeX, e.homeY];
+    if (m.c4 < 4) {
+      if (rnd16(api) < 12) m.c4++;
+      if (rnd16(api) < 8) return warp(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], null);
+      return bomb();
+    }
+    m.c4 = 0;
+    if (m.c5 === 0) { m.c5 = 1; e.rounds = pv(P.hoseCount, v); return warp(hosePanel(), () => go(e, 'hose', 'windup')); }
+    const jump = P.sprinklerPanels.value.find(([x, y]) => free(x, y) && !(p.x === x && p.y === y));
+    if (!jump) { e.think = 1; return; } // 0x80F77E8 failed: nothing this frame
+    m.c5 = 0;
+    e.from = [e.x, e.y]; e.dest = jump; go(e, 'jump', 'jump');
+  }
+  function bomb() {
+    const spots = P.bombPanels.value.map(d => [p.x + d, p.y]).filter(([x, y]) => x >= 3 && x <= 5 && free(x, y));
+    if (!spots.length) return warp(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], null);
+    warp(pick(spots, api), () => go(e, 'bomb', 'aim'));
+  }
+  function hosePanel() {
+    const [hx, hy] = P.hosePanel.value;
+    if (free(hx, hy)) return [hx, hy];
+    return hoseRepeat();
+  }
+  function hoseRepeat() {
+    const col = P.hosePanel.value[0];
+    const rows = [0, 1, 2].filter(y => y !== e.y && free(col, y));
+    return rows.length ? [col, pick(rows, api)] : [e.x, e.y];
+  }
+  function warp(dest, after, thenWait) {
+    e.dest = dest; e.after = after ?? (thenWait ? () => wait(thenWait) : null);
+    go(e, 'vanish', 'vanish');
+  }
+}
+
 const AREAS = {
   wide: [[-1, -1], [-1, 0], [-1, 1]],
   long: [[-1, 0], [-2, 0]],
@@ -648,7 +753,7 @@ function protoman(e, api) {
   }
 }
 
-const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, ProtoMan: protoman };
+const BEHAVIOUR = { HeatMan: heatman, ElecMan: elecman, SlashMan: slashman, EraseMan: eraseman, ChargeMan: chargeman, SpoutMan: spoutman, ProtoMan: protoman };
 
 export function stepNavi(e, api) {
   e.animT++; e.stateT++;

@@ -117,6 +117,39 @@ export function render(g, s, bank) {
     else { g.fillStyle = '#556'; g.fillRect(ax - 16, ay - 20, 32, 16); g.fillStyle = '#a22'; g.fillRect(ax - 12, ay - 4, 24, 4); }
   }
 
+  // SpoutMan: water bomb, hose stream, sprinkler, splashes
+  const bub = bank?.get('bubblebomb'), hose = bank?.get('hosestream'), spr = bank?.get('sprinkler');
+  for (const h of s.hazards) {
+    if (h.kind === 'lob') {
+      const k = Math.min(1, (s.tick - h.start) / (h.land - h.start));
+      const [x0, y0] = anchor(h.x0, h.y), [x1] = anchor(h.tx, h.y);
+      const x = x0 + (x1 - x0) * k, y = y0 - 20 - Math.sin(Math.PI * k) * 40;
+      if (bub) { const f = frameAt(bub.fly, s.tick); g.drawImage(f.image, Math.round(x - f.originX), Math.round(y - f.originY)); }
+      else { g.fillStyle = '#9cf'; g.beginPath(); g.arc(x, y, 6, 0, 7); g.fill(); }
+    }
+    if (h.kind === 'stream') {
+      const t = s.tick - h.start;
+      for (const [cx, cy] of h.cells) {
+        const [ax, ay] = anchor(cx, cy);
+        if (hose) { const f = frameAt(hose.stream, t); g.drawImage(f.image, Math.round(ax - f.originX), Math.round(ay - 16 - f.originY)); }
+        else { g.fillStyle = 'rgba(120,200,255,.85)'; g.fillRect(ax - PANEL_W / 2, ay - 22, PANEL_W, 10); }
+      }
+    }
+  }
+  for (const f of s.effects) {
+    if (f.kind === 'splash' && f.t < 12) {
+      const [ax, ay] = anchor(f.x, f.y);
+      if (bub) { const fr = frameAt(bub.splash, f.t); g.drawImage(fr.image, Math.round(ax - fr.originX), Math.round(ay - 8 - fr.originY)); }
+      else { g.strokeStyle = '#bdf'; g.lineWidth = 2; g.beginPath(); g.arc(ax, ay - 8, 4 + f.t, 0, 7); g.stroke(); }
+    }
+    if (f.kind === 'sprinkle' && f.t < 10) {
+      const [ax, ay] = anchor(f.x, f.y);
+      const key = ['horizontal', 'rising', 'vertical', 'falling'][f.dir];
+      if (spr) { const fr = frameAt(spr[key], f.t); g.drawImage(fr.image, Math.round(ax - fr.originX), Math.round(ay - 16 - fr.originY)); }
+      else { g.strokeStyle = '#8df'; g.lineWidth = 3; const d = [[1, 0], [1, -1], [0, 1], [1, 1]][f.dir]; g.beginPath(); g.moveTo(ax - d[0] * PANEL_W, ay - 16 - d[1] * 24); g.lineTo(ax + d[0] * PANEL_W, ay - 16 + d[1] * 24); g.stroke(); }
+    }
+  }
+
   // Hazards under actors.
   const wave = bank?.get('shockwave');
   for (const h of s.hazards) {
