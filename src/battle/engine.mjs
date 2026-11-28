@@ -651,6 +651,12 @@ function startSpecial(s, name, def, damage, element) {
     const emerge = 0x18 + 35 + 0x1E;
     hold = !hole ? 0 : order[1] ? emerge + 2 + 41 + 0xA + 26 + 0x10 + 0x10 : emerge + 0x10;
   }
+  if (def.kind === 'colorpoint') { // sub_80E650A: the enemy's front panel in each row
+    order = [];
+    for (let y = 0; y < 3; y++) { let x = 0; while (x <= 5 && sideAt(s, x, y) !== 'e') x++; if (x <= 5 && standable(s, x, y) && !at(s, x, y)) order.push({ x, y, z: 0, t: 0, v: 0, fx: x * 40, fy: y * 24 }); }
+    for (const q of order) { const c = s.panels[q.y][q.x]; c.side = 'p'; c.stolenT = GRAB.returnTicks.value; s.events.push({ type: 'grab', x: q.x, y: q.y }); }
+    hold = order.length ? 1e6 : 0;
+  }
   if (def.kind === 'meteors') { // sub_80E42AA: back column first, rows top to bottom, while the column has enemy panels
     order = [];
     for (let x = 5; x >= 0; x--) { const col = [0, 1, 2].filter(y => sideAt(s, x, y) === 'e'); if (!col.length) break; for (const y of col) order.push([x, y]); }
@@ -731,6 +737,19 @@ function stepTimestop(s, input = {}) {
     const sp = ts.special;
     if (sp.def.kind === 'panels') { if (t === ts.start + sp.def.hold) applySpecial(s, sp); }
     else if (sp.def.kind === 'snake') stepSnakes(s, ts, sp, t);
+    else if (sp.def.kind === 'colorpoint' && t >= ts.start) { // t4 0x51: 0x13, rise to 16 at 4 a frame, 0x10, then fly at MegaMan (+0x4000 a frame)
+      const P = CHIP_DATA[ts.name]?.params || [0, 10], p = s.player;
+      for (const q of sp.order) {
+        if (q.done) continue; q.t++;
+        if (q.t <= 0x13) continue;
+        if (q.z < 16) { q.z = Math.min(16, q.z + 4); q.waitT = 0; continue; }
+        if ((q.waitT = (q.waitT || 0) + 1) <= 0x11) continue;
+        const tx = p.x * 40, ty = p.y * 24, d = Math.hypot(tx - q.fx, ty - q.fy); q.v += 0.25;
+        if (d <= q.v) { q.done = true; const c = s.queue[0]; if (c && ((CHIP_DATA[c.name]?.flags || 0) & 2)) c.bonus = (c.bonus || 0) + P[1]; continue; }
+        q.fx += (tx - q.fx) / d * q.v; q.fy += (ty - q.fy) / d * q.v;
+      }
+      if (sp.order.every(q => q.done) && ts.end > t + GRAB.dim.value) ts.end = t + GRAB.dim.value;
+    }
     else if (sp.def.kind === 'sumnblk' && sp.order[1]) { // the slash: column in front of it, rows ±1
       const slashAt = ts.start + 0x18 + 35 + 0x1E + 2 + 41 + 0xA;
       if (t === slashAt) { const [x, y] = sp.order[1]; for (const dy of [-1, 0, 1]) { const e = at(s, x + 1, y + dy); if (e && e.owner !== 'player') hitEnemy(s, e, sp.damage, { element: sp.element, chip: true }); } s.effects.push({ kind: 'slash', area: 'wide', x: x + 2, y, t: 0 }); }

@@ -811,6 +811,10 @@ export function render(g, s, bank) {
       const seq = k < e1 ? 's0' : k < e2 ? 's5' : k < e3 ? 's4' : !sp.order[1] ? 's4' : k < a1 ? 's1' : k < a2 ? 's1' : k < a3 ? 's2' : 's0';
       sprite(g, bank, 'sumnblkfx', seq, k, ax, ay, (g, x, y) => { g.fillStyle = '#302040'; g.fillRect(x - 8, y - 24, 16, 24); }, CHIP_DATA[ts.name] ? CHIP_DATA[ts.name].params[0] * 3 : 0, true);
     }
+    if (sp?.def.kind === 'colorpoint') for (const q of sp.order) if (!q.done && ts.t >= ts.start) { // ColorPt's points (sprite 0x0C/0x13, palette params[0] × 4)
+      const [ax, ay] = anchor(q.fx / 40, q.fy / 24);
+      sprite(g, bank, 'grabbeam', 'land', q.t, ax, ay - q.z, (g, x, y) => { g.fillStyle = '#ffe060'; g.beginPath(); g.arc(x, y - 6, 6, 0, 7); g.fill(); }, (CHIP_DATA[ts.name]?.params?.[0] || 0) * 4, false);
+    }
     if (sp?.def.kind === 'snake') for (const n of sp.snakes || []) { // Snake (sprite 0x0C/0x2C): rises from its hole, bites, flies
       const [ax, ay] = anchor(n.x / 40, n.y / 24);
       sprite(g, bank, 'snakefx', n.anim || 'rise', n.t, ax, ay - n.z, (g, x, y) => { g.fillStyle = '#60c040'; g.fillRect(x - 3, y - 14, 6, 14); }, 0, false);

@@ -509,6 +509,13 @@ export const CHIP_BEHAVIOUR = {
   SumnBlk1: { kind: 'sumnblk', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   SumnBlk2: { kind: 'sumnblk', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   SumnBlk3: { kind: 'sumnblk', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // ColorPt / DblPoint (sub 27 → t4 0x50, sub_80E64C4 / sub_80E650A): in each row, the enemy's front panel (sub_800D4D0)
+  // if it is solid, free and his to take (sub_800D668) becomes MegaMan's (object_setPanelAllianceTimerLong, 0x708) under a
+  // point (t4 0x51, sprite 0x0C/0x13, palette params[0] × 4): 0x13 frames, rises 4 px a frame to 16, 0x10, then flies at
+  // MegaMan speeding up 0x4000 a frame; reaching him it adds params[1] (10 / 20) to his next chip's damage if that chip takes
+  // bonuses (sub_80E667C). The freeze ends when the last point arrives.
+  ColorPt: { kind: 'colorpoint', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  DblPoint: { kind: 'colorpoint', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

@@ -418,3 +418,11 @@ test('SumnBlk: needs a hole ahead; the creature slashes the column of the neares
   while (s.timestop) step(s, {});
   assert.deepEqual(hurt(s), [[4, 0, 160], [4, 1, 160]]); // the top-most candidate, (4, 0): column x 4, rows 0–1
 });
+
+test('ColorPt / DblPoint: take the enemy front column and feed the next chip 10 / 20 a panel', () => {
+  let s = after('DblPoint', 0, s => { s.enemies = s.enemies.filter(e => e.x === 5); }); s.queue.push({ id: 2, name: 'Cannon', code: 'A', bonus: 0 });
+  while (s.timestop) step(s, {});
+  assert.equal(s.panels[1][3].side, 'p'); assert.equal(s.queue[0].bonus, 60);
+  s = after('ColorPt', 0); while (s.timestop) step(s, {}); // every front panel has an enemy: nothing taken
+  assert.equal(s.panels[1][3].side, 'e');
+});
