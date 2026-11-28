@@ -520,6 +520,20 @@ function useChip(s, chip) {
     s.hazards.push({ kind: 'golmfist', owner: 'player', x, y: p.y, start: s.tick, hit: s.tick + 4, until: s.tick + 4 + 0x2D, pal: data.params?.[0] || 0, damage, element });
   }
   else if (def.kind === 'justcone') s.hazards.push({ kind: 'golemhand', owner: 'player', x: 4, y: 1, start: s.tick, land: s.tick + 16, until: s.tick + 16 + 0x1E, damage, element }); // sub_80DB4B4: ROM panel (5, 2)
+  else if (def.kind === 'colarmy') { // sub_80C9ECE: a soldier on every field object
+    const objs = s.enemies.filter(e => e.kind === 'coil' && e.hp > 0); s.enemies = s.enemies.filter(e => !objs.includes(e));
+    for (const o of objs) {
+      const foe = x => { const e = at(s, x, o.y); return e && e.owner !== 'player' && e.kind !== 'coil'; };
+      let ahead = false, behind = false; for (let x = 0; x <= 5; x++) if (foe(x)) { if (x > o.x) ahead = true; else if (x < o.x) behind = true; }
+      const dir = ahead ? 1 : behind || o.x === 5 ? -1 : 1; // sub_80C9F18
+      s.hazards.push({ kind: 'soldier', owner: 'player', x: o.x, y: o.y, dir, start: s.tick, damage, element });
+    }
+  }
+  else if (def.kind === 'synctrgr') setMood(s, 0xFF); // sub_80EC44C
+  else if (def.kind === 'flmhook') { // sub_80EA05C / sub_80EA0A0: two swings, 0x14 apart
+    for (const [n, dx, a0, da] of [[0, 1, 0x16, -0x380], [1, 2, 0xF5, 0x380]]) s.hazards.push({ kind: 'flmhook', owner: 'player', n, col: p.x + 1 + dx, a: a0 << 8, da, start: s.tick + n * 0x14, life: 0x1E, last: null, hit: [], damage, element });
+  }
+  else if (def.kind === 'colforce') s.hazards.push({ kind: 'colforce', owner: 'player', col: 5, next: s.tick, damage, element }); // t4 0x80: app column 5 = ROM 6
   else if (def.kind === 'lance') for (let y = 0; y < 3; y++) s.hazards.push({ kind: 'lance', owner: 'player', x: 5, y, start: s.tick, hit: s.tick + 6, until: s.tick + 8 + 0x14, damage, element }); // sub_80D2596: the back column, rows 1–3
   else if (def.kind === 'fullcust') s.gauge = val('customGaugeTicks'); // sub_800AF34: SetCustGauge 0x4000
   else if (def.kind === 'boomer') s.hazards.push({ kind: 'boomer', owner: 'player', fx: 0, fy: 2, leg: 0, vx: def.speed[0] / 40, vy: def.speed[1] / 24, last: null, damage, element }); // from the bottom row's back corner
@@ -1501,6 +1515,39 @@ function stepHazards(s) {
         s.effects.push({ kind: 'shake', t: 0, life: 0x2D });
       }
       return s.tick < h.until;
+    }
+    if (h.kind === 'colforce') { // sub_80E94F8: the next column toward MegaMan with free panels of his
+      if (s.tick < h.next) return true;
+      for (let x = h.col - 1; x >= 0; x--) {
+        const ys = [0, 1, 2].filter(y => sideAt(s, x, y) === 'p' && standable(s, x, y) && !at(s, x, y) && !(p.x === x && p.y === y));
+        if (!ys.length) continue;
+        ys.forEach((y, i) => spawned.push({ kind: 'cfsoldier', owner: 'player', x, y, start: s.tick + 10 * i, damage: h.damage, element: h.element }));
+        h.col = x; h.next = s.tick + 0x32; return true;
+      }
+      return false;
+    }
+    if (h.kind === 'cfsoldier') { // t3 0xCF: lands, 0x14 frames, 3 shots 10 apart, then 10 + 0xD frames
+      const k = s.tick - h.start;
+      if (k >= 1 + 0x14 && k <= 1 + 0x14 + 20 && (k - 1 - 0x14) % 10 === 0) spawned.push({ kind: 'colshot', owner: 'player', x: h.x + 1, y: h.y, dir: 1, damage: h.damage, element: h.element });
+      return k < 1 + 0x14 + 20 + 10 + 0xD;
+    }
+    if (h.kind === 'soldier') { // t3 0x30: 3 shots from frame 0x30, 10 apart
+      const k = s.tick - h.start;
+      if (k >= 0x30 && k <= 0x30 + 20 && (k - 0x30) % 10 === 0) spawned.push({ kind: 'colshot', owner: 'player', x: h.x + h.dir, y: h.y, dir: h.dir, damage: h.damage, element: h.element });
+      return k < 0x30 + 20 + 16;
+    }
+    if (h.kind === 'colshot') { // t3 0x12: one panel a frame, the first thing it meets
+      if (h.x < 0 || h.x > 5) return false;
+      const e = at(s, h.x, h.y); if (e && e.owner !== 'player') { hitEnemy(s, e, h.damage, { element: h.element, chip: true }); return false; }
+      h.x += h.dir; return true;
+    }
+    if (h.kind === 'flmhook') { // t3 0xCA: sub_80DE984 (ROM field pixels, ROM panel numbers)
+      if (s.tick < h.start) return true;
+      const i = (h.a >> 8) & 255, X = -0x78 + (h.col - 4) * 0x28 + ((0xA000 * Math.round(256 * Math.cos(i * Math.PI / 128))) >> 16), Y = 0x30 + ((0xA000 * Math.round(256 * Math.sin(i * Math.PI / 128))) >> 16);
+      h.X = X; h.Y = Y; h.a = (h.a + h.da) & 0xFFFF;
+      const px = Math.floor((X + 0xA0) / 0x28), py = Math.floor((Y + 0x20) / 0x18), key = px * 16 + py;
+      if (key !== h.last) { h.last = key; if (px >= 1 && px <= 6 && py >= 1 && py <= 3) for (const x of [px - 1, px]) { const e = at(s, x, py - 1); if (e && e.owner !== 'player' && !h.hit.includes(e.id)) { h.hit.push(e.id); hitEnemy(s, e, h.damage, { element: h.element, chip: true }); } } }
+      return --h.life > 0;
     }
     if (h.kind === 'lance') { // t3 0x6F: hits on frame 6, then stays 0x14 frames
       if (s.tick === h.hit) { const e = at(s, h.x, h.y); if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }

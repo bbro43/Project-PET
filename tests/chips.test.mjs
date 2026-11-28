@@ -477,3 +477,23 @@ test('GolmHit: the first enemy column in MegaMan’s row, that panel and the one
   assert.deepEqual(hurt(after('GolmHit1', 10)), [[3, 0, 140], [3, 1, 140], [3, 2, 140]]);
   const s = after('GolmHit2', 0); s.hazards.forEach(h => { h.y = 0; }); for (let i = 0; i < 10; i++) step(s, {}); assert.deepEqual(hurt(s), [[3, 0, 190], [3, 1, 190]]); // top row: no panel above
 });
+
+test('ColArmy: a soldier on every placed object, 3 shots down its row', () => {
+  const s = after('RockCube', 0, s => { s.enemies = s.enemies.filter(e => e.x === 5 && e.y === 1); });
+  while (s.timestop) step(s, {}); for (let i = 0; i < 40; i++) step(s, {});
+  assert.ok(s.enemies.some(e => e.kind === 'coil'));
+  s.queue = [{ id: 2, name: 'ColArmy', code: 'A' }]; step(s, { b: true }); for (let i = 0; i < 120; i++) step(s, {});
+  assert.ok(!s.enemies.some(e => e.kind === 'coil'));
+  assert.deepEqual(hurt(s), [[5, 1, 120]]);
+});
+
+test('SyncTrgr sets Full Synchro; FlmHook swings over the field ahead', () => {
+  let s = after('SyncTrgr', 2); assert.equal(s.emotion.mood, 0xFF);
+  s = after('FlmHook1', 70); // the ROM's circle arithmetic, MegaMan at x 1
+  assert.deepEqual(hurt(s), [[3, 0, 600], [3, 1, 600], [3, 2, 600], [4, 0, 300], [4, 1, 300], [4, 2, 600], [5, 2, 300]]);
+});
+
+test('ColForce: soldiers on MegaMan\'s free panels, front column first, each firing 3 shots down its row', () => {
+  const s = after('ColForce', 200, s => { s.enemies = s.enemies.filter(e => e.x === 3); });
+  assert.deepEqual(hurt(s), [[3, 0, 9 * 30], [3, 1, 6 * 30], [3, 2, 9 * 30]]); // columns 2, 1, 0; none on MegaMan's own panel (1, 1)
+});

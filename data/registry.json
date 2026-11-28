@@ -5313,6 +5313,72 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "colarmyfx": {
+   "label": "ColArmy soldier (t3 0x30 sub_80C9D24): sprite 0x10/0x1D; also ColForce's soldier (t3 0xCF)",
+   "sources": {
+    "bn6f": {
+     "offset": "36B818",
+     "compression": "none",
+     "bytes": 3664,
+     "sha256": "f872f08555d7af1e2bbea444371931e1b65d68a9f6552bd564f3c5a5603cbd70",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "36AD90",
+     "compression": "none",
+     "bytes": 3664,
+     "sha256": "f872f08555d7af1e2bbea444371931e1b65d68a9f6552bd564f3c5a5603cbd70",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "stand": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "fire": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    },
+    "leave": {
+     "seq": 2,
+     "confidence": "rom-verified"
+    },
+    "air": {
+     "seq": 3,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "flmhookfx": {
+   "label": "FlmHook flame (t3 0xCA sub_80DE818): sprite 0x0C/0x45, animation 0 / 1 for the two swings",
+   "sources": {
+    "bn6f": {
+     "offset": "332484",
+     "compression": "none",
+     "bytes": 3788,
+     "sha256": "5b46ed88aa060a0446061dd3761c16df3618caae2838cb35f652696ed28253d6",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3319FC",
+     "compression": "none",
+     "bytes": 3788,
+     "sha256": "5b46ed88aa060a0446061dd3761c16df3618caae2838cb35f652696ed28253d6",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "swing0": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "swing1": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

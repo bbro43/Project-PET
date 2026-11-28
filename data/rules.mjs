@@ -549,6 +549,27 @@ export const CHIP_BEHAVIOUR = {
   GolmHit1: { kind: 'golmhit', anim: 'idle', lock: 1, confidence: 'rom-verified' },
   GolmHit2: { kind: 'golmhit', anim: 'idle', lock: 1, confidence: 'rom-verified' },
   GolmHit3: { kind: 'golmhit', anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  // ColArmy (sub 22, sub_80C9ECE): every field object (BattleState +0xA0 list, both sides; not NameID 0xDA or collision flags
+  // 0x348000) is taken away (sub_800F898) and a soldier (t3 0x30, sprite 0x10/0x1D) stands on its panel. It faces an enemy
+  // ahead in its row; with none ahead it turns round if one is behind or it is in the back column (sub_80C9F18). It shows at
+  // frame 0x12, and from frame 0x30 fires 3 shots 10 frames apart (t3 0x12: one panel a frame, the first thing it meets,
+  // chip damage), then leaves (animation 2).
+  ColArmy: { kind: 'colarmy', anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'every placed object in the app counts as a field object' },
+  // SyncTrgr (sub 13, sub_80EC44C): sub_8015BEC(alliance, 0xFF) = Full Synchro, unless Tired / Angry hold the emotion.
+  SyncTrgr: { kind: 'synctrgr', anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  // FlmHook (sub 14, sub_80EA11C → t4 0x8C): two flames t3 0xCA (sprite 0x0C/0x45), the second 0x14 frames after the first.
+  // Each swings on a circle of radius 0xA000 × cos/sin (160 px) about (−0x78 + (column − 4) × 0x28, 0x30) in field pixels
+  // (panel x × 40 − 140, y × 24 − 20); flame 1: column = MegaMan's + 1, angle 0x16 turning −0x380 a frame; flame 2: column
+  // = MegaMan's + 2, angle 0xF5 turning +0x380; 0x1E frames each (byte_80DE894, sub_80DE984). On each new field panel it
+  // hits region 2 (that panel and the one in front, list byte_80198EC).
+  FlmHook1: { kind: 'flmhook', anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  FlmHook2: { kind: 'flmhook', anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  FlmHook3: { kind: 'flmhook', anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  // ColForce (sub 15, sub_80E94DC → t4 0x80, sub_80E94F8): from the far side (ROM column 5) toward MegaMan, the first column
+  // with any of MegaMan's own panels that stand (0x10) and are free (not 0x03800020) gets a soldier (t3 0xCF, the ColArmy
+  // sprite) on each, 10 frames apart; 0x32 frames later the next column on, until none is left. A soldier drops in, stands
+  // 0x14 frames, fires 3 shots 10 apart (t3 0x12, down its row), then animation 3 for 10 and 2 for 0xD frames.
+  ColForce: { kind: 'colforce', anim: 'idle', lock: 1, confidence: 'rom-verified' },
   // Lance (sub 4, sub_80D2596 → t3 0x6F ×3): in the enemies' back column (ROM column 6), all three rows; each lance starts
   // 0x40 px further back, comes in 8 px a frame for 8 frames, hits its panel on frame 6 (0x4040401), then stays 0x14
   // frames, flickering (sub_80D2514 / sub_80D255A). Sprite 0x0C/0x44 turned to face MegaMan.
