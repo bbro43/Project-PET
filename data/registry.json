@@ -4645,7 +4645,7 @@
  },
  "menus": {
   "label": "BN6 menu screens: CHIP FOLDER (chipFolder_initGfx_812386C) and FOLDER EDIT (0x8133EC0). Each entry is the address of the screen's palette list (src, variant, dest, size) and decompAndCopyData list (src | LZ flag, dest, size), read from the ROM itself.",
-  "note": "Decoded on device by src/rom/menus.mjs. Gregar's code for these menus sits 0x1DDC later than Falzar's. Gregar's palettes are green (the owner's screenshots), Falzar's orange. Background settings: screen mode 0x10 (byte_8001618): BG1 tiles 0x6000000, BG0 0x6008000.",
+  "note": "Decoded on device by src/rom/menus.mjs. Gregar's code for these menus sits 0x1DDC later than Falzar's. Gregar's palettes are green (the owner's screenshots), Falzar's orange. Background settings: screen mode 0x10 (byte_8001618): BG1 tiles 0x6000000, BG0 0x6008000. Chip descriptions: TextScriptChipDescriptions0 (ids 0–255) and TextScriptChipDesc1 (256+), pointers at 0x8027D50 in both versions.",
   "sources": {
    "bn6f": {
     "chipFolder": {
@@ -4656,7 +4656,11 @@
      "palettes": "133F70",
      "data": "133FB8"
     },
-    "confidence": "rom-verified"
+    "confidence": "rom-verified",
+    "descriptions": [
+     "6EB8B8",
+     "6EE0CC"
+    ]
    },
    "bn6g": {
     "chipFolder": {
@@ -4667,7 +4671,11 @@
      "palettes": "135D4C",
      "data": "135D94"
     },
-    "confidence": "rom-verified"
+    "confidence": "rom-verified",
+    "descriptions": [
+     "6E983C",
+     "6EC050"
+    ]
    }
   }
  }

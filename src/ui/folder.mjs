@@ -116,8 +116,25 @@ export function createFolderUI({ getBank, folders, onExit }) {
     text(g, null, chip[0], x + 18, y);
     if (b?.custom) g.drawImage(b.custom.element(ELEMENT_INDEX[d?.icon] ?? 10, 0), x + 80, y);
     text(g, null, chip[1], x + 97, y);
-    text(g, '#f8e030', String(d?.mb ?? ''), x + 106 + (String(d?.mb).length === 1 ? 8 : 0), y - 4);
+    mb(g, d?.mb, x + 122, y);
     if (selected) { g.fillStyle = 'rgba(255,200,40,.35)'; g.fillRect(x, y, 122, ROW_H); }
+  }
+  function plain(g, str, x, y) { // description text: the font's light strokes only (no outline), in dark grey
+    const T = getBank()?.custom?.text; if (!T) return text(g, null, str, x, y);
+    const c = T(str), t = document.createElement('canvas'); t.width = c.width; t.height = c.height;
+    const tg = t.getContext('2d'); tg.drawImage(c, 0, 0);
+    const im = tg.getImageData(0, 0, t.width, t.height), D = im.data;
+    for (let p = 0; p < D.length; p += 4) {
+      if (D[p] + D[p + 1] + D[p + 2] > 480) { D[p] = 72; D[p + 1] = 72; D[p + 2] = 80; } else D[p + 3] = 0;
+    }
+    tg.putImageData(im, 0, 0); g.drawImage(t, x, y);
+  }
+  function mb(g, v, right, y) { // the game's small yellow MB digits, with the small "MB" label under them, right-aligned
+    const M = getBank()?.menus; if (v == null) return;
+    if (!M?.smallDigits) { text(g, '#f8e030', `${v}MB`, right - 24, y); return; }
+    const s = String(v);
+    for (let k = 0; k < s.length; k++) g.drawImage(M.smallDigits[+s[k]], right - 8 * (s.length - k), y);
+    g.drawImage(M.mbLabel, right - 16, y + 8);
   }
   function card(g, chip, x, y) { // the ROM chip card, with the chip's picture, code letter, element and power
     const b = getBank(), M = b.menus, d = chip && byName.get(chip[0]);
@@ -131,8 +148,9 @@ export function createFolderUI({ getBank, folders, onExit }) {
       const dmg = d.damage ? String(d.damage) : '';
       for (let k = 0; k < dmg.length; k++) g.drawImage(b.custom.digit(+dmg[k], cls), x + 69 - 8 * (dmg.length - k), y + 56);
     }
-    text(g, null, d.name, x + 6, y + 78);
-    text(g, '#f8e030', `${d.mb}MB`, x + 6, y + 94);
+    const lines = M.describe?.(d.id);
+    if (lines?.some(l => l.trim())) lines.slice(0, 3).forEach((l, i) => plain(g, l, x + 6, y + 70 + 16 * i));
+    else { text(g, null, d.name, x + 6, y + 78); mb(g, d.mb, x + 70, y + 94); }
   }
   function arrow(g, x, y) { g.fillStyle = (performance.now() >> 8) & 1 ? '#f8a020' : '#f8c040'; g.beginPath(); g.moveTo(x, y + 2); g.lineTo(x + 8, y + 8); g.lineTo(x, y + 14); g.fill(); }
 
@@ -143,14 +161,26 @@ export function createFolderUI({ getBank, folders, onExit }) {
     if (!M) { g.fillStyle = '#fff'; g.font = '10px monospace'; g.fillText('Import a BN6 ROM to edit folders.', 8, 80); g.restore(); return; }
     if (view === 'folders') {
       g.drawImage(M.chipFolder, 0, 0);
+      const cx = 13 + 72 * slot; // selected slot: light-blue fill with blinking bracket corners
+      g.fillStyle = '#2880c8'; g.fillRect(cx + 1, 21, 69, 24); g.fillStyle = '#48c8f8'; g.fillRect(cx + 2, 22, 67, 20);
+      g.fillStyle = (performance.now() >> 8) & 1 ? '#f89818' : '#f8c040';
+      for (const [px, py, dx, dy] of [[cx - 1, 19, 1, 1], [cx + 72, 19, -1, 1], [cx - 1, 46, 1, -1], [cx + 72, 46, -1, -1]]) {
+        g.fillRect(dx > 0 ? px : px - 7, dy > 0 ? py : py - 3, 7, 3); g.fillRect(dx > 0 ? px : px - 3, dy > 0 ? py : py - 7, 3, 7);
+      }
       folders.folders.forEach((f, i) => {
         const x = 13 + 72 * i;
-        if (f) text(g, null, f.name, x + 4, 24);
-        if (i === folders.equipped && f) { g.fillStyle = '#183848'; g.fillRect(x + 14, 6, 44, 11); text(g, '#40f060', 'EQUIP', x + 16, 3); }
+        if (f) text(g, null, f.name, x + 4, 26);
+        if (i === folders.equipped && f) { // EQUIP pill: orange rim, dark fill
+          g.fillStyle = '#f89818'; g.fillRect(x + 15, 15, 37, 10); g.fillRect(x + 14, 16, 39, 8);
+          g.fillStyle = '#184048'; g.fillRect(x + 16, 16, 35, 8); g.fillRect(x + 15, 17, 37, 6);
+          text(g, '#40f060', 'EQUIP', x + 15, 13);
+        }
       });
-      const cx = 13 + 72 * slot; g.strokeStyle = (performance.now() >> 8) & 1 ? '#f8a020' : '#f8c040'; g.lineWidth = 2; g.strokeRect(cx, 21, 70, 24);
       const f = folders.folders[slot];
-      if (f) { text(g, null, f.name, 96, 44); f.chips.slice(0, 5).forEach((c, i) => row(g, c, 96, 70 + i * ROW_H, false)); }
+      if (f) {
+        text(g, null, f.name, 96, 49);
+        f.chips.slice(0, 5).forEach((c, i) => row(g, c, 96, 65 + i * ROW_H, false));
+      }
     } else {
       g.drawImage(M.folderEdit, 0, 0);
       g.drawImage(M.folderPanel, page * 240, 0, 240, 136, 0, 16, 240, 136);

@@ -53,6 +53,35 @@ function drawMap(m, out, W, H, map, w, h, charbase, ox = 0, oy = 0) {
     }
   }
 }
+// `n` consecutive 8×8 BG tiles from VRAM offset `at`, side by side, in BG palette `pal`.
+function tiles(m, at, n, pal) {
+  const rgba = new Uint8ClampedArray(8 * n * 8 * 4);
+  for (let k = 0; k < n; k++) for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
+    const v = (m.vram[at + 32 * k + y * 4 + (x >> 1)] >> ((x & 1) * 4)) & 15;
+    if (!v) continue;
+    const [r, g, b] = color(u16(m.bgpal, pal * 32 + 2 * v)), p = (y * 8 * n + 8 * k + x) * 4;
+    rgba[p] = r; rgba[p + 1] = g; rgba[p + 2] = b; rgba[p + 3] = 255;
+  }
+  return { rgba, width: 8 * n, height: 8 };
+}
+// Chip descriptions (TextScriptChipDescriptions0 for ids 0–255, TextScriptChipDesc1 for 256+; pointers at 0x8027D50):
+// a table of u16 offsets, then one script per chip: control codes, the text in the game charmap (0xE9 = new line), 0xE7 ends it.
+const CHARMAP = { 0x98: '-', 0x9A: '=', 0x9B: ':', 0x9C: '%', 0x9D: '?', 0x9E: '+', 0xA2: '!', 0xA3: '&', 0xA4: ',', 0xA6: '.', 0xAC: '/', 0x25: '*' };
+function describe(rom, tables, id) {
+  const T = hex(tables[id > 255 ? 1 : 0]), i = id & 0xff;
+  let o = T + u16(rom, T + 2 * i);
+  const lines = [''];
+  for (let guard = 0; guard < 200; guard++) {
+    const b = rom[o++];
+    if (b === 0xE7) break;
+    if (b === 0xE8) { o += 3; continue; }
+    if (b === 0xF1) { o += 2; continue; }
+    if (b === 0xE9) { lines.push(''); continue; }
+    if (b >= 0xE4) continue;
+    lines[lines.length - 1] += b === 0 ? ' ' : b <= 10 ? String(b - 1) : b <= 0x24 ? String.fromCharCode(54 + b) : b >= 0x26 && b <= 0x3F ? String.fromCharCode(59 + b) : CHARMAP[b] ?? '';
+  }
+  return lines;
+}
 const layer = (m, W, H, parts) => { const rgba = new Uint8ClampedArray(W * H * 4); for (const p of parts) drawMap(m, rgba, W, H, ...p); return { rgba, width: W, height: H }; };
 const sprite = (buf, seq = 0) => sequenceFrames(buf, 0, seq).map(rec => decodeFrame(buf, rec));
 
@@ -66,7 +95,10 @@ export function decodeMenus(rom, src) {
     folderPanel: layer(fe, 480, 136, [[fe.ram.get(0x2020A20), 60, 17, 0]]),
     sortMenu: layer(fe, 64, 136, [[fe.ram.get(0x203486C), 8, 17, 0x8000]]), // BG0, column 2 (folder page) or 21 (Pack)
     card: sprite(fe.ram.get(0x2024A20))[0],   // the chip card (OBJ, own palette)
-    digits: fe.ram.get(0x2026A20),           // number sprite (MB / count), kept raw
+    // small row numbers: BG tiles 16–25 (0–9) and 26–27 ("MB") from 0x6006800, palette 9 (yellow digits, white MB)
+    smallDigits: Array.from({ length: 10 }, (_, d) => tiles(fe, 0x6800 + 32 * (16 + d), 1, 9)),
+    mbLabel: tiles(fe, 0x6800 + 32 * 26, 2, 9),
+    describe: src.descriptions ? id => describe(rom, src.descriptions, id) : null,
   };
 }
 
@@ -76,5 +108,7 @@ export function buildMenus(rom, src) {
   return {
     chipFolder: canvas(d.chipFolder), folderEdit: canvas(d.folderEdit), folderPanel: canvas(d.folderPanel), sortMenu: canvas(d.sortMenu),
     card: { image: canvas(d.card), originX: d.card.originX, originY: d.card.originY },
+    smallDigits: d.smallDigits.map(canvas), mbLabel: canvas(d.mbLabel),
+    describe: d.describe ? (cache => id => cache.get(id) ?? (cache.set(id, d.describe(id)), cache.get(id)))(new Map()) : null,
   };
 }
