@@ -26,7 +26,7 @@ function machine(rom) {
 }
 function runScreen(rom, src) {
   const m = machine(rom);
-  for (let k = 0; k < 4; k++) { // palette list: variant 0 (sub_811FB84 maps every BN6 entry to itself)
+  for (let k = 0; k < (src.count ?? 4); k++) { // palette list: theme 0 (sub_811FB84 gives the listed palette itself)
     const o = hex(src.palettes) + 16 * k, size = u32(rom, o + 12);
     m.load(u32(rom, o), u32(rom, o + 8), size < 0x1000 ? size : 0x20);
   }
@@ -105,9 +105,36 @@ function describe(rom, tables, id) {
 const layer = (m, W, H, parts) => { const rgba = new Uint8ClampedArray(W * H * 4); for (const p of parts) drawMap(m, rgba, W, H, ...p); return { rgba, width: W, height: H }; };
 const sprite = (buf, seq = 0) => sequenceFrames(buf, 0, seq).map(rec => decodeFrame(buf, rec));
 
+// STATUS (HandleMegaManStatusMenu8126B4C → sub_8126B6C): palette list off_8127160 (2 entries) and decompAndCopyData list
+// byte_8127188; screen mode 0x1A (byte_8001618): BG1 frame, BG2 the two pages (64 columns: MegaMan page at 0, Folder page
+// at 32; sub_8127060), BG0 the chatbox (tiles 0x600DC80, palette 15). OBJ: HP digits at 0x6011400 (palette 9) and the
+// page arrows (tiles 0x24E–0x250, palette 12).
+function decodeStatus(rom, src) {
+  const m = runScreen(rom, { ...src, count: 2 });
+  const chat = hex(src.chatbox.gfx), chatMap = rom.subarray(hex(src.chatbox.map), hex(src.chatbox.map) + 0x1E0);
+  m.vram.set(rom.subarray(chat, chat + 0x280), 0xDC80);                     // chatbox_runScript_803FD9C: byte_86BFBA0 → 0x600DC80
+  m.bgpal.set(rom.subarray(hex(src.chatbox.palette), hex(src.chatbox.palette) + 0x20), 15 * 32); // byte_86BFE20 → BG palette 15
+  const page = layer(m, 512, 96, [
+    [m.ram.get(0x201D520), 12, 8, 0, 1, 4],    // MegaMan box (unk_201D520, 12×8 at (1, 4))
+    [m.ram.get(0x201CF20), 14, 10, 0, 15, 2],  // BUSTER (unk_201CF20, 14×10 at (15, 2))
+    [m.ram.get(0x201D120), 14, 10, 0, 34, 2],  // FOLDER (unk_201D120, at (0x22, 2))
+    [m.ram.get(0x201D320), 13, 10, 0, 48, 2],  // PROGRAM (unk_201D320, at (0x30, 2))
+  ]);
+  const glyph = t => { const a = objTiles(m, 0xA0 + t, 1, 9), b = objTiles(m, 0xA1 + t, 1, 9), rgba = new Uint8ClampedArray(8 * 16 * 4); rgba.set(a.rgba, 0); rgba.set(b.rgba, 8 * 8 * 4); return { rgba, width: 8, height: 16 }; };
+  return {
+    frame: layer(m, 240, 160, [[m.ram.get(0x201BA20), 30, 20, 0]]),
+    pages: page,
+    chatbox: layer(m, 240, 64, [[chatMap, 30, 8, 0x8000]]),
+    hpDigits: [...Array.from({ length: 10 }, (_, d) => glyph(2 + 2 * d)), glyph(22)], // 0–9 then '/' (top tile, bottom tile)
+    hpBox: { left: glyph(0), fill: glyph(24) },
+    pageArrow: [0x250, 0x24F, 0x24E].map(t => objBlock(m, t, 1, 1, 12)),
+  };
+}
+
 export function decodeMenus(rom, src) {
   const cf = runScreen(rom, src.chipFolder), fe = runScreen(rom, src.folderEdit);
   return {
+    status: src.status ? decodeStatus(rom, src.status) : null,
     // CHIP FOLDER: frame (eTextScript201BA20, 30×20) + folder panel (201BF20, 20×13 at column 9, row 6), BG1
     chipFolder: layer(cf, 240, 160, [[cf.ram.get(0x201BA20), 30, 20, 0], [cf.ram.get(0x201BF20), 20, 13, 0, 9, 6]]),
     // FOLDER EDIT: frame (unk_201CA20, 30×20) and the wide panel (unk_2020A20, 60×17 from row 2; the Pack page is 240 px to the right)
@@ -145,6 +172,7 @@ export function buildMenus(rom, src) {
     tagFrame: { image: canvas(d.tagFrame), originX: d.tagFrame.originX, originY: d.tagFrame.originY },
     regFrame: { image: canvas(d.regFrame), originX: d.regFrame.originX, originY: d.regFrame.originY },
     smallDigits: d.smallDigits.map(canvas), mbLabel: canvas(d.mbLabel),
+    status: d.status ? { frame: canvas(d.status.frame), pages: canvas(d.status.pages), chatbox: canvas(d.status.chatbox), hpDigits: d.status.hpDigits.map(canvas), hpBox: { left: canvas(d.status.hpBox.left), fill: canvas(d.status.hpBox.fill) }, pageArrow: d.status.pageArrow.map(canvas) } : null,
     describe: d.describe ? (cache => id => cache.get(id) ?? (cache.set(id, d.describe(id)), cache.get(id)))(new Map()) : null,
   };
 }

@@ -1,22 +1,22 @@
 // NAVICUSTOMIZER: the BN6 screen decoded from the ROM (bank.navicust), the game's board colours and rules
 // (src/battle/navicust.mjs). Parts list on the right (names from the ROM), INFORMATION below it.
-// INFORMATION: the game's descriptions. List: Up/Down pick, A take, Select compress (when the code is "entered": the app lets every part compress),
-// Left to the board. Holding a part: D-pad move, L/R turn, A place, B put back.
+// INFORMATION: the game's descriptions. List: Up/Down pick, A take, Left to the board. Compression code: hold Right and press the
+// program's 10 buttons (A/B/L/R, byte_813B522, sub_8136804 → sub_813C334); entering it again uncompresses. Holding a part: D-pad move, L/R turn, A place, B put back.
 // Board: A on a part → Move / Remove; Right (at the edge) or B back to the list. Start: RUN (checks, saves).
 import { PROGRAMS, CROSSES, REGUPS, LAYOUTS, COMMAND_ROW, COLOR_NAMES, programOf, cellsOf, colorOf, gridOf, canPlace, run, stats } from '../battle/navicust.mjs';
 
 const STORE = 'pet.navicust.v1';
 export function loadNaviCust() {
-  try { const s = JSON.parse(localStorage.getItem(STORE)); if (Array.isArray(s?.parts)) { s.parts = s.parts.filter(p => programOf(p.id) && !LEFT_OUT.has(programOf(p.id).name)); return s; } } catch {}
-  return { parts: [] };
+  try { const s = JSON.parse(localStorage.getItem(STORE)); if (Array.isArray(s?.parts)) { s.parts = s.parts.filter(p => programOf(p.id) && !LEFT_OUT.has(programOf(p.id).name)); s.compressed = Array.isArray(s.compressed) ? s.compressed : []; return s; } } catch {}
+  return { parts: [], compressed: [] };
 }
-export const saveNaviCust = n => { try { localStorage.setItem(STORE, JSON.stringify({ parts: n.parts })); } catch {} };
+export const saveNaviCust = n => { try { localStorage.setItem(STORE, JSON.stringify({ parts: n.parts, compressed: n.compressed || [] })); } catch {} };
 export const naviStats = n => stats(n.parts);
 
 // Programs with nothing to do here (owner decision): VS-only support (Rush, Beat, Tango) and overworld programs.
 export const LEFT_OUT = new Set(['Rush', 'Beat', 'Tango', 'Collect', 'Millions', 'Humor', 'Poem', 'SlipRunr']);
 // The list: every program in each of its colours, then the Cross parts.
-const ENTRIES = [
+const ALL = [
   ...PROGRAMS.filter(p => !LEFT_OUT.has(p.name)).flatMap(p => p.variants.map(v => ({ id: p.id, variant: v.variant, color: v.color, name: p.name, plus: p.plus }))),
   ...CROSSES.map(c => ({ id: c.id, variant: 0, color: c.variants[0].color, name: c.short, cross: true })),
   ...REGUPS.map(c => ({ id: c.id, variant: 0, color: c.variants[0].color, name: c.short, plus: true })),
@@ -28,20 +28,41 @@ const CELL = (x, y) => [3 + 20 * x, 19 + 20 * y]; // board cell (x, y) top-left 
 const ROWS = 4;
 
 export function createNaviCustUI({ getBank, navi, onExit }) {
-  let mode = 'list', cur = 0, top = 0, held = null, heldFrom = null, bx = 3, by = 3, menu = 0, msg = null, compress = false, running = null;
+  let mode = 'list', cur = 0, top = 0, held = null, heldFrom = null, bx = 3, by = 3, menu = 0, msg = null, running = null, code = 0;
+  navi.compressed ||= [];
+  // The list holds the programs not on the board (nor in hand): a placed program leaves it, a removed one comes back.
+  let ENTRIES = ALL;
+  const refresh = () => {
+    ENTRIES = ALL.filter(e => !navi.parts.some(p => p.id === e.id && p.variant === e.variant) && !(held && held.id === e.id && held.variant === e.variant));
+    cur = Math.max(0, Math.min(cur, ENTRIES.length - 1)); top = Math.max(0, Math.min(top, cur, Math.max(0, ENTRIES.length - ROWS)));
+    if (cur >= top + ROWS) top = cur - ROWS + 1;
+  };
+  refresh();
+  const isCompressed = id => navi.compressed.includes(id);
   const say = t => { msg = t; };
   const layout = LAYOUTS[2];
 
-  function input(k) {
+  function input(k, pad) {
     if (running) return; // the RUN animation plays out
     if (msg) { if (k === 'a' || k === 'b' || k === 'start') msg = null; return; }
+    if (mode === 'list' && pad?.has('right') && ['a', 'b', 'l', 'r'].includes(k)) { // compression code (sub_8136804 / sub_813C334)
+      const e = ENTRIES[cur], c = e && !e.cross && programOf(e.id).code;
+      if (!c) { code = 0; return; }
+      code = c[code] === k.toUpperCase() ? code + 1 : 0;
+      if (code === 10) {
+        code = 0;
+        navi.compressed = isCompressed(e.id) ? navi.compressed.filter(i => i !== e.id) : [...navi.compressed, e.id];
+        saveNaviCust(navi); say(isCompressed(e.id) ? `${e.name}|compressed!` : `${e.name}|back to normal.`);
+      }
+      return;
+    }
+    if (!pad?.has('right')) code = 0;
     if (mode === 'list') {
       if (k === 'up') { cur = Math.max(0, cur - 1); if (cur < top) top = cur; }
       else if (k === 'down') { cur = Math.min(ENTRIES.length - 1, cur + 1); if (cur >= top + ROWS) top = cur - ROWS + 1; }
       else if (k === 'l') { cur = Math.max(0, cur - ROWS); top = Math.max(0, top - ROWS); }
       else if (k === 'r') { cur = Math.min(ENTRIES.length - 1, cur + ROWS); top = Math.max(0, Math.min(ENTRIES.length - ROWS, top + ROWS)); }
-      else if (k === 'select') compress = !compress;
-      else if (k === 'a') { const e = ENTRIES[cur]; held = { id: e.id, variant: e.variant, x: 3, y: 3, rot: 0, compressed: compress && !e.cross }; heldFrom = null; mode = 'place'; }
+      else if (k === 'a') { const e = ENTRIES[cur]; if (!e) return; held = { id: e.id, variant: e.variant, x: 3, y: 3, rot: 0, compressed: !e.cross && isCompressed(e.id) }; heldFrom = null; mode = 'place'; }
       else if (k === 'left') mode = 'board';
       else if (k === 'start') runCheck();
       else if (k === 'b') onExit();
@@ -51,11 +72,10 @@ export function createNaviCustUI({ getBank, navi, onExit }) {
       const step = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[k];
       if (step) { held.x = Math.max(-1, Math.min(7, held.x + step[0])); held.y = Math.max(-1, Math.min(7, held.y + step[1])); }
       else if (k === 'r' || k === 'l') held.rot = (held.rot + (k === 'r' ? 1 : 3)) & 3;
-      else if (k === 'select' && !programOf(held.id).cross) held.compressed = !held.compressed;
       else if (k === 'a') {
         if (!canPlace(navi.parts, held, layout)) { say("It won't fit|there."); return; }
-        navi.parts.push(held); held = null; mode = heldFrom ? 'board' : 'list'; saveNaviCust(navi);
-      } else if (k === 'b') { if (heldFrom) navi.parts.push(heldFrom); held = null; mode = heldFrom ? 'board' : 'list'; }
+        navi.parts.push(held); held = null; mode = heldFrom ? 'board' : 'list'; saveNaviCust(navi); refresh();
+      } else if (k === 'b') { if (heldFrom) navi.parts.push(heldFrom); held = null; mode = heldFrom ? 'board' : 'list'; refresh(); }
       return;
     }
     if (mode === 'board') {
@@ -73,7 +93,7 @@ export function createNaviCustUI({ getBank, navi, onExit }) {
         const i = gridOf(navi.parts)[by][bx] - 1; if (i < 0) { mode = 'board'; return; }
         const [p] = navi.parts.splice(i, 1);
         if (menu === 0) { held = { ...p }; heldFrom = p; mode = 'place'; } else mode = 'board';
-        saveNaviCust(navi);
+        saveNaviCust(navi); refresh();
       }
     }
   }
@@ -144,7 +164,8 @@ export function createNaviCustUI({ getBank, navi, onExit }) {
       const img = N.bandImage?.[t < A ? 0 : 1];
       if (img) {
         const h = t < B ? 24 : Math.max(0, Math.round(24 * (C - t) / RUN.out)), y0 = 80 + (24 - h) / 2;
-        g.save(); g.beginPath(); g.rect(3, y0, 140, h); g.clip();
+        const line = layout[COMMAND_ROW].map((v, x) => v === 1 ? x : -1).filter(x => x >= 0), [lx] = CELL(line[0], 0), [rx] = CELL(line.at(-1) + 1, 0);
+        g.save(); g.beginPath(); g.rect(lx, y0, rx - lx, h); g.clip(); // inside the board's frame (owner: not over the frame or the list)
         const x0 = ((-scroll % 256) + 256) % 256;
         g.drawImage(img, x0 - 256, 80); g.drawImage(img, x0, 80);
         g.restore();
@@ -162,12 +183,12 @@ export function createNaviCustUI({ getBank, navi, onExit }) {
       if (e.plus) { g.fillStyle = 'rgba(24,48,72,.6)'; g.fillRect(147, y + 3, 2, 6); g.fillRect(145, y + 5, 6, 2); }
       text(g, e.name, 155, y);
     }
-    g.fillStyle = '#f8f8f8'; g.fillRect(236, 26 + Math.round((16 * ROWS - 10) * cur / (ENTRIES.length - 1)), 2, 10); // list position
+    g.fillStyle = '#f8f8f8'; g.fillRect(236, 26 + Math.round((16 * ROWS - 10) * cur / Math.max(1, ENTRIES.length - 1)), 2, 10); // list position
     // INFORMATION
     const e = held ? ENTRIES.find(x => x.id === held.id && x.variant === held.variant) : mode === 'list' ? ENTRIES[cur] : (() => { const i = gridOf(parts)[by][bx] - 1; return i >= 0 ? ENTRIES.find(x => x.id === parts[i].id && x.variant === parts[i].variant) : null; })();
     if (running) text(g, 'RUN...', 150, 111); // script 6
     else if (e) { // the game's description (CompText873ECC8), 3 lines of up to 8 characters
-      const P = programOf(e.id), C = held?.compressed || (mode === 'list' && compress && !e.cross);
+      const P = programOf(e.id), C = held ? held.compressed : !e.cross && isCompressed(e.id);
       P.info.slice(0, 3).forEach((l, i) => text(g, l, 150, 111 + 12 * i));
       if (C) text(g, 'C', 222, 111, '#f8f040');
     }

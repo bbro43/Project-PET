@@ -116,3 +116,15 @@ sub_803CFB0: Regular memory = 4 + RegUP1 + 2·RegUP2 + 3·RegUP3 (key items 0x72
 | RUN, message | state 0x28 → chatbox script 1 of CompText86D55C8 (eTextScript201D280) | "OK! / RUN complete!"; scripts 6–10 "RUN..." |
 
 App readings: the band is clipped to the board (the window registers' exact rectangle is not decoded); "RUN..." is shown in the INFORMATION box during the run; the bug list after "RUN complete!" is the app's addition (the game doesn't list bugs).
+
+## Compression codes, list, RUN band, STATUS (0.67.0)
+| Item | Location | Value |
+|---|---|---|
+| Compression codes | byte_813B522 (Gregar +0x1DE0), read by sub_813C334 | 10 bytes per program, offsets into byte_813C3A4 (0 L, 2 R, 4 A, 6 B), 0xFF = no code; identical in both versions; extracted to data/bn6-navicust.mjs `code` |
+| Code entry | sub_8135830 → sub_8136804 | only while Right (0x10) is held; A/B/L/R presses (mask 0x303) feed the counter at +0x17, a wrong press restarts it, releasing Right clears it; the tenth toggles event flags 0x2660 + 4·program (all variants) |
+| Programs with no code | Attack+1, Speed+1, Charge+1, HP+50 … HP+500 | their shapes don't compress |
+| RUN band | sub_813686C | the app clips it to the command line's board cells (layout value 1); owner: not over the frame or the list |
+| STATUS screen | HandleMegaManStatusMenu8126B4C → sub_8126B6C | palettes off_8127160 (2 entries), data byte_8127188 (Gregar +0x1DDC); mode 0x1A: BG1 frame eTextScript201BA20 30×20; BG2 pages (sub_8127060): unk_201D520 12×8 at (1,4), unk_201CF20 14×10 at (15,2), unk_201D120 14×10 at (0x22,2), unk_201D320 13×10 at (0x30,2); HP digits OBJ 0x6011400 palette 9 (digit n = tiles 2+2n / 3+2n, '/' 22/23, box edge 0/1, fill 24/25); page arrow tiles 0x24E–0x250 palette 12 |
+| STATUS text | eTextScript201BF20 (off_8127120: CompTextScript86D7578, Gregar 86D54FC) | 5–7 "Attack LV" / "Speed  LV" / "Charge LV" (stats 1–3, + 1); 8–10 "Reg.Mem" / "MegaChip" / "GigaChip" (stats 9, 0xB, 0xC); 11 "Pwr ChargeS"; 70–82 the Cross forms' charge shots ("Pwr HeatArm" …); 1 "Here is my status." |
+| Chatbox | chatbox_runScript_803FD9C | tiles byte_86BFBA0 → 0x600DC80, palette byte_86BFE20 → BG palette 15 (Gregar 0x86BDAEC / 0x86BDD6C), style 4 open map byte_86C0400 (Gregar 0x86BE34C, spritePtrArr8045CEC); mugshot 0x37 = mugshotMegaMan (mugshotSpritePtrs 0x8032598; 0x84F1B3C / Gregar 0x84ED738) |
+

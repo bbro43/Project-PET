@@ -4476,6 +4476,31 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "mugshotmegaman": {
+   "label": "MegaMan's mugshot (mugshotSpritePtrs 0x8032598 entry 0x37, chatbox {F5} as the STATUS screen's text uses it)",
+   "sources": {
+    "bn6f": {
+     "offset": "4F1B3C",
+     "compression": "none",
+     "bytes": 1792,
+     "sha256": "6c47f33d70928d112a841603194b449cea0d3cf3aae65e049c7a947adfec4174",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "4ED738",
+     "compression": "none",
+     "bytes": 1792,
+     "sha256": "6c47f33d70928d112a841603194b449cea0d3cf3aae65e049c7a947adfec4174",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "face": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {
@@ -5150,7 +5175,7 @@
   }
  },
  "menus": {
-  "label": "BN6 menu screens: CHIP FOLDER (chipFolder_initGfx_812386C) and FOLDER EDIT (0x8133EC0). Each entry is the address of the screen's palette list (src, variant, dest, size) and decompAndCopyData list (src | LZ flag, dest, size), read from the ROM itself.",
+  "label": "BN6 menu screens: CHIP FOLDER (chipFolder_initGfx_812386C) FOLDER EDIT (0x8133EC0) and STATUS (sub_8126B6C; palette list off_8127160, data list byte_8127188, chatbox: byte_86BFBA0 tiles, byte_86BFE20 palette, spritePtrArr8045CEC style 4 open map byte_86C0400). Each entry is the address of the screen's palette list (src, variant, dest, size) and decompAndCopyData list (src | LZ flag, dest, size), read from the ROM itself.",
   "note": "Decoded on device by src/rom/menus.mjs. Gregar's code for these menus sits 0x1DDC later than Falzar's. Gregar's palettes are green (the owner's screenshots), Falzar's orange. Background settings: screen mode 0x10 (byte_8001618): BG1 tiles 0x6000000, BG0 0x6008000. Chip descriptions: TextScriptChipDescriptions0 (ids 0–255) and TextScriptChipDesc1 (256+), pointers at 0x8027D50 in both versions.",
   "sources": {
    "bn6f": {
@@ -5166,7 +5191,16 @@
     "descriptions": [
      "6EB8B8",
      "6EE0CC"
-    ]
+    ],
+    "status": {
+     "palettes": "127160",
+     "data": "127188",
+     "chatbox": {
+      "gfx": "6BFBA0",
+      "palette": "6BFE20",
+      "map": "6C0400"
+     }
+    }
    },
    "bn6g": {
     "chipFolder": {
@@ -5181,7 +5215,16 @@
     "descriptions": [
      "6E983C",
      "6EC050"
-    ]
+    ],
+    "status": {
+     "palettes": "128F3C",
+     "data": "128F64",
+     "chatbox": {
+      "gfx": "6BDAEC",
+      "palette": "6BDD6C",
+      "map": "6BE34C"
+     }
+    }
    }
   }
  },

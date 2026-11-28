@@ -117,3 +117,12 @@ test('RegUP parts: Regular memory 4 + 1/2/3 each, at most 99 (sub_803CFB0)', () 
   const many = []; for (let y = 1; y <= 5; y++) for (let x = 1; x <= 5; x++) many.push({ id: r3, x, y, rot: 0 });
   assert.equal(stats(many).reg, Math.min(REG_MAX, 4 + 3 * 25));
 });
+
+test('compression codes from the ROM (byte_813B522): 10 buttons for every program whose shape compresses', () => {
+  for (const P of PROGRAMS) {
+    const shrinks = JSON.stringify(P.shape) !== JSON.stringify(P.compressed);
+    assert.equal(!!P.code, shrinks, P.name);
+    if (P.code) assert.match(P.code, /^[ABLR]{10}$/);
+  }
+  assert.equal(PROGRAMS.find(p => p.name === 'SuprArmr').code, 'ABLLAALRBA');
+});

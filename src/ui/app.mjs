@@ -6,6 +6,7 @@ import { buildBank, pickSources, SOURCE_ORDER } from '../rom/bank.mjs';
 import { render, preview } from './render.mjs';
 import { createFolderUI, loadFolders, equippedFolder, equippedRegular, equippedTag } from './folder.mjs';
 import { createNaviCustUI, loadNaviCust, naviStats } from './navicust.mjs';
+import { createStatusUI } from './status.mjs';
 
 const $ = s => document.querySelector(s);
 const release = self.PROJECT_PET_RELEASE;
@@ -145,6 +146,7 @@ let folderOpen = false, screenUI = null;
 const regularThatFits = f => { const i = equippedRegular(f), c = equippedFolder(f)[i]; return i != null && c && (CHIP_DATA[c[0]]?.mb ?? 99) <= naviStats(navi).reg ? i : null; };
 const folderUI = createFolderUI({ getBank: () => bank, folders, onExit: () => quit(), limits: () => naviStats(navi) });
 const naviUI = createNaviCustUI({ getBank: () => bank, navi, onExit: () => quit() });
+const statusUI = createStatusUI({ getBank: () => bank, navi, stats: () => naviStats(navi), onExit: () => quit() });
 const menuButtons = on => document.querySelectorAll('.menu-only').forEach(b => { b.hidden = !on; });
 function openScreen(ui) {
   folderOpen = true; screenUI = ui; state = null; menuButtons(true);
@@ -153,13 +155,14 @@ function openScreen(ui) {
 }
 const openFolder = () => openScreen(folderUI);
 function folderFrame() {
-  for (const k of ['up', 'down', 'left', 'right', 'a', 'b', 'l', 'r', 'select', 'start']) if (pressed.has(k)) screenUI.input(k);
+  for (const k of ['up', 'down', 'left', 'right', 'a', 'b', 'l', 'r', 'select', 'start']) if (pressed.has(k)) screenUI.input(k, held);
   pressed.clear();
   screenUI.draw(screen);
   raf = requestAnimationFrame(folderFrame);
 }
 $('#folder-btn').addEventListener('click', openFolder);
 $('#navicust-btn').addEventListener('click', () => openScreen(naviUI));
+$('#status-btn').addEventListener('click', () => openScreen(statusUI));
 $('#screen').addEventListener('click', ev => {
   if (!folderOpen) return;
   const r = $('#screen').getBoundingClientRect();
