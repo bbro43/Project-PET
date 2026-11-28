@@ -488,3 +488,16 @@ test('Vulcan1 fires 3 shots 11 frames apart after a 2-frame raise (0x80EBF6E, dw
   for (let i = 0; i < 60; i++) { step(s, {}); for (const ev of s.events) if (ev.type === 'hit') hits.push(s.tick - t0); }
   assert.deepEqual(hits, [3, 14, 25]);
 });
+
+test('intro: BATTLE START! freezes the battle; deleted enemies dissolve over 53 frames (0x801746E)', async () => {
+  const { BANNER, DELETE } = await import('../src/battle/engine.mjs');
+  const s = createBattle({ seed: 4, enemies: formation('Mettaur', 0, 1), intro: true }); confirmCustom(s);
+  assert.equal(s.banner?.kind, 'start');
+  const tick = s.tick; run(s, {}, BANNER.start);
+  assert.equal(s.tick, tick, 'no battle time under the banner'); assert.equal(s.banner, null);
+  const e = s.enemies[0]; e.think = 1e9; s.player.y = e.y; s.player.invuln = 1e9; e.hp = 1;
+  step(s, { a: true }); step(s, {});
+  assert.equal(s.phase, 'win'); assert.ok(e.deadT <= 1);
+  run(s, {}, 100);
+  assert.equal(e.deadT, DELETE.hold + DELETE.fade);
+});

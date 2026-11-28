@@ -40,8 +40,9 @@ export function survivalWave(n, pickFamily = i => PLAYABLE_FAMILIES[i % PLAYABLE
   return Array.from({ length: count }, (_, i) => [pickFamily(n + i), variant]);
 }
 
-export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0, 1), seed = 1, folder = DEFAULT_FOLDER, field = 'normal' } = {}) {
+export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0, 1), seed = 1, folder = DEFAULT_FOLDER, field = 'normal', intro = false } = {}) {
   const s = {
+    intro, banner: null,
     tick: 0, seed: seed >>> 0, mode, wave: 1, deleted: 0,
     phase: 'custom', phaseT: 0, gauge: 0, events: [],
     player: {
@@ -110,13 +111,16 @@ export function confirmCustom(s) {
   s.hand = s.hand.filter((_, i) => !s.picked.includes(i));
   s.picked = [];
   s.phase = 'battle'; s.phaseT = 0; s.gauge = 0;
+  if (s.intro && !s.begun) { s.begun = true; s.banner = { kind: 'start', t: 0 }; } // "BATTLE START!" before the first turn
 }
 // ADD: no chips this turn; the next custom screen draws 5 more.
 export function addCustom(s) {
   if (s.phase !== 'custom') return;
   s.picked = []; s.queue = [];
+  if (s.intro && !s.begun) { s.begun = true; s.banner = { kind: 'start', t: 0 }; }
   s.handBonus = val('addBonus');
   s.phase = 'battle'; s.phaseT = 0; s.gauge = 0;
+  if (s.intro && !s.begun) { s.begun = true; s.banner = { kind: 'start', t: 0 }; } // "BATTLE START!" before the first turn
 }
 function openCustom(s) {
   refillHand(s);
@@ -195,6 +199,19 @@ function useChip(s, chip) {
       setPanel(s, x, y, 'broken'); s.effects.push({ kind: 'panelbreak', x, y, t: 0 });
       s.hazards.push({ kind: 'crackshot', owner: 'player', fx: x, x, y, speed: def.speed, damage, element });
     }
+  }
+}
+
+// Deletion (0x801746E → 0x80174BE): the enemy holds its hurt pose for 21 frames under two deletion bursts
+// (effect object 3), then dissolves over 32 frames (mosaic t/2, alpha 16 − t/2).
+export const DELETE = { hold: 21, fade: 32 };
+// Banner lengths are estimated (the code that runs them was not traced).
+export const BANNER = { start: 70, deleted: 90 };
+function stepDying(s) {
+  for (const e of s.enemies) {
+    if (e.hp > 0 || e.kind === 'coil') continue;
+    if (e.deadT === undefined) { e.deadT = 0; s.effects.push({ kind: 'deleteburst', x: e.x, y: e.y, t: 0, life: 22 }); }
+    else if (e.deadT < DELETE.hold + DELETE.fade) e.deadT++;
   }
 }
 
@@ -572,7 +589,7 @@ function stepHazards(s) {
 // Battle over: stop lingering attacks so nothing stays frozen on screen.
 function endBattleEffects(s) {
   s.hazards = [];
-  s.effects = s.effects.filter(f => f.kind === 'delete' || f.kind === 'blast');
+  s.effects = s.effects.filter(f => f.kind === 'delete' || f.kind === 'blast' || f.kind === 'deleteburst' || f.kind === 'hit');
   for (const e of s.enemies) { e.highlight = null; e.target = null; }
   s.player.trapped = 0;
 }
@@ -580,13 +597,14 @@ function endBattleEffects(s) {
 // ---------- main step ----------
 export function step(s, input = {}) {
   s.events = [];
-  if (s.phase === 'win' || s.phase === 'lose') return s;
+  if (s.phase === 'win' || s.phase === 'lose') { s.phaseT++; stepDying(s); s.effects = s.effects.filter(f => ++f.t < 24); return s; }
   s.phaseT++;
   if (s.phase === 'custom') return s;
   if (s.phase === 'wave') {
     if (s.phaseT >= 90) { s.wave++; spawn(s, survivalWave(s.wave, k => pickSurvival(s, k))); openCustom(s); }
     return s;
   }
+  if (s.banner) { if (++s.banner.t >= BANNER.start) s.banner = null; return s; } // battle frozen under the banner
   if (s.timestop) { stepTimestop(s); return s; } // time freeze: nothing else moves, the gauge waits
   s.tick++;
   stepArea(s);
@@ -603,11 +621,12 @@ export function step(s, input = {}) {
     hurtPlayer: d => { const p = s.player; if (p.hp > 0) p.hp = Math.max(0, p.hp - d); },
     hurtEnemy: (e, d) => { e.hp = Math.max(0, e.hp - d); if (e.hp === 0) { if (e.kind !== 'coil') s.deleted++; s.events.push({ type: 'delete', target: e.id }); s.effects.push({ kind: 'delete', x: e.x, y: e.y, t: 0 }); if (s.turns[e.family] === e.id) delete s.turns[e.family]; } },
   });
+  stepDying(s);
   s.effects = s.effects.filter(f => ++f.t < 24);
-  if (s.player.hp <= 0) { s.phase = 'lose'; s.events.push({ type: 'lose' }); endBattleEffects(s); }
+  if (s.player.hp <= 0) { s.phase = 'lose'; s.phaseT = 0; s.events.push({ type: 'lose' }); endBattleEffects(s); }
   else if (s.enemies.every(e => e.hp <= 0 || e.kind === 'coil')) {
-    if (s.mode === 'survival') { s.phase = 'wave'; s.phaseT = 0; s.events.push({ type: 'waveClear', wave: s.wave }); }
-    else { s.phase = 'win'; s.events.push({ type: 'win' }); endBattleEffects(s); }
+    if (s.mode === 'survival') { s.phase = 'wave'; s.phaseT = 0; s.begun = false; s.events.push({ type: 'waveClear', wave: s.wave }); }
+    else { s.phase = 'win'; s.phaseT = 0; s.events.push({ type: 'win' }); endBattleEffects(s); }
   }
   return s;
 }

@@ -3938,6 +3938,31 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "deletefx": {
+   "label": "Deletion burst (effect object 3, spawned twice by the deletion routine 0x801746E), sprite 0x14/0x03",
+   "sources": {
+    "bn6f": {
+     "offset": "39CCDC",
+     "compression": "none",
+     "bytes": 13104,
+     "sha256": "96aa99b41e194b3416ed01cc1e6b2e1427bc725dba1640555742959331a9611d",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "39C254",
+     "compression": "none",
+     "bytes": 13104,
+     "sha256": "96aa99b41e194b3416ed01cc1e6b2e1427bc725dba1640555742959331a9611d",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "burst": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {
@@ -4402,8 +4427,8 @@
   }
  },
  "customscreen": {
-  "label": "Custom screen: frame tiles (tile 0 at tiles), tilemap byte_86E625C (byte_86E64B4 with CrossSelect), palettes byte_86E587C (4, by chip class), code strips dword_86E591C, damage digits dword_86E411C, element icons dword_86E3598 + colour sets byte_86E3B18, code letters dword_86E2E98 (8×16, at tile (2,9)); selected-chip column: side tiles 0x88/0x89 of the frame tiles (h-flipped on the right), 16×16 boxes dword_86E601C with palette 0x872CFF4 (Gregar 0x872AF30)",
-  "note": "Layout from the tile rects in byte_8027B2C (0x80268AC): name 8×2 tiles at (2,1), picture 7×6 at (2,3), element 2×2 at (3,9), damage 3×2 at (6,9), 10 slots (icon 2×2 + code 2×1) from (1,13) every 2 tiles across and 3 down, selected column 2×10 at (12,3). Frame pixel-checked against the owner's screenshot (0 differing pixels outside the layers the game draws later). Column pixel-checked against the owner's custom-screen sheet; the box palette was found by its colours (one match in the ROM), not traced to code.",
+  "label": "Custom screen: frame tiles (tile 0 at tiles), tilemap byte_86E625C (byte_86E64B4 with CrossSelect), palettes byte_86E587C (4, by chip class), code strips dword_86E591C, damage digits dword_86E411C, element icons dword_86E3598 + colour sets byte_86E3B18, code letters dword_86E2E98 (8×16, at tile (2,9)); selected-chip column: side tiles 0x88/0x89 of the frame tiles (h-flipped on the right), 16×16 boxes dword_86E601C with palette 0x872CFF4 (Gregar 0x872AF30); battle message font: 8×16 glyphs A–Z, bar fill, '!', bar ends at 0x86F133C (Gregar 0x86EF2C0), palette 0x86F2900 (Gregar 0x86F0884)",
+  "note": "Layout from the tile rects in byte_8027B2C (0x80268AC): name 8×2 tiles at (2,1), picture 7×6 at (2,3), element 2×2 at (3,9), damage 3×2 at (6,9), 10 slots (icon 2×2 + code 2×1) from (1,13) every 2 tiles across and 3 down, selected column 2×10 at (12,3). Frame pixel-checked against the owner's screenshot (0 differing pixels outside the layers the game draws later). Column pixel-checked against the owner's custom-screen sheet; the box palette was found by its colours (one match in the ROM), not traced to code. Font located by matching the owner's font sheet against the ROM's tiles (one match); the glyph order was read from the tiles. The code that composes the banners was not traced.",
   "sources": {
    "bn6f": {
     "tiles": "6E1D18",
@@ -4479,7 +4504,11 @@
     "sideTiles": [
      136,
      137
-    ]
+    ],
+    "font": {
+     "glyphs": "6F133C",
+     "palette": "6F2900"
+    }
    },
    "bn6g": {
     "tiles": "6DFC9C",
@@ -4555,7 +4584,11 @@
     "sideTiles": [
      136,
      137
-    ]
+    ],
+    "font": {
+     "glyphs": "6EF2C0",
+     "palette": "6F0884"
+    }
    }
   }
  }

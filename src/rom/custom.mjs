@@ -44,8 +44,14 @@ export function decodeCustom(rom, src) {
     }
     return { rgba, width: 32, height: h };
   }
+  // Battle message font (8×16 glyphs, top tile then bottom tile): A–Z, then the banner bar fill, '!', bar left end, bar right end.
+  const fontPal = src.font ? readPalette(rom, hex(src.font.palette)) : null;
+  const glyph = k => { // letters are 14 rows tall; rows 0–1 are cleared (row 0 of the 'A' tile holds unrelated data)
+    const g = stack(hex(src.font.glyphs) + 0x40 * k, 1, 2, fontPal, true);
+    g.rgba.fill(0, 0, 8 * 2 * 4); return g;
+  };
   return {
-    frame, column,
+    frame, column, glyph: src.font ? glyph : null,
     code: (k, cls = 0) => stack(hex(src.codes) + 0x40 * k, 2, 1, pals[cls]),          // 16×8 strip, k = 0..25 A–Z, 26 *, 27 empty
     letter: (k, cls = 0) => stack(hex(src.letters) + 0x40 * k, 1, 2, pals[cls], true), // 8×16 code letter under the picture
     digit: (d, cls = 0) => stack(hex(src.digits) + 0x40 * d, 1, 2, pals[cls], true),   // 8×16
@@ -65,6 +71,7 @@ export function buildCustom(rom, src) {
     layout: d.layout,
     frame: cls => get('f' + cls, () => d.frame(cls)),
     column: cls => get('k' + cls, () => d.column(cls)),
+    glyph: d.glyph ? k => get('g' + k, () => d.glyph(k)) : null,
     code: (k, cls) => get(`c${k}.${cls}`, () => d.code(k, cls)),
     letter: (k, cls) => get(`l${k}.${cls}`, () => d.letter(k, cls)),
     digit: (n, cls) => get(`d${n}.${cls}`, () => d.digit(n, cls)),

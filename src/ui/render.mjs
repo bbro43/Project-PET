@@ -4,7 +4,24 @@
 // Panel geometry and sprite anchors are approximations pending an on-screen trace.
 import { frameAt } from '../rom/bank.mjs';
 import { val } from '../../data/rules.mjs';
-import { chipBehaviour, CHIP_DATA } from '../battle/engine.mjs';
+import { chipBehaviour, CHIP_DATA, DELETE, BANNER } from '../battle/engine.mjs';
+
+// Deleted enemies: drawn into a scratch canvas, then pixelated (mosaic) and faded like the game.
+let scratch, small;
+function dissolveCtx() {
+  if (!scratch) { scratch = document.createElement('canvas'); scratch.width = 128; scratch.height = 96; small = document.createElement('canvas'); small.width = 128; small.height = 96; }
+  const c = scratch.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, 128, 96); c.imageSmoothingEnabled = false; return c;
+}
+function blitDissolve(g, ax, ay, block, alpha) {
+  let src = scratch;
+  if (block > 1) {
+    const w = Math.ceil(128 / block), h = Math.ceil(96 / block), c = small.getContext('2d');
+    c.imageSmoothingEnabled = false; c.clearRect(0, 0, 128, 96); c.drawImage(scratch, 0, 0, w, h); src = small;
+    g.save(); g.globalAlpha = alpha; g.imageSmoothingEnabled = false; g.drawImage(small, 0, 0, w, h, Math.round(ax - 64), Math.round(ay - 80), w * block, h * block); g.restore();
+    return;
+  }
+  g.save(); g.globalAlpha = alpha; g.drawImage(src, Math.round(ax - 64), Math.round(ay - 80)); g.restore();
+}
 
 export const PANEL_W = 40, PANEL_H = 24, FIELD_Y = 72;
 const anchor = (x, y) => [x * PANEL_W + PANEL_W / 2, FIELD_Y + y * PANEL_H + 18];
@@ -404,6 +421,13 @@ export function render(g, s, bank) {
     } });
   }
   for (const e of s.enemies) {
+    if (e.hp <= 0 && e.deadT !== undefined && e.kind !== 'coil' && e.deadT < DELETE.hold + DELETE.fade && !e.hidden) { // deletion (0x801746E / 0x80174BE)
+      const [ax, ay] = anchor(e.drawX ?? e.x, e.drawY ?? e.y), seqs = bank?.get(e.sprite, e.palette);
+      const role = seqs?.flinch ? 'flinch' : e.anim, flip = (e.kind !== 'coil' || !!e.flip) && !e.faceBack;
+      const t = e.deadT - DELETE.hold, fn = c => sprite(c, bank, e.sprite, role, e.deadT, 64, 80, () => {}, e.palette, flip);
+      draw.push({ y: e.drawY ?? e.y, fn: () => t < 0 ? (fn(dissolveCtx()), blitDissolve(g, ax, ay, 1, 1)) : (fn(dissolveCtx()), blitDissolve(g, ax, ay, (t >> 1) + 1, Math.max(0, 16 - (t >> 1)) / 16)) });
+      continue;
+    }
     if (e.hp <= 0 || e.hidden) continue;
     const [ax, ay0] = anchor(e.drawX ?? e.x, e.drawY ?? e.y);
     const ay = ay0 - (e.z || 0);
@@ -592,6 +616,9 @@ export function render(g, s, bank) {
       if (f.hit) sprite(g, bank, 'vulcanhitfx', 'hit', f.t, ax, ay - f.z, () => {});
       continue;
     }
+    if (f.kind === 'deleteburst' && bank?.has?.('deletefx')) { if (f.t < (f.life ?? 22)) sprite(g, bank, 'deletefx', 'burst', f.t, ax, ay - 14, () => {}); continue; }
+    if (f.kind === 'deleteburst') continue;
+    if (f.kind === 'delete' && bank?.has?.('deletefx')) continue; // the ROM burst replaces the ring
     if (f.kind === 'shot' && f.t > 6) continue;
     const r = f.kind === 'blast' ? 4 + f.t : f.kind === 'delete' ? f.t : f.kind === 'shot' ? 3 + f.t : 6 - f.t / 4;
     if (r <= 0) continue;
@@ -600,9 +627,15 @@ export function render(g, s, bank) {
   }
 
   // HUD
-  g.fillStyle = '#183058'; g.fillRect(2, 2, 34, 13);
-  g.strokeStyle = '#a8c8f0'; g.lineWidth = 1; g.strokeRect(2.5, 2.5, 33, 12);
-  text(g, String(p.hp), 33, 12, p.hp <= p.maxHp / 4 ? '#ff8080' : '#fff', 'right');
+  if (bank?.custom) { // HP in the game's white 8×16 digits (the custom screen's digit set, dword_86E411C)
+    g.fillStyle = '#e8f0f8'; g.fillRect(2, 1, 42, 18); g.fillStyle = '#304068'; g.fillRect(3, 2, 40, 16);
+    const hp = String(Math.max(0, p.hp));
+    for (let k = 0; k < hp.length; k++) g.drawImage(bank.custom.digit(+hp[k], 0), 42 - 8 * (hp.length - k), 2);
+  } else {
+    g.fillStyle = '#183058'; g.fillRect(2, 2, 34, 13);
+    g.strokeStyle = '#a8c8f0'; g.lineWidth = 1; g.strokeRect(2.5, 2.5, 33, 12);
+    text(g, String(p.hp), 33, 12, p.hp <= p.maxHp / 4 ? '#ff8080' : '#fff', 'right');
+  }
   const full = s.gauge >= val('customGaugeTicks');
   if (s.phase !== 'custom') { // the game hides the gauge while the custom window is open
     g.fillStyle = '#183058'; g.fillRect(56, 4, 128, 8);
@@ -634,11 +667,37 @@ export function render(g, s, bank) {
     }
   }
   for (const f of s.effects) if (f.kind === 'grabland') { const [bx, by] = anchor(f.x, f.y); sprite(g, bank, 'grabbeam', 'land', f.t, bx, by, (g, x, y) => { g.fillStyle = `rgba(255,250,180,${1 - f.t / 24})`; g.fillRect(x - 16, y - 12, 32, 16); }); }
+  // Banners in the game's battle message font: BATTLE START! before the first turn; after the last deletion,
+  // ENEMY DELETED! and then YOU WIN!
+  const lastDeath = Math.max(0, ...s.enemies.filter(e => e.deadT !== undefined).map(e => DELETE.hold + DELETE.fade - e.deadT));
+  if (s.banner?.kind === 'start') { drawBanner(g, bank, 'BATTLE START!', s.banner.t, BANNER.start); return; }
+  if (s.phase === 'win' && bank?.custom?.glyph) {
+    if (lastDeath > 0) return;
+    const t = s.phaseT - (DELETE.hold + DELETE.fade);
+    if (t >= 0 && t < BANNER.deleted) drawBanner(g, bank, 'ENEMY DELETED!', t, BANNER.deleted);
+    else if (t >= BANNER.deleted) drawBanner(g, bank, 'YOU WIN!', t - BANNER.deleted, Infinity);
+    return;
+  }
   const banner = { win: 'ENEMY DELETED!', lose: 'MegaMan deleted…', wave: `WAVE ${s.wave} CLEAR` }[s.phase];
   if (banner) {
     g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, 50, 240, 22);
     g.font = '12px monospace'; text(g, banner, 120, 65, '#fff', 'center');
   }
+}
+
+// Banner: the blue bar (glyphs 28 / 26 / 29) opens from the middle, then the letters (8×16, 8 px apart) appear.
+// Open / close lengths are estimated; the game's banner code was not traced.
+const GLYPH = ch => ch === '!' ? 27 : ch >= 'A' && ch <= 'Z' ? ch.charCodeAt(0) - 65 : -1;
+function drawBanner(g, bank, msg, t, dur) {
+  const cy = 64;
+  if (!bank?.custom?.glyph) { g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, cy - 8, 240, 22); g.font = '12px monospace'; text(g, msg, 120, cy + 7, '#fff', 'center'); return; }
+  const G = bank.custom.glyph, w = msg.length * 8, cells = Math.ceil(w / 8) + 2;
+  const open = Math.min(1, (t + 1) / 8), close = dur === Infinity ? 1 : Math.min(1, (dur - t) / 8);
+  const k = Math.min(open, close), n = Math.max(0, Math.round(cells * k)), x0 = 120 - n * 4;
+  for (let i = 0; i < n; i++) g.drawImage(G(i === 0 ? 28 : i === n - 1 ? 29 : 26), x0 + i * 8, cy - 8);
+  if (k < 1) return;
+  let x = 120 - w / 2;
+  for (const ch of msg) { const gi = GLYPH(ch); if (gi >= 0) g.drawImage(G(gi), x, cy - 8); x += 8; }
 }
 
 // Draws a static preview of one sprite into a small canvas for the menu.
