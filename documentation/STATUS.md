@@ -39,7 +39,7 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 | 19 BN6 Navis, 35 BN4/BN5 Navis | offsets ✓ | ✓ (BN6 labels / BN4-5 visual) | – | – | – | ROM hash test |
 
 ## Next checkpoint (owner's order, 27 Nov 2026)
-1. **Chip folder**: the game's CHIP FOLDER (folders with EQUIP) and FOLDER EDIT screens (folder list ↔ Pack, chip picture / code / element / power / description, MB, 30/30 count), so the player builds their own deck from all 411 BN6 chips. The owner's screenshots are reference only (not committed).
+1. **Chip folder**: the game's CHIP FOLDER (folders with EQUIP) and FOLDER EDIT screens (folder list ↔ Pack, chip picture / code / element / power / description, MB, 30/30 count), so the player builds their own deck from all 411 BN6 chips. Owner decision: the screens are the BN6 game's own, decoded on device from the imported BN6 ROM (frames, fonts, chip art, icons, as in the owner's screenshots), not app-drawn look-alikes. The screenshots are reference only (not committed).
 2. **Animations for every chip**: per family, from the chip-action table (AIAttackJumptable, family − 0x10) and the t1 0x5 attachments / effect objects.
 3. **Cross Systems and Double Souls as playable MegaMan forms**: unlike the games (a chip transforms MegaMan mid-battle), the player presets a form, e.g. TomahawkCross, before the battle and keeps it for the whole fight.
 4. **Every Navi playable**: moved to last by the owner.
