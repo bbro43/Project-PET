@@ -5199,6 +5199,12 @@
       "gfx": "6BFBA0",
       "palette": "6BFE20",
       "map": "6C0400"
+     },
+     "fonts": {
+      "bold": "6B7AE0",
+      "thin": "6A5D60",
+      "chat": "6ACD60",
+      "chatWidth": "43CA4"
      }
     }
    },
@@ -5223,6 +5229,12 @@
       "gfx": "6BDAEC",
       "palette": "6BDD6C",
       "map": "6BE34C"
+     },
+     "fonts": {
+      "bold": "6B5A2C",
+      "thin": "6A3CAC",
+      "chat": "6AACAC",
+      "chatWidth": "43C74"
      }
     }
    }

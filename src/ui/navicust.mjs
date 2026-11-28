@@ -130,6 +130,19 @@ export function createNaviCustUI({ getBank, navi, onExit }) {
   }
   const rgbOf = e => { const c = getBank()?.navicust?.colors[0][e.color] ?? 0x7fff; return `rgb(${(c & 31) << 3},${(c >> 5 & 31) << 3},${(c >> 10 & 31) << 3})`; };
 
+  // The board's frame pixels in the band's rows, drawn back over the band: everything outside the command line's
+  // cells except the notch interiors (the window's dark fill, 0x3128 → (40, 64, 104)).
+  const over = document.createElement('canvas'); over.width = 140; over.height = 24;
+  function overFrame(g, board) {
+    const line = layout[COMMAND_ROW].map((v, x) => v === 1 ? x : -1).filter(x => x >= 0), [lx] = CELL(line[0], 0), [rx] = CELL(line.at(-1) + 1, 0);
+    const og = over.getContext('2d'); og.clearRect(0, 0, 140, 24); og.drawImage(board, 3, 80, 140, 24, 0, 0, 140, 24);
+    const d = og.getImageData(0, 0, 140, 24), px = d.data;
+    for (let y = 0; y < 24; y++) for (let x = 0; x < 140; x++) {
+      const p = (y * 140 + x) * 4, X = x + 3;
+      if ((X >= lx && X < rx) || (px[p] === 40 && px[p + 1] === 64 && px[p + 2] === 104)) px[p + 3] = 0;
+    }
+    og.putImageData(d, 0, 0); g.drawImage(over, 3, 80);
+  }
   function draw(g) {
     const N = getBank()?.navicust;
     g.save(); g.imageSmoothingEnabled = false;
@@ -157,18 +170,19 @@ export function createNaviCustUI({ getBank, navi, onExit }) {
       }
     }
     const used = [...new Set(parts.map(colorOf))]; // the colour strip: the board's colours in the order they were placed (unk_2022B70)
-    g.drawImage(N.board(cells, 0, used), 0, 0);
+    const boardImg = N.board(cells, 0, used);
+    g.drawImage(boardImg, 0, 0);
     if (running) { // the band (BG3 maps 0 / 1, scrolling right from 252), clipped to the board's command line
       const t = running.t, A = RUN.cell * RUN.cells, B = A + RUN.fast, C = B + RUN.out;
       const scroll = 252 - (t < A ? t : t < B ? A + 2 * (t - A) : A + 2 * RUN.fast + 3 * (t - B));
       const img = N.bandImage?.[t < A ? 0 : 1];
       if (img) {
         const h = t < B ? 24 : Math.max(0, Math.round(24 * (C - t) / RUN.out)), y0 = 80 + (24 - h) / 2;
-        const line = layout[COMMAND_ROW].map((v, x) => v === 1 ? x : -1).filter(x => x >= 0), [lx] = CELL(line[0], 0), [rx] = CELL(line.at(-1) + 1, 0);
-        g.save(); g.beginPath(); g.rect(lx, y0, rx - lx, h); g.clip(); // inside the board's frame (owner: not over the frame or the list)
+        g.save(); g.beginPath(); g.rect(3, y0, 140, h); g.clip();
         const x0 = ((-scroll % 256) + 256) % 256;
         g.drawImage(img, x0 - 256, 80); g.drawImage(img, x0, 80);
         g.restore();
+        overFrame(g, boardImg); // the band runs above the programs but behind the window frame and the green screen (owner)
       }
       if (++running.t >= C) runDone();
     }

@@ -105,6 +105,7 @@ function describe(rom, tables, id) {
 const layer = (m, W, H, parts) => { const rgba = new Uint8ClampedArray(W * H * 4); for (const p of parts) drawMap(m, rgba, W, H, ...p); return { rgba, width: W, height: H }; };
 const sprite = (buf, seq = 0) => sequenceFrames(buf, 0, seq).map(rec => decodeFrame(buf, rec));
 
+const TEXT_CHARS = { ' ': 0, '*': 0x25, '-': 0x98, '=': 0x9A, ':': 0x9B, '%': 0x9C, '?': 0x9D, '+': 0x9E, '!': 0xA2, '&': 0xA3, ',': 0xA4, '.': 0xA6, '/': 0xAC, "'": 0xA9 };
 // STATUS (HandleMegaManStatusMenu8126B4C → sub_8126B6C): palette list off_8127160 (2 entries) and decompAndCopyData list
 // byte_8127188; screen mode 0x1A (byte_8001618): BG1 frame, BG2 the two pages (64 columns: MegaMan page at 0, Folder page
 // at 32; sub_8127060), BG0 the chatbox (tiles 0x600DC80, palette 15). OBJ: HP digits at 0x6011400 (palette 9) and the
@@ -121,7 +122,32 @@ function decodeStatus(rom, src) {
     [m.ram.get(0x201D320), 13, 10, 0, 48, 2],  // PROGRAM (unk_201D320, at (0x30, 2))
   ]);
   const glyph = t => { const a = objTiles(m, 0xA0 + t, 1, 9), b = objTiles(m, 0xA1 + t, 1, 9), rgba = new Uint8ClampedArray(8 * 16 * 4); rgba.set(a.rgba, 0); rgba.set(b.rgba, 8 * 8 * 4); return { rgba, width: 8, height: 16 }; };
+  // Text (sub_8127578 / sub_8127580 → renderTextGfx 0x8045F8C): 8×16 glyphs per character code, 8 px apart, in BG palette 7
+  // (the text maps byte_8126930 … use palette 7). BUSTER lines use dword_86B7AE0 (bold), FOLDER / PROGRM dword_86A5D60 (thin).
+  // The chatbox prints with byte_86ACD60 (sub_3006F8C): 0x60 bytes a glyph, 12 rows of 16 px, advance byte_8043CA4[code].
+  const F = src.fonts, code = ch => ch >= '0' && ch <= '9' ? 1 + (ch.charCodeAt(0) - 48) : ch >= 'A' && ch <= 'Z' ? 0x0B + ch.charCodeAt(0) - 65 : ch >= 'a' && ch <= 'z' ? 0x26 + ch.charCodeAt(0) - 97 : TEXT_CHARS[ch] ?? 0;
+  const mono = (base, str) => {
+    const w = Math.max(1, 8 * str.length), rgba = new Uint8ClampedArray(w * 16 * 4);
+    [...str].forEach((ch, i) => { for (let y = 0; y < 16; y++) for (let x = 0; x < 8; x++) {
+      const o = base + 64 * code(ch) + (y >> 3) * 32 + (y & 7) * 4 + (x >> 1), v = (rom[o] >> ((x & 1) * 4)) & 15;
+      if (!v) continue;
+      const [r, g, b] = color(u16(m.bgpal, 7 * 32 + 2 * v)), p = (y * w + 8 * i + x) * 4; rgba[p] = r; rgba[p + 1] = g; rgba[p + 2] = b; rgba[p + 3] = 255;
+    } });
+    return { rgba, width: w, height: 16 };
+  };
+  const chatText = (str, ink) => { // ink: the chatbox's text colour (palette 15 entry 2; the glyphs are 1 = ink)
+    const widths = [...str].map(ch => rom[hex(F.chatWidth) + code(ch)]), w = Math.max(1, widths.reduce((a, b) => a + b, 0)), rgba = new Uint8ClampedArray(w * 12 * 4);
+    const [r, g, b] = color(u16(m.bgpal, 15 * 32 + 2 * ink));
+    let X = 0;
+    [...str].forEach((ch, i) => { const base = hex(F.chat) + 0x60 * code(ch); for (let y = 0; y < 12; y++) for (let x = 0; x < widths[i]; x++) {
+      const v = (rom[base + 8 * y + (x >> 1)] >> ((x & 1) * 4)) & 15;
+      if (!v) continue;
+      const p = (y * w + X + x) * 4; rgba[p] = r; rgba[p + 1] = g; rgba[p + 2] = b; rgba[p + 3] = 255;
+    } X += widths[i]; });
+    return { rgba, width: w, height: 12 };
+  };
   return {
+    bold: str => mono(hex(F.bold), str), thin: str => mono(hex(F.thin), str), chat: str => chatText(str, 2),
     frame: layer(m, 240, 160, [[m.ram.get(0x201BA20), 30, 20, 0]]),
     pages: page,
     chatbox: layer(m, 240, 64, [[chatMap, 30, 8, 0x8000]]),
@@ -172,7 +198,7 @@ export function buildMenus(rom, src) {
     tagFrame: { image: canvas(d.tagFrame), originX: d.tagFrame.originX, originY: d.tagFrame.originY },
     regFrame: { image: canvas(d.regFrame), originX: d.regFrame.originX, originY: d.regFrame.originY },
     smallDigits: d.smallDigits.map(canvas), mbLabel: canvas(d.mbLabel),
-    status: d.status ? { frame: canvas(d.status.frame), pages: canvas(d.status.pages), chatbox: canvas(d.status.chatbox), hpDigits: d.status.hpDigits.map(canvas), hpBox: { left: canvas(d.status.hpBox.left), fill: canvas(d.status.hpBox.fill) }, pageArrow: d.status.pageArrow.map(canvas) } : null,
+    status: d.status ? { text: (cache => (kind, str) => cache.get(kind + str) ?? (cache.set(kind + str, canvas(d.status[kind](str))), cache.get(kind + str)))(new Map()), frame: canvas(d.status.frame), pages: canvas(d.status.pages), chatbox: canvas(d.status.chatbox), hpDigits: d.status.hpDigits.map(canvas), hpBox: { left: canvas(d.status.hpBox.left), fill: canvas(d.status.hpBox.fill) }, pageArrow: d.status.pageArrow.map(canvas) } : null,
     describe: d.describe ? (cache => id => cache.get(id) ?? (cache.set(id, d.describe(id)), cache.get(id)))(new Map()) : null,
   };
 }

@@ -5,7 +5,7 @@
 //   Folder page: FOLDER Reg.Mem / MegaChip / GigaChip (stats 9, 0xB, 0xC; scripts 8–10) and PROGRM, the programs
 //   installed in the Navi Customizer (names from TextScript873EA50), 4 at a time, L / R to scroll.
 // The chatbox at the bottom is the game's (style 4, MegaMan's mugshot 0x37) with its line "Here is my status."
-// Text is drawn with the battle text font; the game renders these lines with its menu font (not decoded yet).
+// Text: the game's fonts from the ROM (bold for BUSTER, thin for FOLDER / PROGRM, the chatbox font for the line).
 import { frameAt } from '../rom/bank.mjs';
 import { programOf } from '../battle/navicust.mjs';
 
@@ -25,18 +25,9 @@ export function createStatusUI({ getBank, navi, stats, onExit }) {
     if (y < 16) return onExit();
     if (x < 40) input('left'); else if (x > 200) input('right');
   }
-  const tinted = new Map();
-  function text(g, str, x, y, color) {
-    const T = getBank()?.custom?.text;
-    if (!T) { g.fillStyle = color || '#fff'; g.font = '8px monospace'; g.fillText(str, x, y + 11); return; }
-    if (!color) { g.drawImage(T(str), x, y); return; }
-    let c = tinted.get(color + str);
-    if (!c) { // the chatbox prints dark text on white: the glyphs in one colour
-      const src = T(str); c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
-      const cg = c.getContext('2d'); cg.drawImage(src, 0, 0); cg.globalCompositeOperation = 'source-atop'; cg.fillStyle = color; cg.fillRect(0, 0, c.width, c.height);
-      tinted.set(color + str, c);
-    }
-    g.drawImage(c, x, y);
+  function text(g, str, x, y, kind = 'bold') {
+    const S = getBank()?.menus?.status;
+    if (S?.text) g.drawImage(S.text(kind, str), x, y); else { g.fillStyle = '#fff'; g.font = '8px monospace'; g.fillText(str, x, y + 11); }
   }
   function draw(g) {
     const bank = getBank(), S = bank?.menus?.status;
@@ -60,13 +51,13 @@ export function createStatusUI({ getBank, navi, stats, onExit }) {
     // Folder page
     const P = 256;
     [[LINES.reg, s.reg, true], [LINES.mega, s.mega], [LINES.giga, s.giga]].forEach(([l, n, mb], i) => {
-      text(g, l.trim(), P + 24, 24 + 16 * i);
+      text(g, l.trim(), P + 24, 24 + 16 * i, 'thin');
       const v = String(n), right = P + (mb ? 96 : 112);
-      text(g, v, right - 8 * v.length, 24 + 16 * i);
+      text(g, v, right - 8 * v.length, 24 + 16 * i, 'thin');
       if (mb && bank.menus.regMB) g.drawImage(bank.menus.regMB, P + 98, 28 + 16 * i);
     });
     const names = programs();
-    for (let i = 0; i < 4; i++) text(g, names[top + i] ?? LINES.none, P + 136, 24 + 16 * i);
+    for (let i = 0; i < 4; i++) text(g, names[top + i] ?? LINES.none, P + 136, 24 + 16 * i, 'thin');
     g.restore();
     // page arrow (sprite tiles 0x24E–0x250): right on the MegaMan page, left on the Folder page
     if (scroll === want) {
@@ -78,7 +69,7 @@ export function createStatusUI({ getBank, navi, stats, onExit }) {
     g.drawImage(S.chatbox, 0, 96);
     const face = bank.get?.('mugshotmegaman')?.face;
     if (face) { const f = face[0]; g.drawImage(f.image, 26 - f.originX, 130 - f.originY); }
-    text(g, LINES.say, 52, 106, '#484048');
+    text(g, LINES.say, 52, 108, 'chat');
     g.restore();
   }
   return { input, tap, draw };
