@@ -225,6 +225,7 @@ function hitEnemy(s, e, damage, extra = {}) {
   if (!e || e.hp <= 0 || e.airborne || e.invuln > 0) return; // invuln: e.g. Trumpy's song
   if (e.guard) { e.guardHit = true; s.events.push({ type: 'guard', target: e.id }); s.effects.push({ kind: 'guard', x: e.x, y: e.y, t: 0 }); return; }
   damage *= elementMultiplier(extra.element, e.element);
+  if (e.bubble > 0) { if (extra.element === 'elec') damage *= 2; e.bubble = 0; e.paralyzed = 0; } // Bubbled: popped by the hit; Elec doubles
   if (!e.cells) damage = panelHit(s, e.x, e.y, damage, extra.element).damage;
   e.hp = Math.max(e.sturdy ? 1 : 0, e.hp - damage);
   e.flash = 4;
@@ -233,6 +234,7 @@ function hitEnemy(s, e, damage, extra = {}) {
     s.events.push({ type: 'counter', target: e.id }); s.effects.push({ kind: 'counter', x: e.x, y: e.y, t: 0 });
   }
   if (extra.paralyze && e.hp > 0 && e.kind !== 'coil') { e.paralyzed = extra.paralyze; s.events.push({ type: 'paralyze', target: e.id }); }
+  if (extra.bubble && e.hp > 0 && e.kind !== 'coil' && !e.cells) { e.bubble = e.paralyzed = BUBBLE.frames.value; s.events.push({ type: 'bubble', target: e.id }); } // status 0x60
   s.effects.push({ kind: 'hit', x: e.x, y: e.y, t: 0, damage, fx: extra.fx, jx: (s.tick * 7) % 15 - 7, jy: (s.tick * 11) % 15 - 7 }); // jitter from the frame count so the battle RNG is untouched // hit effect: t4 0x4 near the target (0x801A0D8, ±7 px)
   s.events.push({ type: 'hit', target: e.id, damage });
   if (extra.push && e.hp > 0) {
@@ -253,7 +255,7 @@ export function hitPlayer(s, damage, opts = {}) {
   const element = opts.element ?? s.attacker?.element;
   if (p.state === 'guard') { // Shield / Reflect (attack family 0x2B): the hit is blocked; Reflect answers with a 50-damage shot
     s.events.push({ type: 'guard' }); s.effects.push({ kind: 'guard', x: p.x, y: p.y, t: 0 }); p.guardHitT = 12; // the guard's hit animation
-    if (p.guardReflect && !p.reflected) { p.reflected = true; hitEnemy(s, rowTarget(s, p.x, p.y), 50, { fx: 'buster' }); } // sub_80C4FFE, damage 0x32
+    if (p.guardReflect && !p.reflected) { p.reflected = true; hitEnemy(s, rowTarget(s, p.x, p.y), p.reflectDamage ?? 50, { fx: 'buster', chip: p.reflectDamage != null }); } // B+Left: sub_80C4FFE, 0x32; Rflectr: the chip's damage (sub_80C9CDA)
     return;
   }
   if (p.state === 'antidmg') { // AntiDmg (family 0x5A): hit inside the window → no damage, a 50-damage star at the attacker
@@ -423,6 +425,29 @@ function useChip(s, chip) {
       s.hazards.push({ kind: 'chiptwister', owner: 'player', x, y, start: s.tick, every: def.every, life: def.life, damage: dmg, element: el, pal });
     }
   }
+  else if (def.kind === 'reflector') { // Rflectr (family 0x2B, subfamily 0–2): the guard for params[0] frames; the first hit blocked is sent back
+    p.state = 'guard'; p.stateT = 0; p.abilityTicks = def.ticks; p.guardReflect = true; p.reflected = false; p.reflectDamage = damage; setAnim(p, 'idle');
+    return;
+  }
+  else if (def.kind === 'bubblestar') s.hazards.push({ kind: 'shell', owner: 'player', fx: p.x + 1, x: p.x + 1, y: p.y, speed: def.speed / 40, pal: 0, sprite: 'starfish', seq: 'idle', toX: 5, stopOnHit: true, bubble: true, damage, element, start: s.tick, hit: [] });
+  else if (def.kind === 'corn') {
+    const target = rowTarget(s, p.x, p.y);
+    if (target) {
+      if (standable(s, target.x, target.y)) setPanel(s, target.x, target.y, 'grass');
+      const blast = (x, y) => s.hazards.push({ kind: 'multihit', owner: 'player', x, y, left: def.hits, next: s.tick, gap: def.every, damage, element });
+      blast(target.x, target.y);
+      for (let x = 0; x < 6; x++) for (let y = 0; y < 3; y++) // the other grass panels of the enemy area
+        if ((x !== target.x || y !== target.y) && sideAt(s, x, y) === 'e' && panelType(s, x, y) === 'grass') blast(x, y);
+    }
+  }
+  else if (def.kind === 'yoyo') {
+    const x0 = p.x + 1, path = [];
+    for (let i = 0; i <= def.out; i++) path.push(x0 + i);
+    for (let i = 0; i < def.hold; i++) path.push(x0 + def.out);
+    for (let i = def.out - 1; i >= 0; i--) path.push(x0 + i);
+    s.hazards.push({ kind: 'yoyo', owner: 'player', y: p.y, path, step: def.step, t: 0, damage, element });
+  }
+  else if (def.kind === 'thunder') s.hazards.push({ kind: 'thunder', owner: 'player', fx: p.x + 1, fy: p.y, dx: 0, dy: 0, legs: def.legs, leg: def.leg, t: 0, start: s.tick, damage, element });
   else if (def.kind === 'burner') s.hazards.push({ kind: 'flame', owner: 'player', x: p.x + 1, y: p.y, born: s.tick, life: def.life, spread: def.spread, wide: def.wide, crack: def.crack, damage, element, hit: [] });
   else if (def.kind === 'busterup') { s.busterUp++; s.events.push({ type: 'busterUp', level: 1 + s.busterUp }); }
   else if (def.kind === 'crack') for (const [dx, dy] of REGIONS[def.region || 1]) { // the panels of the area are lifted and sent down their rows
@@ -587,7 +612,7 @@ function stepPlayer(s, input) {
   p.prevDir = input.dir;
   if (s.navi.bLeft && input.a && leftNow && !(p.bLeftCool > 0)) {
     const A = B_LEFT[s.navi.bLeft];
-    p.state = A.state; p.stateT = 0; p.abilityTicks = A.ticks; p.guardReflect = !!A.reflect; p.reflected = false; p.bLeftCool = A.ticks + A.cool;
+    p.state = A.state; p.stateT = 0; p.abilityTicks = A.ticks; p.guardReflect = !!A.reflect; p.reflected = false; p.reflectDamage = null; p.bLeftCool = A.ticks + A.cool;
     p.holdT = 0; p.charge = 0; setAnim(p, 'idle');
     s.events.push({ type: 'bLeft', ability: s.navi.bLeft });
     return;
@@ -894,7 +919,7 @@ function stepHazards(s) {
       if (s.tick < h.start) return true; // StreamHd: the later heads wait their turn
       if (h.x > h.toX || h.x > 5 || !standable(s, h.x, h.y)) return false;
       const e = at(s, h.x, h.y);
-      if (e && !h.hit.includes(e.id)) { h.hit.push(e.id); hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
+      if (e && !h.hit.includes(e.id)) { h.hit.push(e.id); hitEnemy(s, e, h.damage, { element: h.element, chip: true, bubble: h.bubble }); if (h.stopOnHit) return false; }
       h.fx += h.speed; h.x = Math.round(h.fx);
       return true;
     }
@@ -937,9 +962,34 @@ function stepHazards(s) {
       if (age % h.every === 0) hitEnemy(s, at(s, h.x, h.y), h.damage, { element: h.element, chip: true });
       return true;
     }
+    if (h.kind === 'yoyo') { // YoYo (t3 0x52): one entry of the path every 8 frames, a hit check on each
+      if (h.t % h.step === 0) {
+        const x = h.path[h.t / h.step];
+        if (x === undefined || x > 5) return false;
+        h.x = x; const e = at(s, x, h.y);
+        if (e) hitEnemy(s, e, h.damage, { element: h.element, chip: true });
+      }
+      h.t++; return true;
+    }
+    if (h.kind === 'thunder') { // Thunder ball (t3 0x2A): homes leg by leg; a hit paralyses and ends it
+      if (h.t % h.leg === 0) {
+        if (h.t / h.leg >= h.legs) return false;
+        const x = Math.round(h.fx), y = Math.round(h.fy), foes = s.enemies.filter(e => e.hp > 0);
+        const e = foes.sort((a, b) => Math.abs(a.x - x) + Math.abs(a.y - y) - Math.abs(b.x - x) - Math.abs(b.y - y))[0];
+        if (!e) { h.dx = 1 / h.leg; h.dy = 0; }
+        else if (e.x === x && e.y !== y) { h.dx = 0; h.dy = Math.sign(e.y - y) / h.leg; }
+        else { h.dx = Math.sign(e.x - x || 1) / h.leg; h.dy = 0; }
+      }
+      h.t++; h.fx += h.dx; h.fy += h.dy;
+      const x = Math.round(h.fx), y = Math.round(h.fy);
+      if (x < 0 || x > 5 || y < 0 || y > 2) return false;
+      const e = at(s, x, y);
+      if (e) { hitEnemy(s, e, h.damage, { element: h.element, paralyze: val('chipParalyzeTicks'), chip: true }); return false; }
+      return true;
+    }
     if (h.kind === 'multihit') {
       if (s.tick < h.next) return true;
-      hitEnemy(s, at(s, h.x, h.y), h.damage, { chip: true }); s.effects.push({ kind: 'blast', x: h.x, y: h.y, t: 0 });
+      hitEnemy(s, at(s, h.x, h.y), h.damage, { chip: true, element: h.element }); s.effects.push({ kind: 'blast', x: h.x, y: h.y, t: 0 });
       h.next = s.tick + h.gap;
       return --h.left > 0;
     }
@@ -986,7 +1036,7 @@ export function step(s, input = {}) {
   if (input.l && s.gauge >= val('customGaugeTicks') && s.player.state === 'idle') { openCustom(s); return s; }
   stepPlayer(s, input);
   const api = virusApi(s);
-  for (const e of [...s.enemies]) if (e.hp > 0) { if (e.counterT > 0) e.counterT--; if (e.paralyzed > 0) { e.paralyzed--; continue; } s.attacker = e; (e.kind === 'navi' ? stepNavi : e.kind === 'coil' ? stepCoil : stepVirus)(e, api); }
+  for (const e of [...s.enemies]) if (e.hp > 0) { if (e.counterT > 0) e.counterT--; if (e.paralyzed > 0) { e.paralyzed--; if (e.bubble > 0) e.bubble--; continue; } s.attacker = e; (e.kind === 'navi' ? stepNavi : e.kind === 'coil' ? stepCoil : stepVirus)(e, api); }
   s.attacker = null;
   s.enemies = s.enemies.filter(e => e.hp > 0 || e.kind !== 'coil');
   stepHazards(s);

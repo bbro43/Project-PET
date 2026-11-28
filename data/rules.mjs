@@ -229,6 +229,30 @@ export const CHIP_BEHAVIOUR = {
   // off_80CA160 = 1, 2, 4 or 6 panels round the panel 2 ahead.
   Tornado: { kind: 'tornado', every: 4, life: 32, panelElement: true, anim: 'buster', lock: 42, confidence: 'rom-verified', note: 'twister at Unk_10 0x20 of 0x2A' },
   Static: { kind: 'tornado', every: 4, life: 32, byBugs: [[[0, 0]], [[0, 0], [1, 0]], [[0, 0], [1, 0], [0, -1], [0, 1]], [[0, 0], [1, 0], [0, -1], [0, 1], [1, -1], [1, 1]]], anim: 'buster', lock: 42, confidence: 'rom-verified', note: 'bug count: stats 0x31, 0x13, 0x14, 0x16, 0x54, 0x24, 0x18, 0x19 each add 1; 0x54 and 0x19 are not modelled' },
+  // Reflectors (family 0x2B, sub_80ED154): the guard (t3 0x2B) for params[0] = 60 frames (Unk_10 against Unk_0c); the first hit it
+  // blocks sends a reflect wave (sub_80C9CDA) back down the row with the chip's damage.
+  Rflectr1: { kind: 'reflector', ticks: 60, confidence: 'rom-verified' },
+  Rflectr2: { kind: 'reflector', ticks: 60, confidence: 'rom-verified' },
+  Rflectr3: { kind: 'reflector', ticks: 60, confidence: 'rom-verified' },
+  // BubbleStars (family 0x2D → t3 0x42): a StarFish (sprite 4/0x0F, animation 0) glides from the panel ahead at
+  // byte_80CC65C[params[0]] = 1.5 / 2.25 / 3 px a frame; the first enemy it hits is bubbled (status 0x60) and it stops.
+  BblStar1: { kind: 'bubblestar', speed: 1.5, anim: 'throw', lock: 30, confidence: 'rom-verified', note: 'bubble length on enemies as on MegaMan (BUBBLE.frames, recalled)' },
+  BblStar2: { kind: 'bubblestar', speed: 2.25, anim: 'throw', lock: 30, confidence: 'rom-verified' },
+  BblStar3: { kind: 'bubblestar', speed: 3, anim: 'throw', lock: 30, confidence: 'rom-verified' },
+  // CornShots (family 0x2A → t3 0x10): an invisible shot, one panel a frame; where it hits, the panel turns to grass (if solid)
+  // and a corn blast hits there twice, 12 frames apart (Param2 = 2, sub_80C6698 / sub_80C66E4), and sets off corns on the other
+  // grass panels of the enemy area (sub_80C6774, Param1 + 1; the app goes one level deep).
+  CornSht1: { kind: 'corn', hits: 2, every: 12, anim: 'buster', lock: 34, confidence: 'rom-verified', note: 'attack 0x0A + 0x18 frames; one level of spreading (recalled)' },
+  CornSht2: { kind: 'corn', hits: 2, every: 12, anim: 'buster', lock: 34, confidence: 'rom-verified' },
+  CornSht3: { kind: 'corn', hits: 2, every: 12, anim: 'buster', lock: 34, confidence: 'rom-verified' },
+  // Thunder (family 0x1F → t3 0x2A, battle_BDT_*): a ball from the panel ahead; every 60 frames it picks a direction toward an
+  // enemy (along the row unless already in its column) and slides one panel (X 0xAAAB, Y 0x6666 a frame); after Param2 = 5
+  // legs it vanishes. A hit paralyses (Param3 = 0x10) and ends it.
+  Thunder: { kind: 'thunder', legs: 5, leg: 60, anim: 'buster', lock: 20, confidence: 'rom-verified', note: 'which enemy it follows (FindOpponentPanelXYForThunderObject) is taken as the nearest (recalled)' },
+  // YoYo (family 0x18 → t3 0x52): from the panel ahead it moves out params[2] = 2 more panels (8 frames a panel), spins there
+  // params[3] = 2 × 8 frames (the hit area is re-armed every 8 frames, sub_80CE9DC), then comes back the same way. Each panel
+  // it enters, and each re-arm, can hit.
+  YoYo: { kind: 'yoyo', out: 2, hold: 2, step: 8, anim: 'buster', lock: 30, confidence: 'rom-verified', note: 'attack held 0x1E frames after the spawn (Unk_10)' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

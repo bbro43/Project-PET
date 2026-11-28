@@ -127,3 +127,36 @@ test('Tornado: 8 hits 2 panels ahead; on volcano it turns fire, doubles and clea
   const v = after('Tornado', 60, s => { setPanel(s, 3, 1, 'volcano'); });
   assert.equal(hurt(v)[0][2], 320); assert.equal(panelType(v, 3, 1), 'normal');
 });
+
+import { hitPlayer } from '../src/battle/engine.mjs';
+test('Reflector: guards for 60 frames and sends the first hit back with the chip\'s damage', () => {
+  const s = after('Rflectr2', 5);
+  assert.equal(s.player.state, 'guard');
+  s.player.invuln = 0; const hp = s.player.hp; hitPlayer(s, 40);
+  assert.equal(s.player.hp, hp);
+  assert.deepEqual(hurt(s), [[3, 1, 120]]);
+  for (let i = 0; i < 60; i++) step(s, {});
+  assert.equal(s.player.state, 'idle');
+});
+
+test('BubbleStar: the first enemy in the row is bubbled; the next hit pops it', () => {
+  const s = after('BblStar1', 120, s => { for (const e of s.enemies) e.paralyzed = 0; s.enemies.forEach(e => { e.think = 1e9; }); });
+  const e = s.enemies.find(e => e.x === 3 && e.y === 1);
+  assert.ok(e.bubble > 0); assert.equal(hurt(s).length, 1);
+});
+
+test('CornShot: grass where it hits, two blasts, and corns on the other grass panels', () => {
+  const s = after('CornSht1', 40, s => { setPanel(s, 5, 0, 'grass'); });
+  assert.equal(panelType(s, 3, 1), 'grass');
+  assert.deepEqual(hurt(s).map(([x, y, d]) => [x, y, d]), [[3, 1, 100], [5, 0, 100]]); // wood on grass? 50 × 2
+});
+
+test('Thunder: the ball homes in one panel per 60 frames and paralyses', () => {
+  const s = after('Thunder', 200, s => { s.enemies = s.enemies.filter(e => e.x === 4 && e.y === 0); s.enemies[0].paralyzed = 0; s.enemies[0].think = 1e9; });
+  assert.equal(hurt(s).length, 1);
+});
+
+test('YoYo: out three panels, spins there twice, and back', () => {
+  const s = after('YoYo', 80, s => { s.enemies = s.enemies.filter(e => e.x === 4 && e.y === 1); s.enemies[0].think = 1e9; });
+  assert.deepEqual(hurt(s), [[4, 1, 150]]); // arrives, then two re-arms
+});

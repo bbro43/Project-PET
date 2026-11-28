@@ -4243,6 +4243,60 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "thunderfx": {
+   "label": "Thunder ball (t3 0x2A battle_BDT_init_80c940c): sprite 0x10/0x16, animation 0 (Param1 1; 2 for kind 2), the next animation as it vanishes",
+   "sources": {
+    "bn6f": {
+     "offset": "35F424",
+     "compression": "none",
+     "bytes": 5036,
+     "sha256": "581abf0b1d415114c44f36a81e0e535cf1e1f122c98b4e0e90149f48314baa02",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "35E99C",
+     "compression": "none",
+     "bytes": 5036,
+     "sha256": "581abf0b1d415114c44f36a81e0e535cf1e1f122c98b4e0e90149f48314baa02",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "ball": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "end": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "yoyofx": {
+   "label": "YoYo (t3 0x52 sub_80CE83C): sprite_load 0x0C/0x0B, animation 0",
+   "sources": {
+    "bn6f": {
+     "offset": "303A34",
+     "compression": "none",
+     "bytes": 2792,
+     "sha256": "3e3a18164a7c09935f2976e9250f957232b8fa900a0da8fdb1bac04c0b412be6",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "302FAC",
+     "compression": "none",
+     "bytes": 2792,
+     "sha256": "3e3a18164a7c09935f2976e9250f957232b8fa900a0da8fdb1bac04c0b412be6",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "spin": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

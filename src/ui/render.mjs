@@ -196,6 +196,14 @@ export function render(g, s, bank) {
 
   // ChargeMan's train cars (drawn facing left like ChargeMan)
   const car = bank?.get('traincar');
+  for (const h of s.hazards) if (h.kind === 'yoyo' && h.x !== undefined) { // YoYo (sprite 0x0C/0x0B)
+    const [ax, ay] = anchor(h.x, h.y);
+    sprite(g, bank, 'yoyofx', 'spin', h.t, ax, ay - 16, (g, x, y) => { g.fillStyle = '#c0c8d8'; g.beginPath(); g.arc(x, y, 8, 0, 7); g.fill(); }, 0, false);
+  }
+  for (const h of s.hazards) if (h.kind === 'thunder') { // Thunder ball (sprite 0x10/0x16)
+    const [ax, ay] = anchor(h.fx, h.fy);
+    sprite(g, bank, 'thunderfx', 'ball', h.t, ax, ay - 12, (g, x, y) => { g.fillStyle = '#ffe060'; g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); }, 0, false);
+  }
   for (const h of s.hazards) if (h.kind === 'widewave') { // WideShot wave (sprite 0x10/0x37): forming, then travelling
     const [ax, ay] = anchor(h.fx, h.y), t = s.tick - h.start;
     sprite(g, bank, 'widefx', t < 9 ? 'form' : 'wave', t < 9 ? t : t - 9, ax, ay - 16, (g, x, y) => { g.fillStyle = 'rgba(120,190,255,.8)'; g.beginPath(); g.ellipse(x, y, 8, 40, 0, 0, 7); g.fill(); }, 0, false);
@@ -485,7 +493,8 @@ export function render(g, s, bank) {
     }
     draw.push({ y: e.drawY ?? e.y, fn: () => {
       sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, fallback, e.palette, flip); // ROM sprites face right; Navis and viruses face MegaMan
-      if (e.paralyzed > 0 && (s.tick >> 1) & 1) { g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.6; sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, () => {}, e.palette, flip); g.restore(); } // paralysed: flicker bright (app-drawn)
+      if (e.bubble > 0) sprite(g, bank, 'bubblefx', 'bubble', s.tick, ax, ay - 16, () => { g.strokeStyle = 'rgba(200,230,255,.8)'; g.beginPath(); g.arc(ax, ay - 16, 16, 0, 7); g.stroke(); }); // bubbled (BubbleStar)
+      else if (e.paralyzed > 0 && (s.tick >> 1) & 1) { g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.6; sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, () => {}, e.palette, flip); g.restore(); } // paralysed: flicker bright (app-drawn)
       if (e.family === 'Cragger' && !e.fist) sprite(g, bank, 'craggerarm', e.anim, e.animT, ax, ay, () => {}, e.palette, flip);
       if (e.kind === 'coil' && e.discharge > 0 && !bank?.has('eleccoil')) { g.strokeStyle = '#80f0ff'; g.lineWidth = 2; g.beginPath(); g.moveTo(ax, FIELD_Y); g.lineTo(ax, FIELD_Y + 3 * PANEL_H); g.stroke(); }
       if (e.guard) { g.fillStyle = 'rgba(200,230,255,.7)'; g.fillRect(ax - 18, ay - 34, 3, 28); }
