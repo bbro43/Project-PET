@@ -4501,6 +4501,147 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "blkbombfx": {
+   "label": "BlkBomb (t3 0x4A sub_80CD50C): sprite 0x0C/0x24, animation 0",
+   "sources": {
+    "bn6f": {
+     "offset": "31FA84",
+     "compression": "none",
+     "bytes": 620,
+     "sha256": "2c022e44787872287d8206309a90452ecd4ab844b344d62dfac3ec1f67076843",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "31EFFC",
+     "compression": "none",
+     "bytes": 620,
+     "sha256": "2c022e44787872287d8206309a90452ecd4ab844b344d62dfac3ec1f67076843",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "bugbombfx": {
+   "label": "BugBomb (t3 0xA5 sub_80D9D6C): sprite 0x0C/0x02, animation 5",
+   "sources": {
+    "bn6f": {
+     "offset": "2F569C",
+     "compression": "none",
+     "bytes": 6192,
+     "sha256": "5ca6744ea54d6fd269df28c95999a979e1d86f320b7405552986f8942db226eb",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2F4C14",
+     "compression": "none",
+     "bytes": 6192,
+     "sha256": "5ca6744ea54d6fd269df28c95999a979e1d86f320b7405552986f8942db226eb",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 5,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "flshbombfx": {
+   "label": "FlshBom (t3 0xA4 sub_80D9A74): sprite 0x10/0x52, animation 0 in the air, 1 set down",
+   "sources": {
+    "bn6f": {
+     "offset": "391E40",
+     "compression": "none",
+     "bytes": 1596,
+     "sha256": "4f0857290f61f3bd80293ab05408643d4a2a901a4a0584877937471d0c75c9f6",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3913B8",
+     "compression": "none",
+     "bytes": 1596,
+     "sha256": "4f0857290f61f3bd80293ab05408643d4a2a901a4a0584877937471d0c75c9f6",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "air": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "idle": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "boilerfx": {
+   "label": "LilBolr (t3 0x93 sub_80D761C): sprite 4/0x0D, animation 0; 5 as it blows",
+   "sources": {
+    "bn6f": {
+     "offset": "24EAF4",
+     "compression": "none",
+     "bytes": 14948,
+     "sha256": "e01961b16f4cb1bc4c7d04fa101309a4fd0333debb124abf153c5eb657dacda4",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "24EAF4",
+     "compression": "none",
+     "bytes": 14948,
+     "sha256": "e01961b16f4cb1bc4c7d04fa101309a4fd0333debb124abf153c5eb657dacda4",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "blow": {
+     "seq": 5,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "dragonchip": {
+   "label": "Dragon chips (t3 0xC9 head sub_80DE430, t3 0xC8 body): sprite 4/0x10, head animation 2 going down / 6 going up, body 7; palette 3·kind (Heat 0, Elec 3, Aqua 6, Wood 9)",
+   "sources": {
+    "bn6f": {
+     "offset": "253F88",
+     "compression": "none",
+     "bytes": 14860,
+     "sha256": "7c3738a5dc127bd39387ac90d22f31feeb4b01d112fb5cc2559f7484c2ab7fbf",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "253F88",
+     "compression": "none",
+     "bytes": 14860,
+     "sha256": "7c3738a5dc127bd39387ac90d22f31feeb4b01d112fb5cc2559f7484c2ab7fbf",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "down": {
+     "seq": 2,
+     "confidence": "rom-verified"
+    },
+    "up": {
+     "seq": 6,
+     "confidence": "rom-verified"
+    },
+    "body": {
+     "seq": 7,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

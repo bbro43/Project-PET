@@ -295,6 +295,32 @@ export const CHIP_BEHAVIOUR = {
   // there, turning back at its border. Its hit is re-armed on every new panel; a hole ends it.
   AirHocky: { kind: 'hockey', moves: 10, every: 6, anim: 'throw', lock: 15, confidence: 'rom-verified' },
   PitHocky: { kind: 'hockey', moves: 18, every: 6, anim: 'throw', lock: 15, confidence: 'rom-verified', note: 'its afterimages (spawnIllusionObject every 4 frames) are not drawn' },
+  // Placed bombs (family 0x12, off_80EB6F8 by subfamily): thrown at 2.75 px a frame (0x2C000) to the panel 3 ahead; on a solid,
+  // empty panel each becomes an object there (MegaMan's side's object, it blocks shots):
+  //   BlkBomb (sub 6 → t3 0x4A): 100 HP for 6000 frames; a Fire hit (PanelDamage2) sets it off: a hit area 0x82 / 0x81 by
+  //     side (sub_80CD7D0) with the chip's damage, as Fire. The app reads 0x81 / 0x82 as the whole enemy side (recalled).
+  //   FlshBom (sub 14 → t3 0xA4, byte_80D9A20[params[0]]): HP 10 / 15 / 20; after 60 frames it flashes: a hit area 0x82 / 0x81
+  //     with status 0x10 / 0x12 (paralysis); FlshBom3 adds status 0x30 at the end (not modelled).
+  //   LilBolr (sub 3 → t3 0x93): a boiler that soaks up hits; after 180 frames (0xB4) or its third hit it bursts over the 8
+  //     panels around it (area 0x10), with the damage it took (sub_80D7A2A). The app adds the chip's damage (recalled).
+  //   BugBomb (sub 7 → t3 0xA5): HP 40; after 60 frames area 0x10 around it, status 0x20 (a random bug on a Navi, sub_80D9FC2;
+  //     the CPU Navis have no bugs here, so it does nothing to them).
+  BlkBomb: { kind: 'place', obj: 'BlackBomb', sprite: 'blkbombfx', hp: 100, life: 6000, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
+  FlshBom1: { kind: 'place', obj: 'FlashBomb', sprite: 'flshbombfx', hp: 10, life: 60, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
+  FlshBom2: { kind: 'place', obj: 'FlashBomb', sprite: 'flshbombfx', hp: 15, life: 60, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
+  FlshBom3: { kind: 'place', obj: 'FlashBomb', sprite: 'flshbombfx', hp: 20, life: 60, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
+  LilBolr1: { kind: 'place', obj: 'Boiler', sprite: 'boilerfx', hp: 4000, life: 180, hits: 3, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
+  LilBolr2: { kind: 'place', obj: 'Boiler', sprite: 'boilerfx', hp: 4000, life: 180, hits: 3, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
+  LilBolr3: { kind: 'place', obj: 'Boiler', sprite: 'boilerfx', hp: 4000, life: 180, hits: 3, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
+  BugBomb: { kind: 'place', obj: 'BugBomb', sprite: 'bugbombfx', hp: 40, life: 60, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
+  // Dragons (family 0x51, sub_80EF4D0 → t3 0xC9): on frame 2 a dragon comes down the nearest enemy column (sub_80ED040; else the
+  // panel ahead) from above the field at 4 px a frame (byte_80DE3DC), swings one column back over 10 frames (0x28 / 4,
+  // sine bob), and goes up that column and away. Its head's hit area (area 1) is re-armed on every new panel (sub_80DE730);
+  // four body pieces (t3 0xC8) follow 3 / 6 / 9 / 12 frames behind (drawn, not hitting here).
+  HeatDrgn: { kind: 'dragon', pal: 0, anim: 'buster', lock: 50, confidence: 'rom-verified', note: 'body pieces drawn only' },
+  ElecDrgn: { kind: 'dragon', pal: 3, anim: 'buster', lock: 50, confidence: 'rom-verified' },
+  AquaDrgn: { kind: 'dragon', pal: 6, anim: 'buster', lock: 50, confidence: 'rom-verified' },
+  WoodDrgn: { kind: 'dragon', pal: 9, anim: 'buster', lock: 50, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

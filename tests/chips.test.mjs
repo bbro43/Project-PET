@@ -41,7 +41,7 @@ function after(name, frames, setup = () => {}) {
   step(s, { b: true }); for (let i = 0; i < frames; i++) step(s, {});
   return s;
 }
-const hurt = s => s.enemies.filter(e => e.hp < 5000).map(e => [e.x, e.y, 5000 - e.hp]).sort();
+const hurt = s => s.enemies.filter(e => e.owner !== 'player' && e.hp < 5000).map(e => [e.x, e.y, 5000 - e.hp]).sort();
 
 test('bombs: MiniBomb one panel 3 ahead, BigBomb 3×3, EnergBom 3 hits', () => {
   assert.deepEqual(hurt(after('MiniBomb', 80)), [[4, 1, 50]]);
@@ -195,4 +195,28 @@ test('DollThunder: every enemy in the row ahead, once', () => {
 test('AirHockey: the puck bounces diagonally and keeps to the enemy area', () => {
   const s = after('AirHocky', 80, s => { s.enemies = s.enemies.filter(e => e.x === 4 && e.y === 1); });
   assert.deepEqual(hurt(s), [[4, 1, 300]]); // (2,1) (3,2) (4,1) (5,0) (4,1) (3,2) (4,1) (5,0) (4,1) (3,2) (4,1): 5 passes
+});
+
+test('placed bombs: BlkBomb waits for Fire, FlshBom paralyses everyone, LilBolr soaks hits, BugBomb goes off', () => {
+  const empty = s => { s.enemies = s.enemies.filter(e => !(e.x === 4 && e.y === 1)); };
+  let s = after('BlkBomb', 70, empty);
+  const bomb = s.enemies.find(e => e.family === 'BlackBomb');
+  assert.ok(bomb && bomb.x === 4 && bomb.y === 1 && bomb.hp === 100);
+  assert.equal(hurt(s).length, 0);
+  s.queue = [{ id: 2, name: 'FireBrn1', code: 'F' }]; s.player.x = 3; // a Fire hit on it sets it off
+  step(s, { b: true }); for (let i = 0; i < 30; i++) step(s, {});
+  assert.equal(bomb.hp, 0);
+  assert.ok(hurt(s).filter(([x, y, d]) => d >= 250).length >= 7); // every enemy takes the blast (plus burner hits)
+  s = after('FlshBom1', 120, empty);
+  assert.equal(hurt(s).length, 8);
+  assert.ok(s.enemies.filter(e => e.owner !== 'player').every(e => e.paralyzed > 0));
+  s = after('LilBolr1', 250, empty);
+  assert.deepEqual(hurt(s).map(h => h[2]), Array(8).fill(100)); // the 8 enemies around (4, 1) get the chip's damage
+  s = after('BugBomb', 120, empty);
+  assert.equal(s.enemies.some(e => e.family === 'BugBomb' && e.hp > 0), false);
+});
+
+test('Dragons: down the nearest enemy column, one column back, and up it', () => {
+  const s = after('HeatDrgn', 90);
+  assert.deepEqual(hurt(s).map(([x, y]) => [x, y]), [[3, 0], [3, 1], [3, 2], [4, 0], [4, 1], [4, 2]]);
 });

@@ -4,7 +4,7 @@
 // Panel geometry and sprite anchors are approximations pending an on-screen trace.
 import { frameAt } from '../rom/bank.mjs';
 import { val } from '../../data/rules.mjs';
-import { chipBehaviour, CHIP_DATA, DELETE, BANNER, emotionOf } from '../battle/engine.mjs';
+import { chipBehaviour, CHIP_DATA, DELETE, BANNER, emotionOf, dragonAt } from '../battle/engine.mjs';
 import { EMOTION } from '../../data/rules.mjs';
 
 // Deleted enemies: drawn into a scratch canvas, then pixelated (mosaic) and faded like the game.
@@ -641,13 +641,21 @@ export function render(g, s, bank) {
       g.beginPath(); g.arc(ax, ay - 12, 8, 0, 7); g.moveTo(ax - 10, ay - 12); g.lineTo(ax + 10, ay - 12); g.moveTo(ax, ay - 22); g.lineTo(ax, ay - 2); g.stroke();
     }
   }
+  for (const h of s.hazards) if (h.kind === 'dragon' && h.pos) { // Dragon chips (sprite 4/0x10): four body pieces trail the head
+    for (let k = 4; k >= 0; k--) {
+      const q = k ? dragonAt(h.t - 3 * k, h.col) : h.pos; if (!q) continue;
+      const [ax, ay] = anchor(q.x, q.y);
+      sprite(g, bank, 'dragonchip', k ? 'body' : q.dir, h.t, ax, ay - 12, (g, x, y) => { g.fillStyle = k ? '#c04020' : '#e06030'; g.beginPath(); g.arc(x, y, k ? 7 : 10, 0, 7); g.fill(); }, h.pal, true); // flipped to face the enemy side (object_getFlip)
+    }
+  }
   for (const h of s.hazards) if (h.kind === 'bomb') {
     const k = Math.min(1, (s.tick - h.start) / (h.land - h.start));
     const [sx, sy] = anchor(h.x, h.y), [tx, ty] = anchor(h.tx, h.y);
     const x = sx + (tx - sx) * k, y = sy + (ty - sy) * k - 40 * Math.sin(Math.PI * k) - 16;
     if (s.tick < h.start) continue; // still in MegaMan's hand
     g.fillStyle = 'rgba(0,0,0,.45)'; g.beginPath(); g.ellipse(Math.round(sx + (tx - sx) * k), Math.round(sy + (ty - sy) * k) - 2, 6, 2, 0, 0, 7); g.fill(); // shadow (app-drawn)
-    sprite(g, bank, 'throwball', 'fly', s.tick - h.start, x, y, (g, x, y) => { g.fillStyle = '#3aa0e0'; g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill(); }); // t3 0x8, sprite 0x0C/0x02 animation 1
+    if (h.sprite) sprite(g, bank, h.sprite, 'air', s.tick - h.start, x, y + 12, (g, x, y) => { g.fillStyle = '#303030'; g.beginPath(); g.arc(x, y - 6, 6, 0, 7); g.fill(); }, 0, false); // a placed bomb in the air (its own sprite)
+    else sprite(g, bank, 'throwball', 'fly', s.tick - h.start, x, y, (g, x, y) => { g.fillStyle = '#3aa0e0'; g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill(); }); // t3 0x8, sprite 0x0C/0x02 animation 1
   }
   // Volcano eruption (object type3 0x07, sprite 0x10/0x24): bubbles, then a flame column
   for (const h of s.hazards) if (h.kind === 'volcano') {
@@ -767,6 +775,7 @@ export function render(g, s, bank) {
       if (z > 0) sprite(g, bank, 'grabbeam', 'fall', ts.t, bx, by - z, (g, x, y) => { g.fillStyle = '#fff8a0'; g.fillRect(x - 3, y - 40, 6, 40); });
     }
   }
+  for (const f of s.effects) if (f.kind === 'flash' && f.t < 12) { g.fillStyle = `rgba(255,255,255,${0.8 * (1 - f.t / 12)})`; g.fillRect(0, 0, 240, 160); } // FlshBom's flash (app-drawn)
   for (const f of s.effects) if (f.kind === 'grabland') { const [bx, by] = anchor(f.x, f.y); sprite(g, bank, 'grabbeam', 'land', f.t, bx, by, (g, x, y) => { g.fillStyle = `rgba(255,250,180,${1 - f.t / 24})`; g.fillRect(x - 16, y - 12, 32, 16); }); }
   // Banners in the game's battle message font: BATTLE START! before the first turn; after the last deletion,
   // ENEMY DELETED! and then YOU WIN!
