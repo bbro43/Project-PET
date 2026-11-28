@@ -505,7 +505,7 @@ test('intro: BATTLE START! freezes the battle; deleted enemies dissolve over 53 
 test('WhiCapsl after an attack chip paralyzes what it hits; alone it pops (0x8010488)', () => {
   const s = createBattle({ seed: 4, enemies: formation('Mettaur', 0, 1) });
   s.hand = [{ name: 'Cannon', code: '*' }, { name: 'WhiCapsl', code: '*' }, { name: 'WhiCapsl', code: '*' }]; pick(s, 0); pick(s, 1); confirmCustom(s);
-  assert.equal(s.queue.length, 1); assert.equal(s.queue[0].status, 'paralyze');
+  assert.equal(s.queue.length, 1); assert.equal(s.queue[0].paralyze, true);
   const e = s.enemies[0]; e.think = 1e9; e.hp = 999; s.player.y = e.y; s.player.invuln = 1e9;
   step(s, { b: true });
   assert.ok(e.paralyzed > 0, 'paralyzed');

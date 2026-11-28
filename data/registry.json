@@ -5234,6 +5234,31 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "lancefx": {
+   "label": "Lance (t3 0x6F sub_80D2480): sprite 0x0C/0x44, flipped to face MegaMan",
+   "sources": {
+    "bn6f": {
+     "offset": "3322B8",
+     "compression": "none",
+     "bytes": 460,
+     "sha256": "c9398da91d1335bc98d5c504db3ef73157a9eb90f6fa0064391e61c963445724",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "331830",
+     "compression": "none",
+     "bytes": 460,
+     "sha256": "c9398da91d1335bc98d5c504db3ef73157a9eb90f6fa0064391e61c963445724",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "thrust": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

@@ -183,13 +183,15 @@ export function shuffleHand(s) {
 
 export function confirmCustom(s) {
   if (s.phase !== 'custom') return;
-  // Atk+10 style chips add their damage to the attack chip picked before them.
+  // sub_8029224: a plus chip joins the chip before it when that chip's effect flags allow it (Atk+10 / Atk+30 / WhiCapsl:
+  // flag 2; Navi+20: flag 4; Uninstll: flag 2 without flag 1), then leaves the list, so several stack on one chip.
+  // Atk+ adds its power; WhiCapsl marks paralysis (chip flag 2), Uninstll marks Uninstall (chip flag 4, collision code 0xF8).
   s.queue = [];
   for (const c of s.picked.map(i => ({ ...s.hand[i], bonus: 0 }))) {
-    const b = chipBehaviour(c.name);
-    if (b?.kind === 'plus') { // attaches to the attack chip before it; alone it is used as itself (a puff)
-      const prev = s.queue[s.queue.length - 1], pk = prev && chipBehaviour(prev.name)?.kind;
-      if (prev && ['shot', 'slash', 'throw', 'vulcan', 'crack'].includes(pk)) { prev.bonus += CHIP_DATA[c.name].damage; if (b.adds) prev.status = b.adds; continue; }
+    const b = chipBehaviour(c.name), prev = s.queue[s.queue.length - 1];
+    if (b?.join && prev) {
+      const f = CHIP_DATA[prev.name]?.flags || 0;
+      if ((f & b.join.need) && !(f & (b.join.not || 0))) { prev.bonus += b.adds ? 0 : CHIP_DATA[c.name].damage; if (b.adds) prev[b.adds] = true; continue; }
     }
     s.queue.push(c);
   }
@@ -478,7 +480,7 @@ function useChip(s, chip) {
     if (mood === 'synchro') s.emotion.mood = 0x80; else resetEmotion(s);
   }
   const el = chip.element ?? data.element, element = el === 'none' ? undefined : el;
-  const paralyze = chip.status === 'paralyze' ? val('chipParalyzeTicks') : 0;
+  const paralyze = chip.paralyze ? val('chipParalyzeTicks') : 0;
   p.state = 'chip'; p.stateT = 0; p.chip = { ...chip, lock: def.lock }; setAnim(p, def.anim);
   if (def.kind === 'shot') {
     const target = rowTarget(s, p.x, p.y);
@@ -509,6 +511,8 @@ function useChip(s, chip) {
   else if (def.kind === 'firehit') { // sub_80CFE08: the first column ahead holding an enemy, a fist on each enemy there
     for (let x = p.x + 1, n = 0; x <= 5; x++, n++) { const col = [0, 1, 2].map(y => at(s, x, y)).filter(e => e && e.owner !== 'player'); if (!col.length) continue; for (const e of col) s.hazards.push({ kind: 'firefist', owner: 'player', x: p.x + 1 + Math.min(n, 2), y: e.y, hit: s.tick + 10, until: s.tick + 10 + 0x26, damage, element }); break; } // the drop column stops after two empty ones
   }
+  else if (def.kind === 'lance') for (let y = 0; y < 3; y++) s.hazards.push({ kind: 'lance', owner: 'player', x: 5, y, start: s.tick, hit: s.tick + 6, until: s.tick + 8 + 0x14, damage, element }); // sub_80D2596: the back column, rows 1–3
+  else if (def.kind === 'fullcust') s.gauge = val('customGaugeTicks'); // sub_800AF34: SetCustGauge 0x4000
   else if (def.kind === 'boomer') s.hazards.push({ kind: 'boomer', owner: 'player', fx: 0, fy: 2, leg: 0, vx: def.speed[0] / 40, vy: def.speed[1] / 24, last: null, damage, element }); // from the bottom row's back corner
   else if (def.kind === 'wavearm') for (const dy of def.rows) { // WaveArm / PwrWave (family 0x31): shockwaves (t3 0x16) from the panel ahead
     const x = p.x + 1, y = p.y + dy;
@@ -1466,6 +1470,10 @@ function stepHazards(s) {
       h.fx += 3; const x = Math.round(h.fx / 40);
       if (x !== h.x) { h.x = x; if (x > 5 || !standable(s, x, h.y)) return false; const e = at(s, x, h.y); if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
       return true;
+    }
+    if (h.kind === 'lance') { // t3 0x6F: hits on frame 6, then stays 0x14 frames
+      if (s.tick === h.hit) { const e = at(s, h.x, h.y); if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
+      return s.tick < h.until;
     }
     if (h.kind === 'firefist') { // FireHit (t3 0x5B): flashes 10 frames, hits once, 0x25 more on screen
       if (s.tick === h.hit) { const e = at(s, h.x, h.y); if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }

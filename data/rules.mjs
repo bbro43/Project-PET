@@ -525,6 +525,12 @@ export const CHIP_BEHAVIOUR = {
   // a fist t3 0x5B (sprite 0x14/0x1A) on each enemy row, but the column it puts them in stops moving after two empty columns,
   // so the fists never land more than 3 columns ahead. The fist flashes the panel 10 frames, hits once (0x4050101), then
   // shows its animation 0x25 frames (sub_80CFD80 / sub_80CFDB0).
+  // Lance (sub 4, sub_80D2596 → t3 0x6F ×3): in the enemies' back column (ROM column 6), all three rows; each lance starts
+  // 0x40 px further back, comes in 8 px a frame for 8 frames, hits its panel on frame 6 (0x4040401), then stays 0x14
+  // frames, flickering (sub_80D2514 / sub_80D255A). Sprite 0x0C/0x44 turned to face MegaMan.
+  Lance: { kind: 'lance', anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  // FullCust (sub 5, sub_800AF34): custom gauge set to full (SetCustGauge 0x4000).
+  FullCust: { kind: 'fullcust', anim: 'idle', lock: 1, confidence: 'rom-verified' },
   FireHit1: { kind: 'firehit', anim: 'idle', lock: 1, confidence: 'rom-verified' },
   FireHit2: { kind: 'firehit', anim: 'idle', lock: 1, confidence: 'rom-verified' },
   FireHit3: { kind: 'firehit', anim: 'idle', lock: 1, confidence: 'rom-verified' },
@@ -550,8 +556,15 @@ export const CHIP_BEHAVIOUR = {
   BusterUp: { kind: 'busterup', anim: 'idle', lock: 1, confidence: 'recalled', note: 'the 20-frame chip lockout (ChipData +0x14) follows; the action itself is not decoded' },
   AreaGrab: { kind: 'grab', column: true, anim: 'idle', lock: 1, confidence: 'rom-verified', note: 't4 0x3 0x80E0754: time freeze, a beam (t3 0xF 0x80C6414) on each panel of the first column ahead that is not all MegaMan\'s (0x800D58C)' },
   PanlGrab: { kind: 'grab', column: false, anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'same chip action with param 0: one beam on the edge panel of MegaMan\'s row (object_getEdgePanelMatchingRow)' },
-  'Atk+10': { kind: 'plus', anim: 'idle', lock: 1, confidence: 'recalled', note: 'added to the attack chip picked before it; used alone it only pops (0x8010488)' },
-  WhiCapsl: { kind: 'plus', adds: 'paralyze', anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'description "Add an effect: Paralyze" (TextScriptChipDescriptions0 #184); used alone: smoke puff t4 0x14 (sprite 0x14/0x02 animation 1) rising 2 px a frame from 48 px up, sound 0x90 (0x8010488 / 0x80E1CF8)' },
+  // Plus chips (family 0x1C sub 3, sub_8010488): joined to the chip before them in the custom screen (sub_8029224, chip IDs
+  // 0xC0 / 0xC1 / 0xC3 / 0xB8 / 0xB9) when its effect flags (ChipData +9) allow; used alone, the capsule puff. DarkPlus (0x122)
+  // isn't in that list, so it never joins a chip.
+  'Atk+10': { kind: 'plus', join: { need: 2 }, anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'joins the chip before it if that chip has effect flag 2 (sub_8029224); used alone it only pops (0x8010488)' },
+  'Atk+30': { kind: 'plus', join: { need: 2 }, anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  'Navi+20': { kind: 'plus', join: { need: 4 }, anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'only Navi chips have effect flag 4' },
+  Uninstll: { kind: 'plus', join: { need: 2, not: 1 }, adds: 'uninstall', anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'the hit strips the target\'s programs (collision 0xF8, sub_80140EE: SuperArmor, shoes, barrier, B+Left); the app\'s enemies have none, so it only joins' },
+  DarkPlus: { kind: 'plus', anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'not in sub_8029224\'s list: never joins a chip, used alone it pops' },
+  WhiCapsl: { kind: 'plus', join: { need: 2 }, adds: 'paralyze', anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'description "Add an effect: Paralyze" (TextScriptChipDescriptions0 #184); used alone: smoke puff t4 0x14 (sprite 0x14/0x02 animation 1) rising 2 px a frame from 48 px up, sound 0x90 (0x8010488 / 0x80E1CF8)' },
 };
 
 // Area stealing (AreaGrab / PanlGrab).

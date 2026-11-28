@@ -446,3 +446,17 @@ test('FireHit: the fists never land more than 3 columns ahead', () => {
   const s = after('FireHit1', 30, s => { s.enemies = s.enemies.filter(e => e.x === 5 && e.y === 1); });
   assert.deepEqual(hurt(s), []);
 });
+
+test('plus chips join by the effect flags (sub_8029224): stack, Navi+20 needs a Navi chip, DarkPlus never joins', () => {
+  const q = names => { const s = createBattle({ seed: 1 }); s.hand = names.map(name => ({ name, code: '*' })); s.phase = 'custom'; s.picked = names.map((_, i) => i); confirmCustom(s); return s.queue.map(c => [c.name, c.bonus, !!c.paralyze, !!c.uninstall]); };
+  assert.deepEqual(q(['Cannon', 'Atk+10', 'Atk+30', 'WhiCapsl']), [['Cannon', 40, true, false]]);
+  assert.deepEqual(q(['Cannon', 'Navi+20']), [['Cannon', 0, false, false], ['Navi+20', 0, false, false]]);
+  assert.deepEqual(q(['Cannon', 'DarkPlus']), [['Cannon', 0, false, false], ['DarkPlus', 0, false, false]]);
+  assert.deepEqual(q(['Cannon', 'Uninstll']), [['Cannon', 0, false, true]]);
+  assert.deepEqual(q(['Recov10', 'Atk+10']), [['Recov10', 0, false, false], ['Atk+10', 0, false, false]]);
+});
+
+test('Lance hits the back column on all three rows; FullCust fills the custom gauge', () => {
+  assert.deepEqual(hurt(after('Lance', 20)), [[5, 0, 150], [5, 1, 150], [5, 2, 150]]);
+  const s = after('FullCust', 2, s => { s.gauge = 0; }); assert.equal(s.gauge, 512);
+});
