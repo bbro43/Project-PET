@@ -4998,6 +4998,35 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "guardianfx": {
+   "label": "Guardian statue (t3 0x7D sub_80D4CA4): sprite 0x0C/0x35",
+   "sources": {
+    "bn6f": {
+     "offset": "326724",
+     "compression": "none",
+     "bytes": 4764,
+     "sha256": "ff453acb998c54402bc06fd3a163196c7e4b93a28620c7d2078a9d3a10975c96",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "325C9C",
+     "compression": "none",
+     "bytes": 4764,
+     "sha256": "ff453acb998c54402bc06fd3a163196c7e4b93a28620c7d2078a9d3a10975c96",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "strike": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

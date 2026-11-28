@@ -461,6 +461,12 @@ export const CHIP_BEHAVIOUR = {
   // breaks if the panel is not solid and free), then every 6 frames hits the whole enemy area (byte_80CF31C: region 0x82,
   // collision 0x52) with the chip's damage (1), and every 0x10 frames shows an effect on a random enemy panel.
   Anubis: { kind: 'place', obj: 'Anubis', sprite: 'anubisfx', seq: 'idle', pal: 0, hp: 100, life: 3000 + 20, ahead: true, freeze: true, hold: 120, anubis: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // Guardian (sub 14 → t4 0x52, sub_80E679C, hold 0x1E): on the panel ahead (needs 0x10, not 0x0F880080) a statue t3 0x7D
+  // (sub_80D4CA4: sprite 0x0C/0x35, HP 1, Timer 0x1770, collision 0x0E / 0x0F from frame 3). When an attack hits it, it takes
+  // the attacker's alliance (sub_80D4FF6: 0x55000000 = MegaMan's side, 0xAA000000 = the enemy's) and stops time (t4 0x53, its
+  // name, 0x3C): it strikes every panel the other side occupies (byte_80D4EB4: 0x85 / 0x84) with the chip's damage, the
+  // screen shakes 0x3C, then it crumbles. Hit by MegaMan it strikes the enemies; hit by an enemy it strikes MegaMan.
+  Guardian: { kind: 'place', obj: 'Guardian', sprite: 'guardianfx', seq: 'idle', pal: 0, hp: 1, life: 6000, ahead: true, freeze: true, hold: 30, guardian: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

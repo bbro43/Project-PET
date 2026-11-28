@@ -363,3 +363,13 @@ test('chip lockout: LockoutFrames from the chip data block the next chip after t
   for (let i = 0; i < 30; i++) step(s, {});
   step(s, { b: true }); assert.equal(s.queue.length, 0);
 });
+
+test('Guardian: hit by MegaMan it strikes every enemy; hit by an enemy it strikes MegaMan', async () => {
+  const { hitPlayer } = await import('../src/battle/engine.mjs');
+  let s = after('Guardian', 0); while (s.timestop) step(s, {});
+  const g = s.enemies.find(e => e.family === 'Guardian'); assert.deepEqual([g.x, g.y, g.hp], [2, 1, 1]);
+  for (let i = 0; i < 30; i++) step(s, {});
+  step(s, { a: true }); for (let i = 0; i < 30 && !s.timestop; i++) step(s, {}); // MegaMan's buster hits it
+  assert.ok(s.timestop); while (s.timestop) step(s, {});
+  assert.equal(hurt(s).length, 9); assert.ok(hurt(s).every(h => h[2] >= 200)); assert.equal(g.hp, 0);
+});

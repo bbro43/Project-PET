@@ -250,10 +250,17 @@ function placedBombBurst(s, o) {
 }
 function hitPlacedBomb(s, o, damage, extra) {
   o.flash = 4;
+  if (o.family === 'Guardian') return guardianStrikes(s, o, 'enemies');
   if (o.family === 'BlackBomb' && extra.element === 'fire') return placedBombBurst(s, o);
   if (o.family === 'Boiler') { o.soaked += damage; if (--o.hitsLeft <= 0) placedBombBurst(s, o); return; }
   o.hp = Math.max(0, o.hp - damage);
   if (!o.hp) s.effects.push({ kind: 'blast', x: o.x, y: o.y, t: 0 });
+}
+// Guardian (t3 0x7D / t4 0x53): hit → time stops, it strikes the side opposite to whoever hit it, then crumbles.
+function guardianStrikes(s, o, target) {
+  if (o.struck || o.stateT < 3 || s.timestop) return;
+  o.struck = true; o.anim = 'strike';
+  startSpecial(s, 'Guardian', { kind: 'guardianstrike', hold: 0x3C, target, obj: o }, o.damage, o.element);
 }
 function stepPlacedBomb(o, api) {
   const s = api.s; o.animT++; o.stateT++; if (o.flash) o.flash--;
@@ -278,7 +285,7 @@ function stepPlacedBomb(o, api) {
     if (o.stateT % 6 === 0) for (const e of s.enemies.filter(e => e.hp > 0 && e.owner !== 'player' && e.kind !== 'coil')) if (sideAt(s, e.x, e.y) === 'e') hitEnemy(s, e, o.damage, { element: o.element, chip: true, quiet: true });
   }
   if (--o.life > 0) return;
-  if (o.family === 'BlackBomb' || o.family === 'Cube' || o.family === 'MusicBox' || o.family === 'WindBox' || o.family === 'AirRaid' || o.family === 'Sensor') { o.hp = 0; s.effects.push({ kind: 'puff', x: o.x, y: o.y, t: 0 }); } // left alone: it just goes away
+  if (o.family === 'BlackBomb' || o.family === 'Cube' || o.family === 'MusicBox' || o.family === 'WindBox' || o.family === 'AirRaid' || o.family === 'Sensor' || o.family === 'Guardian' || o.family === 'Anubis') { o.hp = 0; s.effects.push({ kind: 'puff', x: o.x, y: o.y, t: 0 }); } // left alone: it just goes away
   else placedBombBurst(s, o);
 }
 // AirRaid's plane (t3 0x75): rises 0x1E frames, then a bomb every 0xA frames.
@@ -670,6 +677,9 @@ function springTrap(s, damage, element, opts) {
 // ElemTrap (t3 0x4D, sub_80CDFA4): an invisible catcher on every panel (region 0x80, target type 0x18) that records the
 // enemy attacks touching any panel; the first Fire / Aqua / Elec / Wood one (sub_80CE034) springs it. The hit on MegaMan,
 // if any, still lands. Called for every enemy attack aimed at panels, whether MegaMan stands there or not.
+function guardianHitAt(s, cells) { // an enemy attack on the Guardian's panel: it strikes MegaMan
+  for (const o of s.enemies) if (o.family === 'Guardian' && o.hp > 0 && cells.some(([x, y]) => x === o.x && y === o.y)) guardianStrikes(s, o, 'player');
+}
 export function elemTrapSees(s, opts = {}) {
   const tr = s.trap, element = (typeof opts === 'object' ? opts.element : undefined) ?? s.attacker?.element;
   if (tr?.kind !== 'element' || !['fire', 'aqua', 'elec', 'wood'].includes(element)) return;
@@ -695,6 +705,14 @@ function stepTimestop(s, input = {}) {
     const sp = ts.special;
     if (sp.def.kind === 'panels') { if (t === ts.start + sp.def.hold) applySpecial(s, sp); }
     else if (sp.def.kind === 'snake') stepSnakes(s, ts, sp, t);
+    else if (sp.def.kind === 'guardianstrike') { // sub_80D4E64: region 0x85 / 0x84, shake 0x3C
+      if (t === ts.start) {
+        if (sp.def.target === 'player') hitPlayer(s, sp.damage, { element: sp.element });
+        else for (const e of s.enemies.filter(e => e.hp > 0 && e.owner !== 'player' && e.kind !== 'coil')) { hitEnemy(s, e, sp.damage, { element: sp.element, chip: true }); s.effects.push({ kind: 'blast', x: e.x, y: e.y, t: 0 }); }
+        s.effects.push({ kind: 'shake', t: 0 });
+      }
+      if (t === ts.end - 1) { sp.def.obj.hp = 0; s.effects.push({ kind: 'puff', x: sp.def.obj.x, y: sp.def.obj.y, t: 0 }); }
+    }
     else if (sp.def.kind === 'grabback') { const k = t - ts.start; if (k > 0 && k % 0x1E === 0 && k / 0x1E <= sp.order.length) for (const e of s.enemies.filter(e => e.hp > 0 && e.owner !== 'player' && e.kind !== 'coil')) { hitEnemy(s, e, sp.damage, { element: sp.element, chip: true }); s.effects.push({ kind: 'grabland', x: e.x, y: e.y, t: 0 }); } }
     else if (sp.def.kind === 'meteors') { // a meteor every 0xA frames from start + 2; each lands 0x1E + 0x10 later
       const k = t - ts.start - 2 - 46;
@@ -936,8 +954,8 @@ function virusApi(s) {
     breakPanel: (x, y) => breakPanel(s, x, y),
     setPanel: (x, y, type) => setPanel(s, x, y, type),
     panelType: (x, y) => panelType(s, x, y),
-    hitPlayerAt(x, y, damage, opts) { elemTrapSees(s, opts); if (p.x === x && p.y === y && p.state !== 'vanish') hitPlayer(s, damage, opts); },
-    hitPlayerCells(cells, damage, opts) { elemTrapSees(s, opts); if (p.state !== 'vanish' && cells.some(([x, y]) => p.x === x && p.y === y)) hitPlayer(s, damage, opts); },
+    hitPlayerAt(x, y, damage, opts) { elemTrapSees(s, opts); guardianHitAt(s, [[x, y]]); if (p.x === x && p.y === y && p.state !== 'vanish') hitPlayer(s, damage, opts); },
+    hitPlayerCells(cells, damage, opts) { elemTrapSees(s, opts); guardianHitAt(s, cells); if (p.state !== 'vanish' && cells.some(([x, y]) => p.x === x && p.y === y)) hitPlayer(s, damage, opts); },
     rng: () => rng(s),
     coils: owner => s.enemies.filter(c => c.kind === 'coil' && c.owner === owner.id && c.hp > 0),
     addEnemy(o) { o.id = s.nextId++; s.enemies.push(o); return o; },
