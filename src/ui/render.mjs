@@ -161,6 +161,7 @@ export function render(g, s, bank) {
 
   // HeatMan fire: floor pillars and the wall nozzle
   const pil = bank?.get('firepillar'), noz = bank?.get('nozzle');
+  for (const h of s.hazards) if (h.kind === 'heatflame' && h.live) { const [ax, ay] = anchor(h.x, h.y); sprite(g, bank, 'heatflame', 'burn', s.tick, ax, ay, (g, x, y) => { g.fillStyle = '#ff8020'; g.beginPath(); g.ellipse(x, y - 10, 8, 14, 0, 0, 7); g.fill(); }, 0, h.dir < 0); } // HeatMan's column flames (t3 0x25, sprite 0x10/0x1A); Z 0xF0 while hidden
   for (const h of s.hazards) {
     if (h.kind === 'pillar') {
       const t = s.tick - h.start, [ax, ay] = anchor(h.x, h.y);
@@ -171,10 +172,10 @@ export function render(g, s, bank) {
     }
     if (h.kind === 'nozzle') {
       const [ax, ay] = anchor(0, h.y), t = s.tick - h.start;
-      if (noz) { // sprite fires to the left; mirror so the plate sits on the left edge and flame runs right
+      if (noz) { // t3 0x27 on ROM panel (1, row), Z 0, turned like HeatMan (sub_80C8E2C)
         const f = frameAt(noz.burn, t);
-        g.save(); g.translate(4, 0); g.scale(-1, 1);
-        g.drawImage(f.image, -f.originX, Math.round(ay - 12 - f.originY)); g.restore();
+        g.save(); g.translate(Math.round(ax), 0); g.scale(-1, 1);
+        g.drawImage(f.image, -f.originX, Math.round(ay - f.originY)); g.restore();
       } else { g.fillStyle = '#ff9030'; g.fillRect(0, ay - 20, PANEL_W * h.cells.length, 12); }
     }
   }
@@ -290,10 +291,13 @@ export function render(g, s, bank) {
     }
     if (h.kind === 'stream') {
       const t = s.tick - h.start;
-      for (const [cx, cy] of h.cells) {
-        const [ax, ay] = anchor(cx, cy);
-        if (hose) { const f = frameAt(hose.stream, t); g.drawImage(f.image, Math.round(ax - f.originX), Math.round(ay - 16 - f.originY)); }
-        else { g.fillStyle = 'rgba(120,200,255,.85)'; g.fillRect(ax - PANEL_W / 2, ay - 22, PANEL_W, 10); }
+      // t3 0x17 at SpoutMan (animation 0), t4 0x2E on each panel between (animation 1) and at the tip (animation 2); all at
+      // panel height (Z 1–2 px), the sprites carry the height themselves
+      const pieces = [[h.x0, 'nozzle']]; for (let x = h.x0 - 1; x > h.tip; x--) pieces.push([x, 'stream']); pieces.push([h.tip, 'tip']);
+      for (const [cx, part] of pieces) {
+        const [ax, ay] = anchor(cx, h.y);
+        if (hose?.[part]) { const f = frameAt(hose[part], t); g.drawImage(f.image, Math.round(ax - f.originX), Math.round(ay - 2 - f.originY)); }
+        else if (part !== 'nozzle') { g.fillStyle = 'rgba(120,200,255,.85)'; g.fillRect(ax - PANEL_W / 2, ay - 22, PANEL_W, 10); }
       }
     }
   }

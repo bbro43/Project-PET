@@ -1311,9 +1311,19 @@ function stepHazards(s) {
       s.effects.push({ kind: 'splash', x: h.tx, y: h.y, t: 0 });
       return false;
     }
+    if (h.kind === 'heatflame') { // t3 0x25 (sub_80C8B80): burns `show` frames, hides `hide`, then one panel on
+      if (!s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
+      if (h.live && p.x === h.x && p.y === h.y && p.state !== 'vanish') { hitPlayer(s, h.damage, { element: 'fire' }); return false; } // a flame that hits is gone
+      if (--h.timer === h.hide) h.live = false;
+      if (h.timer > 0) return true;
+      const nx = h.x + h.dir;
+      if (nx < 0 || nx > 5) { if (!h.bounce || h.back) return false; h.back = true; h.dir = -h.dir; } // at the edge: gone, or (Param1) turn back on the spot
+      else { h.x = nx; if (!standable(s, h.x, h.y) || (h.back && sideAt(s, h.x, h.y) === 'e')) return false; }
+      h.live = true; h.timer = h.show + h.hide; return true;
+    }
     if (h.kind === 'stream') {
       if (!s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
-      if (h.cells.some(([x, y]) => p.x === x && p.y === y) && p.state !== 'vanish') hitPlayer(s, h.damage);
+      if ((s.tick - h.start) % 30 === 0 && h.cells.some(([x, y]) => p.x === x && p.y === y) && p.state !== 'vanish') hitPlayer(s, h.damage); // regions renewed every 0x1E frames
       return s.tick < h.until;
     }
     if (h.kind === 'car') { // ChargeMan's train cars; moved by ChargeMan, hit like his body

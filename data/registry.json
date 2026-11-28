@@ -5379,6 +5379,31 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "heatflame": {
+   "label": "HeatMan fire-column flame (t3 0x25 sub_80C8AC8): sprite 0x10/0x1A",
+   "sources": {
+    "bn6f": {
+     "offset": "367848",
+     "compression": "none",
+     "bytes": 5900,
+     "sha256": "eb7eece5707c854af30d1c2f005413d24e61a5e5162b245ea5a4810f40548c8a",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "366DC0",
+     "compression": "none",
+     "bytes": 5900,
+     "sha256": "eb7eece5707c854af30d1c2f005413d24e61a5e5162b245ea5a4810f40548c8a",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "burn": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

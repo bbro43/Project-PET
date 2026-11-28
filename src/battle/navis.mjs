@@ -3,6 +3,7 @@
 // See documentation/audit/2026-11-27-bn6-navi-ai.md for the decoded routines.
 import BN6 from '../../data/bn6-viruses.mjs';
 import { NAVI_AI } from '../../data/rules.mjs';
+import { standable } from './panels.mjs';
 
 export const PLAYABLE_NAVIS = ['HeatMan', 'ElecMan', 'SlashMan', 'EraseMan', 'ChargeMan', 'SpoutMan', 'TomahawkMan', 'TenguMan', 'GroundMan', 'DustMan', 'BlastMan', 'DiveMan', 'CircusMan', 'JudgeMan', 'ElementMan', 'Colonel', 'Bass', 'Gregar', 'Falzar', 'ProtoMan'];
 const SPRITE = { HeatMan: 'heatman', ElecMan: 'elecman', SlashMan: 'slashman', EraseMan: 'eraseman', ChargeMan: 'chargeman', SpoutMan: 'spoutman', TomahawkMan: 'tomahawkman', TenguMan: 'tenguman', GroundMan: 'groundman', DustMan: 'dustman', BlastMan: 'blastman', DiveMan: 'diveman', CircusMan: 'circusman', JudgeMan: 'judgeman', ElementMan: 'elementman', Colonel: 'colonel', Bass: 'bass', Gregar: 'gregar', Falzar: 'falzar', ProtoMan: 'protoman' };
@@ -184,7 +185,7 @@ function heatman(e, api) {
   const lowHp = e.hp < e.maxHp / 2;
   const done = wait => { go(e, 'idle', 'idle'); e.think = wait; };
   const pillar = (x, y, burn, damage) => {
-    if (x < 0 || x > 5 || y < 0 || y > 2) return;
+    if (x < 0 || x > 5 || y < 0 || y > 2 || !standable(s, x, y)) return; // sub_80F37D8: only on standing panels (0x10)
     s.hazards.push({ kind: 'pillar', x, y, start: s.tick, rise: P.pillarRise.value, burn, fall: P.pillarFall.value, damage });
   };
   switch (e.state) {
@@ -203,11 +204,12 @@ function heatman(e, api) {
     // ---- 0xA: aim, fire, three pillars in the column in front
     case 'column':
       if (e.stateT === P.aimTicks.value) setAnim(e, 'fire');
-      if (e.stateT === P.aimTicks.value + P.fireTicks.value) {
+      if (e.stateT === P.aimTicks.value + P.columnFire.value) { // sub_80F382C: t3 0x25 on standing panels, rows −1..+1
         setAnim(e, 'arm');
-        for (const dy of [-1, 0, 1]) pillar(e.x - 1, e.y + dy, P.columnBurn.value, pv(P.columnDamage, v));
+        const show = P.columnFlame.value.show[Math.min(v, 4)], hide = P.columnFlame.value.hide[Math.min(v, 4)];
+        for (const dy of [-1, 0, 1]) { const x = e.x - 1, y = e.y + dy; if (x >= 0 && y >= 0 && y <= 2 && standable(s, x, y)) s.hazards.push({ kind: 'heatflame', owner: e.id, x, y, dir: -1, show, hide, timer: show + hide, bounce: e.bounce, back: false, live: true, damage: pv(P.columnDamage, v) }); }
       }
-      if (e.stateT >= P.aimTicks.value + P.fireTicks.value + 20) returnHome('column');
+      if (e.stateT >= P.aimTicks.value + P.columnFire.value + 20) returnHome('column');
       return;
     // ---- 0xB: lighter stomp, repeated
     case 'stomp': {
@@ -257,9 +259,11 @@ function heatman(e, api) {
     }
     if (m.c4 >= 3) {
       e.homeX = e.x; e.homeY = e.y;
+      e.bounce = !!m.c5; // AttackVars +0x0C = AIState +5 before it toggles (sub_80F2B6C)
       if (v > 0) { m.c5 ^= 1; if (m.c5 === 0) m.c4 = 0; else e.mem.followUp = true; } else e.mem.followUp = true;
-      const t = [p.x + 1, p.y];
-      return warp(api.at(...t) && api.at(...t) !== e ? rowPanel() : t, 'column');
+      const free = ([x, y]) => !api.at(x, y) || api.at(x, y) === e; // sub_80F3704: ROM (6,2), (6,1), (6,3), then (5,2)
+      const t = [[5, 1], [5, 0], [5, 2], [4, 1]].find(free) || [e.x, e.y];
+      return warp(t, 'column');
     }
     if (rnd16(api) < 12) m.c4++;
     const free = freeEnemyPanels(e, api);
@@ -574,13 +578,16 @@ function spoutman(e, api) {
     case 'hose': {
       const aim = P.hoseAim.value, spray = P.hoseSpray.value;
       if (e.stateT === 1) {
-        const target = Math.min(p.x, e.x - 1);
-        e.hoseCells = []; for (let x = e.x - 1; x >= target; x--) e.hoseCells.push([x, e.y]);
+        let tip = e.x - 1; // sub_80C6F08: on to the first occupied panel, at most MegaMan's back column
+        while (tip > 0 && !(p.x === tip && p.y === e.y) && !(api.at(tip, e.y) && api.at(tip, e.y) !== e)) tip--;
+        e.hoseTip = tip; e.hoseCells = [];
+        for (let x = e.x - 1; x > tip; x--) e.hoseCells.push([x, e.y]);
+        for (const y of [e.y - 1, e.y, e.y + 1]) if (y >= 0 && y <= 2) e.hoseCells.push([tip, y]); // sub_80C6F50: the tip and the panels above and below
         e.highlight = [e.hoseCells];
       }
       if (e.stateT === aim) {
         e.highlight = null; setAnim(e, 'spray');
-        s.hazards.push({ kind: 'stream', y: e.y, x0: e.x, cells: e.hoseCells, start: s.tick, until: s.tick + spray, damage: pv(P.hoseDamage, v), owner: e.id });
+        s.hazards.push({ kind: 'stream', y: e.y, x0: e.x, tip: e.hoseTip, cells: e.hoseCells, start: s.tick, until: s.tick + spray, damage: pv(P.hoseDamage, v), owner: e.id });
       }
       if (e.stateT === aim + spray) setAnim(e, 'hold');
       if (e.stateT >= aim + spray + pv(P.hoseGap, v)) {

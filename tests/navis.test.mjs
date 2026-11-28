@@ -169,12 +169,12 @@ test('HeatMan stats from ROM: 700 / 1500 / 1900 HP, fire', () => {
   assert.equal(start('HeatMan').enemies[0].element, 'fire');
 });
 
-test('HeatMan fire column: warps in front of MegaMan and burns the column in front of him', () => {
+test('HeatMan fire column: from his back column, flames march across to MegaMan (sub_80F3704)', () => {
   const { s, e } = findState('HeatMan', 0, 'column', s => { s.player.invuln = 1e9; });
-  assert.deepEqual([e.x, e.y], [s.player.x + 1, s.player.y]);
-  s.player.invuln = 0;
-  run(s, 80);
-  assert.equal(s.player.hp, 80, 'column damage 20');
+  assert.deepEqual([e.x, e.y], [5, 1]);
+  s.player.invuln = 0; s.player.y = 1;
+  run(s, 200);
+  assert.equal(s.player.hp, 80, 'column damage 20 once the flame reaches him');
 });
 
 test('HeatMan stomp lands on MegaMan\'s panel and leaves fire pillars in a cross', () => {
@@ -1012,4 +1012,16 @@ test('TomahawkMan totem and eagle: the eagle swoops down the middle row and a hi
   for (let i = 0; i < 60 && eagle.state === 'fly'; i++) step(s, {});
   assert.equal(500 - s.player.hp, P.eagleDamage.value[0]);
   assert.ok(s.enemies.includes(eagle));
+});
+
+test('HeatMan fire column: three flames burn 12, hide 18, then move one panel back each time; gone at the edge (version 1)', () => {
+  const { s, e } = findState('HeatMan', 0, 'column', s => { s.player.invuln = 1e9; });
+  const P = NAVI_AI.HeatMan;
+  while (!s.hazards.some(h => h.kind === 'heatflame')) step(s, {});
+  s.player.y = 9; // out of the way
+  const xs = () => s.hazards.filter(h => h.kind === 'heatflame').map(h => h.x);
+  const x0 = e.x - 1; assert.deepEqual([...new Set(xs())], [x0]);
+  run(s, 30); assert.deepEqual([...new Set(xs())], [x0 - 1]);
+  run(s, 30 * x0); assert.deepEqual(xs(), []);
+  assert.equal(P.columnFire.value, 8);
 });

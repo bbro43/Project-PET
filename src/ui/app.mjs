@@ -288,7 +288,7 @@ function customInput(k) {
   else {
     const row = focus / per | 0, col = focus % per;
     if (k === 'right') focus = col === per - 1 || focus + 1 >= n ? 'ok' : focus + 1;
-    else if (k === 'left') focus = col > 0 ? focus - 1 : focus;
+    else if (k === 'left') focus = col > 0 ? focus - 1 : 'ok'; // the far-left slot wraps to OK, as in the game
     else if (k === 'down' && focus + per < n) focus += per;
     else if (k === 'down' && row === 0 && n > per) focus = n - 1;
     else if (k === 'up' && row > 0) focus -= per;
