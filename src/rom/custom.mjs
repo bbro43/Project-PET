@@ -50,7 +50,17 @@ export function decodeCustom(rom, src) {
     const g = stack(hex(src.font.glyphs) + 0x40 * k, 1, 2, fontPal, true);
     g.rgba.fill(0, 0, 8 * 2 * 4); return g;
   };
+  // Battle text font (renderTextGfx 0x8045F8C with dword_86B7AE0): 8×16 per character code, 8 px apart, palette index 1 fill, 2 outline.
+  const textPal = src.text ? readPalette(rom, hex(src.text.palette)) : null;
+  const CHARS = { ' ': 0, '*': 0x25, '-': 0x98, '=': 0x9A, ':': 0x9B, '%': 0x9C, '?': 0x9D, '+': 0x9E, '!': 0xA2, '&': 0xA3, ',': 0xA4, '.': 0xA6, '/': 0xAC };
+  const code = ch => ch >= '0' && ch <= '9' ? 1 + (ch.charCodeAt(0) - 48) : ch >= 'A' && ch <= 'Z' ? 0x0B + ch.charCodeAt(0) - 65 : ch >= 'a' && ch <= 'z' ? 0x26 + ch.charCodeAt(0) - 97 : CHARS[ch] ?? 0;
+  const text = str => {
+    const w = 8 * str.length, rgba = new Uint8ClampedArray(Math.max(1, w) * 16 * 4);
+    [...str].forEach((ch, i) => { blit(rom, rgba, w, hex(src.text.glyphs) + 64 * code(ch), 8 * i, 0, textPal); blit(rom, rgba, w, hex(src.text.glyphs) + 64 * code(ch) + 32, 8 * i, 8, textPal); });
+    return { rgba, width: Math.max(1, w), height: 16 };
+  };
   return {
+    text: src.text ? text : null,
     frame, column, glyph: src.font ? glyph : null,
     code: (k, cls = 0) => stack(hex(src.codes) + 0x40 * k, 2, 1, pals[cls]),          // 16×8 strip, k = 0..25 A–Z, 26 *, 27 empty
     letter: (k, cls = 0) => stack(hex(src.letters) + 0x40 * k, 1, 2, pals[cls], true), // 8×16 code letter under the picture
@@ -72,6 +82,7 @@ export function buildCustom(rom, src) {
     frame: cls => get('f' + cls, () => d.frame(cls)),
     column: cls => get('k' + cls, () => d.column(cls)),
     glyph: d.glyph ? k => get('g' + k, () => d.glyph(k)) : null,
+    text: d.text ? str => get('t' + str, () => d.text(str)) : null,
     code: (k, cls) => get(`c${k}.${cls}`, () => d.code(k, cls)),
     letter: (k, cls) => get(`l${k}.${cls}`, () => d.letter(k, cls)),
     digit: (n, cls) => get(`d${n}.${cls}`, () => d.digit(n, cls)),

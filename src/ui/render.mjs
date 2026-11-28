@@ -454,7 +454,7 @@ export function render(g, s, bank) {
   }
   draw.sort((a, b) => a.y - b.y).forEach(d => d.fn());
   // Queued chips above MegaMan (0x801C082): the next chip's icon, once per queued chip, each copy 2 px up and back.
-  if (s.queue.length && s.phase === 'battle' && !s.timestop && p.hp > 0) {
+  if (s.queue.length && s.phase === 'battle' && !s.timestop && !s.banner && p.hp > 0) {
     const [ax, ay] = anchor(p.drawX ?? p.x, p.drawY ?? p.y);
     const icon = bank?.chips?.icon(CHIP_DATA[s.queue[0].name]?.id);
     for (let k = s.queue.length - 1; k >= 0; k--) {
@@ -648,13 +648,14 @@ export function render(g, s, bank) {
     const [ax, ay] = anchor(p.x, p.y);
     g.fillRect(ax - 12, ay + 3, 24 * p.charge / val('chargeTime'), 2);
   }
-  if (s.queue.length) {
-    const c = s.queue[0];
-    text(g, `${c.name} ${c.code}` + (s.queue.length > 1 ? `  +${s.queue.length - 1}` : ''), 3, 156, '#fff');
+  if (s.queue.length) { // the next chip's name on tile rows 18–19 at the left (0x801C6EE), with its power
+    const c = s.queue[0], dmg = (CHIP_DATA[c.name]?.damage || 0) + (c.bonus || 0);
+    if (!romText(g, bank, c.name + (dmg && chipBehaviour(c.name)?.kind !== 'busterup' ? ' ' + dmg : ''), 0, 144))
+      text(g, `${c.name} ${c.code}` + (s.queue.length > 1 ? `  +${s.queue.length - 1}` : ''), 3, 156, '#fff');
   }
-  if (s.mode === 'survival') text(g, `WAVE ${s.wave}`, 237, 12, '#ffe070', 'right');
-  // Enemy names, top right (BN style list)
-  if (s.mode !== 'survival') s.enemies.filter(e => e.hp > 0 && e.kind !== 'coil').forEach((e, i) => text(g, e.name, 237, 12 + i * 9, '#fff', 'right'));
+  if (s.mode === 'survival' && !romText(g, bank, `WAVE ${s.wave}`, 240, 0, 'right')) text(g, `WAVE ${s.wave}`, 237, 12, '#ffe070', 'right');
+  // Enemy names, top right, in the game's battle text font
+  if (s.mode !== 'survival') s.enemies.filter(e => e.hp > 0 && e.kind !== 'coil').forEach((e, i) => { if (!romText(g, bank, e.name, 240, i * 14, 'right')) text(g, e.name, 237, 12 + i * 9, '#fff', 'right'); });
   // Time freeze (AreaGrab / PanlGrab): the field dims, the chip name shows, the beams drop (sprite 0x0C/0x13).
   const ts = s.timestop;
   if (ts) {
@@ -678,11 +679,21 @@ export function render(g, s, bank) {
     else if (t >= BANNER.deleted) drawBanner(g, bank, 'YOU WIN!', t - BANNER.deleted, Infinity);
     return;
   }
-  const banner = { win: 'ENEMY DELETED!', lose: 'MegaMan deleted…', wave: `WAVE ${s.wave} CLEAR` }[s.phase];
+  const banner = { win: 'ENEMY DELETED!', lose: 'MegaMan deleted...', wave: `WAVE ${s.wave} CLEAR` }[s.phase];
+  if (banner && bank?.custom?.text) { g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, 54, 240, 20); romText(g, bank, banner, 120, 56, 'center'); return; }
   if (banner) {
     g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, 50, 240, 22);
     g.font = '12px monospace'; text(g, banner, 120, 65, '#fff', 'center');
   }
+}
+
+// Text in the game's battle font (8×16 cells, 8 px apart). Returns false without a ROM.
+function romText(g, bank, str, x, y, align = 'left') {
+  const T = bank?.custom?.text;
+  if (!T) return false;
+  const c = T(str), w = c.width, x0 = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+  g.drawImage(c, Math.round(x0), Math.round(y));
+  return true;
 }
 
 // Banner: the blue bar (glyphs 28 / 26 / 29) opens from the middle, then the letters (8×16, 8 px apart) appear.
