@@ -90,6 +90,23 @@ function text(g, s, x, y, color = '#fff', align = 'left') {
   g.fillStyle = color; g.fillText(s, x, y);
 }
 
+// What MegaMan holds during an attack: t1 0x5 attachments (table 0x80B8BD4) drawn at his position,
+// shifted by the arm-position table 0x80188C0 (entry → x forward, z up). Values read from the ROM.
+const ARMS = {
+  buster: [{ key: 'busterarm', seq: 'arm' }, { key: 'busterflash', seq: 'flash', dx: 40, dz: 26, from: 1 }],
+  cannon: [{ key: 'cannonarm', seq: 'arm', dx: 16, dz: 24 }],
+  vulcan: [{ key: 'vulcanarm', seq: 'arm', dx: 23, dz: 25 }],
+  airshot: [{ key: 'airshotarm', seq: 'arm', dx: 18, dz: 24 }],
+  throw: [{ key: 'throwball', seq: 'hand', until: 9 }],
+};
+const CANNON_PAL = { Cannon: 0, HiCannon: 1, 'M-Cannon': 2 };
+function armParts(p) {
+  const list = (p.state === 'buster' || p.state === 'chip') && ARMS[p.anim];
+  if (!list) return [];
+  return list.filter(a => p.animT >= (a.from || 0) && p.animT < (a.until ?? 1e9))
+    .map(a => ({ ...a, dx: a.dx || 0, dz: a.dz || 0, t: p.animT - (a.from || 0), pal: a.key === 'cannonarm' ? CANNON_PAL[p.chip?.name] || 0 : 0 }));
+}
+
 export function render(g, s, bank) {
   g.imageSmoothingEnabled = false;
   const shake = s.effects.find(f => f.kind === 'shake' && f.t < 20);
@@ -373,6 +390,7 @@ export function render(g, s, bank) {
     const [ax, ay] = anchor(p.drawX ?? p.x, p.drawY ?? p.y);
     draw.push({ y: p.y, fn: () => {
       sprite(g, bank, 'megaman', p.anim, p.animT, ax, ay, placeholderNavi);
+      for (const a of armParts(p)) sprite(g, bank, a.key, a.seq, a.t, ax + a.dx, ay - a.dz, () => {}, a.pal || 0);
       if (p.frozen && p.paralyzed > 0) { g.fillStyle = 'rgba(180,230,255,.55)'; g.fillRect(ax - 12, ay - 34, 24, 34); } // frozen on ice
       else if (p.paralyzed > 0 && (s.tick >> 1) & 1) { // paralysis: flicker bright
         g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.6;
@@ -499,13 +517,9 @@ export function render(g, s, bank) {
     const k = Math.min(1, (s.tick - h.start) / (h.land - h.start));
     const [sx, sy] = anchor(h.x, h.y), [tx, ty] = anchor(h.tx, h.y);
     const x = sx + (tx - sx) * k, y = sy + (ty - sy) * k - 40 * Math.sin(Math.PI * k) - 16;
-    const bomb = bank?.get('minibomb')?.fly; // sprite 0x0C/0x24 (t3 0x4A): body OAM above, shadow OAM (8 rows from origin − 3) stays on the floor
-    if (bomb) {
-      const f = frameAt(bomb, s.tick - h.start), split = f.originY - 3, W = f.image.width, H = f.image.height;
-      const gx = Math.round(sx + (tx - sx) * k - f.originX), gy = Math.round(sy + (ty - sy) * k - 2);
-      g.drawImage(f.image, 0, split, W, H - split, gx, gy - 3 + (f.originY - f.originY), W, H - split);
-      g.drawImage(f.image, 0, 0, W, split, gx, Math.round(y + 10 - f.originY), W, split);
-    } else { g.fillStyle = '#222'; g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill(); }
+    if (s.tick < h.start) continue; // still in MegaMan's hand
+    g.fillStyle = 'rgba(0,0,0,.45)'; g.beginPath(); g.ellipse(Math.round(sx + (tx - sx) * k), Math.round(sy + (ty - sy) * k) - 2, 6, 2, 0, 0, 7); g.fill(); // shadow (app-drawn)
+    sprite(g, bank, 'throwball', 'fly', s.tick - h.start, x, y, (g, x, y) => { g.fillStyle = '#3aa0e0'; g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill(); }); // t3 0x8, sprite 0x0C/0x02 animation 1
   }
   // Volcano eruption (object type3 0x07, sprite 0x10/0x24): bubbles, then a flame column
   for (const h of s.hazards) if (h.kind === 'volcano') {

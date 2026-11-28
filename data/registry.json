@@ -44,24 +44,43 @@
      "confidence": "visual-candidate"
     },
     "buster": {
-     "seq": 9,
-     "confidence": "visual-candidate"
+     "seq": 14,
+     "confidence": "rom-verified",
+     "note": "buster attack 0x80EB450 sets animation 0xE"
     },
     "charge-hold": {
      "seq": 10,
      "confidence": "visual-candidate"
     },
     "throw": {
-     "seq": 5,
-     "confidence": "visual-candidate"
+     "seq": 6,
+     "confidence": "rom-verified",
+     "note": "MiniBomb 0x80EB644"
     },
     "slash": {
-     "seq": 6,
-     "confidence": "visual-candidate"
+     "seq": 5,
+     "confidence": "rom-verified",
+     "note": "Sword 0x80EB862"
     },
     "cannon": {
      "seq": 8,
-     "confidence": "visual-candidate"
+     "confidence": "rom-verified",
+     "note": "Cannon 0x80EBC28"
+    },
+    "airshot": {
+     "seq": 9,
+     "confidence": "rom-verified",
+     "note": "AirShot 0x80EC8A0"
+    },
+    "vulcan": {
+     "seq": 10,
+     "confidence": "rom-verified",
+     "note": "Vulcan 0x80EBF30 (0xD while firing)"
+    },
+    "crack": {
+     "seq": 12,
+     "confidence": "rom-verified",
+     "note": "CrakShot 0x80EC97C"
     }
    }
   },
@@ -3611,31 +3630,159 @@
     }
    }
   },
-  "minibomb": {
-   "label": "Bomb (object type3 0x4A, sprite 0x0C/0x24)",
+  "cannonarm": {
+   "label": "Cannon / HiCannon / M-Cannon arm (t1 0x5 entries 0–2, palette 0/1/2), sprite 0x0C/0x01",
    "sources": {
     "bn6f": {
-     "offset": "31FA84",
+     "offset": "2F39C0",
      "compression": "none",
-     "bytes": 620,
-     "sha256": "2c022e44787872287d8206309a90452ecd4ab844b344d62dfac3ec1f67076843",
+     "bytes": 7388,
+     "sha256": "ca937c6bcb5d97307158c781d880e0ec8080972773e20cb9cb362a6a5fdac0d0",
      "confidence": "rom-verified"
     },
     "bn6g": {
-     "offset": "31EFFC",
+     "offset": "2F2F38",
      "compression": "none",
-     "bytes": 620,
-     "sha256": "2c022e44787872287d8206309a90452ecd4ab844b344d62dfac3ec1f67076843",
+     "bytes": 7388,
+     "sha256": "ca937c6bcb5d97307158c781d880e0ec8080972773e20cb9cb362a6a5fdac0d0",
      "confidence": "rom-verified"
     }
    },
    "sequences": {
-    "fly": {
+    "arm": {
      "seq": 0,
      "confidence": "rom-verified"
     }
+   }
+  },
+  "throwball": {
+   "label": "Thrown ball: in MegaMan's hand (t1 0x5 entry 4, animation 0) and in flight (t3 0x8, animation 1); MiniBomb uses palette 0, sprite 0x0C/0x02",
+   "sources": {
+    "bn6f": {
+     "offset": "2F569C",
+     "compression": "none",
+     "bytes": 6192,
+     "sha256": "5ca6744ea54d6fd269df28c95999a979e1d86f320b7405552986f8942db226eb",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2F4C14",
+     "compression": "none",
+     "bytes": 6192,
+     "sha256": "5ca6744ea54d6fd269df28c95999a979e1d86f320b7405552986f8942db226eb",
+     "confidence": "rom-verified"
+    }
    },
-   "note": "t3 0x4A loads it with animation 0 (0x80CD50C). That MiniBomb's chip action spawns t3 0x4A is recalled, not traced."
+   "sequences": {
+    "hand": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "fly": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "busterarm": {
+   "label": "MegaBuster arm (t1 0x5 entry 6), sprite 0x0C/0x03",
+   "sources": {
+    "bn6f": {
+     "offset": "2F6ECC",
+     "compression": "none",
+     "bytes": 11776,
+     "sha256": "2a5c2c6b96167a1f721a7e54311841db446f51ec76ee233ee7c517bf2caaab56",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2F6444",
+     "compression": "none",
+     "bytes": 11776,
+     "sha256": "2a5c2c6b96167a1f721a7e54311841db446f51ec76ee233ee7c517bf2caaab56",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "arm": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "busterflash": {
+   "label": "Buster muzzle flash (t1 0x5 entry 5, arm offset 0x10), sprite 0x0C/0x06",
+   "sources": {
+    "bn6f": {
+     "offset": "2FE378",
+     "compression": "none",
+     "bytes": 908,
+     "sha256": "9c593cd4d4060b2ac4c08c54109adaefda81c298790370488e45bf5466df6ed8",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2FD8F0",
+     "compression": "none",
+     "bytes": 908,
+     "sha256": "9c593cd4d4060b2ac4c08c54109adaefda81c298790370488e45bf5466df6ed8",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "flash": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "airshotarm": {
+   "label": "AirShot gun (t1 0x5 entry 0x13, arm offset 0xA), sprite 0x0C/0x18",
+   "sources": {
+    "bn6f": {
+     "offset": "3138C4",
+     "compression": "none",
+     "bytes": 6728,
+     "sha256": "38ffed797c1c71399f0c49398735d2726f9e493bf55594c15b2aef35652689b3",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "312E3C",
+     "compression": "none",
+     "bytes": 6728,
+     "sha256": "38ffed797c1c71399f0c49398735d2726f9e493bf55594c15b2aef35652689b3",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "arm": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "vulcanarm": {
+   "label": "Vulcan gun (t1 0x5 entry 0xD, arm offset 0xE), sprite 0x0C/0x1D",
+   "sources": {
+    "bn6f": {
+     "offset": "3195F0",
+     "compression": "none",
+     "bytes": 1388,
+     "sha256": "cc395f187fa4778250266e599e27714e963225b476ba29ee6291cf1e172236e7",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "318B68",
+     "compression": "none",
+     "bytes": 1388,
+     "sha256": "cc395f187fa4778250266e599e27714e963225b476ba29ee6291cf1e172236e7",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "arm": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {
