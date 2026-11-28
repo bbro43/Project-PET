@@ -54,12 +54,23 @@ function drawMap(m, out, W, H, map, w, h, charbase, ox = 0, oy = 0) {
   }
 }
 // `n` consecutive 8×8 BG tiles from VRAM offset `at`, side by side, in BG palette `pal`.
-function tiles(m, at, n, pal) {
+function tiles(m, at, n, pal, clear = 0) { // `clear`: an extra colour index left transparent
   const rgba = new Uint8ClampedArray(8 * n * 8 * 4);
   for (let k = 0; k < n; k++) for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
     const v = (m.vram[at + 32 * k + y * 4 + (x >> 1)] >> ((x & 1) * 4)) & 15;
-    if (!v) continue;
+    if (!v || v === clear) continue;
     const [r, g, b] = color(u16(m.bgpal, pal * 32 + 2 * v)), p = (y * 8 * n + 8 * k + x) * 4;
+    rgba[p] = r; rgba[p + 1] = g; rgba[p + 2] = b; rgba[p + 3] = 255;
+  }
+  return { rgba, width: 8 * n, height: 8 };
+}
+// `n` consecutive 8×8 OBJ tiles (tile index `t` in sprite VRAM 0x6010000) in OBJ palette `pal`.
+function objTiles(m, t, n, pal) {
+  const rgba = new Uint8ClampedArray(8 * n * 8 * 4);
+  for (let k = 0; k < n; k++) for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
+    const v = (m.vram[0x10000 + 32 * (t + k) + y * 4 + (x >> 1)] >> ((x & 1) * 4)) & 15;
+    if (!v) continue;
+    const [r, g, b] = color(u16(m.objpal, pal * 32 + 2 * v)), p = (y * 8 * n + 8 * k + x) * 4;
     rgba[p] = r; rgba[p + 1] = g; rgba[p + 2] = b; rgba[p + 3] = 255;
   }
   return { rgba, width: 8 * n, height: 8 };
@@ -96,8 +107,12 @@ export function decodeMenus(rom, src) {
     sortMenu: layer(fe, 64, 136, [[fe.ram.get(0x203486C), 8, 17, 0x8000]]), // BG0, column 2 (folder page) or 21 (Pack)
     card: sprite(fe.ram.get(0x2024A20))[0],   // the chip card (OBJ, own palette)
     // small row numbers: BG tiles 16–25 (0–9) and 26–27 ("MB") from 0x6006800, palette 9 (yellow digits, white MB)
-    smallDigits: Array.from({ length: 10 }, (_, d) => tiles(fe, 0x6800 + 32 * (16 + d), 1, 9)),
-    mbLabel: tiles(fe, 0x6800 + 32 * 26, 2, 9),
+    // Regular memory number (sub_812053C, tile 0x160 palette 8): digits 0x161–0x16A, "MB" 0x16C–0x16D
+    regDigits: Array.from({ length: 10 }, (_, d) => objTiles(fe, 0x161 + d, 1, 8)),
+    regMB: objTiles(fe, 0x16C, 2, 8),
+    regFrame: sprite(fe.ram.get(0x203526C), 0)[0], // REG frame (seq 0; seq 1 is TAG), drawn round the Regular chip's row
+    smallDigits: Array.from({ length: 10 }, (_, d) => tiles(fe, 0x6800 + 32 * (16 + d), 1, 9, 13)),
+    mbLabel: tiles(fe, 0x6800 + 32 * 26, 2, 9, 13),
     describe: src.descriptions ? id => describe(rom, src.descriptions, id) : null,
   };
 }
@@ -108,6 +123,8 @@ export function buildMenus(rom, src) {
   return {
     chipFolder: canvas(d.chipFolder), folderEdit: canvas(d.folderEdit), folderPanel: canvas(d.folderPanel), sortMenu: canvas(d.sortMenu),
     card: { image: canvas(d.card), originX: d.card.originX, originY: d.card.originY },
+    regDigits: d.regDigits.map(canvas), regMB: canvas(d.regMB),
+    regFrame: { image: canvas(d.regFrame), originX: d.regFrame.originX, originY: d.regFrame.originY },
     smallDigits: d.smallDigits.map(canvas), mbLabel: canvas(d.mbLabel),
     describe: d.describe ? (cache => id => cache.get(id) ?? (cache.set(id, d.describe(id)), cache.get(id)))(new Map()) : null,
   };

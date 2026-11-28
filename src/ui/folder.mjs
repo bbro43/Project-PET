@@ -2,12 +2,14 @@
 // chip art, battle text font, code letters, element icons and digits already decoded for battle.
 // Folder rules from the ROM: 30 chips; copies of one chip limited by its MB (sub_8135500: ≤19 MB → 5,
 // ≤29 → 4, ≤39 → 3, ≤49 → 2, else 1); one of each MegaChip / GigaChip (CompText86CF1A8). The overall
-// Mega / Giga caps come from the Navi's stats in the game; 5 and 1 are the base values (recalled).
+// Mega / Giga caps and the Regular memory are Navi stats; their starting values (MegaLevel 5, GigaLevel 1,
+// RegUP 4 MB) are set by initNaviStats_WithDefaultStatsMaybe_8013438. A chip can be the folder's Regular only
+// if its MB ≤ the Regular memory (sub_8134A00); each folder's Regular index is Navi stat 0x2E + folder (0xFF = none).
 import CHIPDATA from '../../data/bn6-chips.mjs';
 
 const STORE = 'pet.folders.v1';
 export const FOLDER_SIZE = 30;
-export const MEGA_CAP = 5, GIGA_CAP = 1; // recalled base values (Navi stats in the game)
+export const MEGA_CAP = 5, GIGA_CAP = 1, REG_MEMORY = 4; // starting Navi stats (rom-verified, 0x8013438)
 const CHIPS = CHIPDATA.chips;
 const byName = new Map(CHIPS.filter(c => c.name).map(c => [c.name, c]));
 
@@ -23,6 +25,15 @@ export function loadFolders(defaultFolder) {
 }
 export const saveFolders = f => { try { localStorage.setItem(STORE, JSON.stringify(f)); } catch {} };
 export const equippedFolder = f => (f.folders[f.equipped] || f.folders[0]).chips;
+export const equippedRegular = f => (f.folders[f.equipped] || f.folders[0]).reg ?? null;
+// Select on a folder chip: make it the Regular (again to clear it). Returns a message when not allowed.
+export function setRegular(folder, i) {
+  if (folder.reg === i) { folder.reg = null; return null; }
+  const d = byName.get(folder.chips[i]?.[0]);
+  if (!d) return null;
+  if (d.mb > REG_MEMORY) return `This chip is too\nbig for your\nRegular memory.`;
+  folder.reg = i; return null;
+}
 
 // Why adding `chip` to `chips` (with slot `skip` being replaced) would break a rule, or null.
 export function folderRule(chips, chip, skip = -1) {
@@ -68,6 +79,7 @@ export function createFolderUI({ getBank, folders, onExit }) {
     else if (k === 'right' && page === 0) page = 1;
     else if (k === 'left' && page === 1) page = 0;
     else if (k === 'a') pick();
+    else if (k === 'select' && page === 0 && !held) { const why = setRegular(folders.folders[slot], P.cur); if (why) say(why); else saveFolders(folders); }
     else if (k === 'b') {
       if (held) { held = null; return; }
       if (chips().length !== FOLDER_SIZE) { say(`The folder needs\n${FOLDER_SIZE} chips.`); return; }
@@ -82,6 +94,7 @@ export function createFolderUI({ getBank, folders, onExit }) {
     const why = folderRule(c, chip, fi);
     if (why) { say(why); held = null; return; }
     if (fi < c.length) c[fi] = [...chip]; else c.push([...chip]);
+    const F = folders.folders[slot]; if (F.reg === fi && (byName.get(chip[0])?.mb ?? 99) > REG_MEMORY) F.reg = null;
     held = null; saveFolders(folders);
   }
   // Taps: rows select (a second tap acts as A); the right / left edge switches pages; folder slots on the CHIP FOLDER screen.
@@ -128,6 +141,12 @@ export function createFolderUI({ getBank, folders, onExit }) {
       if (D[p] + D[p + 1] + D[p + 2] > 480) { D[p] = 72; D[p + 1] = 72; D[p + 2] = 80; } else D[p + 3] = 0;
     }
     tg.putImageData(im, 0, 0); g.drawImage(t, x, y);
+  }
+  function regMemory(g, x, y) { // the Regular memory ("4MB") next to the folder name: a 2-digit field from x (0x8134514), then MB
+    const M = getBank()?.menus; if (!M?.regDigits) return;
+    const s = String(REG_MEMORY).padStart(2, ' ');
+    for (let k = 0; k < 2; k++) if (s[k] !== ' ') g.drawImage(M.regDigits[+s[k]], x + 8 * k, y);
+    g.drawImage(M.regMB, x + 16, y);
   }
   function mb(g, v, right, y) { // the game's small yellow MB digits, with the small "MB" label under them, right-aligned
     const M = getBank()?.menus; if (v == null) return;
@@ -179,6 +198,7 @@ export function createFolderUI({ getBank, folders, onExit }) {
       const f = folders.folders[slot];
       if (f) {
         text(g, null, f.name, 96, 49);
+        regMemory(g, 186, 55);
         f.chips.slice(0, 5).forEach((c, i) => row(g, c, 96, 65 + i * ROW_H, false));
       }
     } else {
@@ -191,6 +211,10 @@ export function createFolderUI({ getBank, folders, onExit }) {
         const i = P.top + r; if (i >= L.length) break;
         row(g, L[i], lx, 32 + r * ROW_H, held && held.side === page && held.index === i);
       }
+      const reg = folders.folders[slot]?.reg;
+      if (page === 0 && M.regFrame && reg != null && reg >= P.top && reg < P.top + ROWS) // the game's REG frame sprite (x 165, y 40 + 16·row, origin 69,8)
+        g.drawImage(M.regFrame.image, 165 - M.regFrame.originX, 40 + 16 * (reg - P.top) - M.regFrame.originY);
+      if (page === 0) regMemory(g, 194, 22);
       arrow(g, lx - 10, 32 + (P.cur - P.top) * ROW_H);
       const sb = 32 + Math.round((ROWS * ROW_H - 12) * (P.cur / Math.max(1, L.length - 1)));
       g.fillStyle = '#f0f8f8'; g.fillRect(page === 0 ? 229 : 133, sb, 4, 12);

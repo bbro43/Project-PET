@@ -40,7 +40,7 @@ export function survivalWave(n, pickFamily = i => PLAYABLE_FAMILIES[i % PLAYABLE
   return Array.from({ length: count }, (_, i) => [pickFamily(n + i), variant]);
 }
 
-export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0, 1), seed = 1, folder = DEFAULT_FOLDER, field = 'normal', intro = false } = {}) {
+export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0, 1), seed = 1, folder = DEFAULT_FOLDER, regular = null, field = 'normal', intro = false } = {}) {
   const s = {
     intro, banner: null,
     tick: 0, seed: seed >>> 0, mode, wave: 1, deleted: 0,
@@ -55,10 +55,25 @@ export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0,
     draw: [], hand: [], picked: [], queue: [], handBonus: 0, busterUp: 0,
   };
   s.panels = createPanels(field, () => rng(s));
-  s.draw = shuffle(s, s.folder.slice());
+  s.draw = deal(s, s.folder, regular);
   spawn(s, mode === 'survival' ? survivalWave(1, k => pickSurvival(s, k)) : enemies);
   refillHand(s);
   return s;
+}
+
+// Battle folder order (sub_800A350 / sub_800A570): the Regular chip is swapped to the front and left out of the
+// shuffle, so it is always in the first hand; GigaChips are shuffled apart and each inserted at index
+// 10 + rnd % (count − 12) of the main list, so they never come in the first hand.
+export function deal(s, folder, regular = null) {
+  const list = folder.slice();
+  if (regular != null && list[regular]) [list[0], list[regular]] = [list[regular], list[0]];
+  const giga = c => CHIP_DATA[c.name]?.class === 'giga';
+  const main = list.filter((c, i) => !giga(c) || (regular != null && i === 0)), gigas = list.filter((c, i) => giga(c) && !(regular != null && i === 0));
+  const fixed = regular != null && list[regular] ? 1 : 0;
+  const tail = shuffle(s, main.slice(fixed));
+  const out = [...main.slice(0, fixed), ...tail];
+  for (const g of shuffle(s, gigas)) out.splice(10 + Math.floor(rng(s) * 0x7fffffff) % Math.max(1, out.length - 12), 0, g);
+  return out;
 }
 
 function shuffle(s, list) {
