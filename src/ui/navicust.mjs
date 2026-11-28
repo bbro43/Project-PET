@@ -3,7 +3,7 @@
 // INFORMATION: the game's descriptions. List: Up/Down pick, A take, Select compress (when the code is "entered": the app lets every part compress),
 // Left to the board. Holding a part: D-pad move, L/R turn, A place, B put back.
 // Board: A on a part → Move / Remove; Right (at the edge) or B back to the list. Start: RUN (checks, saves).
-import { PROGRAMS, CROSSES, LAYOUTS, COMMAND_ROW, COLOR_NAMES, programOf, cellsOf, colorOf, gridOf, canPlace, run, stats } from '../battle/navicust.mjs';
+import { PROGRAMS, CROSSES, REGUPS, LAYOUTS, COMMAND_ROW, COLOR_NAMES, programOf, cellsOf, colorOf, gridOf, canPlace, run, stats } from '../battle/navicust.mjs';
 
 const STORE = 'pet.navicust.v1';
 export function loadNaviCust() {
@@ -19,6 +19,7 @@ export const LEFT_OUT = new Set(['Rush', 'Beat', 'Tango', 'Collect', 'Millions',
 const ENTRIES = [
   ...PROGRAMS.filter(p => !LEFT_OUT.has(p.name)).flatMap(p => p.variants.map(v => ({ id: p.id, variant: v.variant, color: v.color, name: p.name, plus: p.plus }))),
   ...CROSSES.map(c => ({ id: c.id, variant: 0, color: c.variants[0].color, name: c.short, cross: true })),
+  ...REGUPS.map(c => ({ id: c.id, variant: 0, color: c.variants[0].color, name: c.short, plus: true })),
 ];
 // Bug types by the Navi stat their effect sets (byte_813CC18): 1 ProcessingBug (0x31), 2 EmotionBug (0x24),
 // 4 TurnsUntilCustBugActivates (0x63); the others' stats are unnamed in the disassembly, so they show as numbers.

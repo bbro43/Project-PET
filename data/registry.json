@@ -4106,6 +4106,35 @@
     }
    },
    "clearFrom": 5
+  },
+  "shurikenfx": {
+   "label": "AntiDmg's shuriken (family 0x47 sub_80EE90C → sub_80DD91A → t3 0xC2): sprite 0x0C/0x2F; sequence 0 falling, 1 landing",
+   "sources": {
+    "bn6f": {
+     "offset": "325038",
+     "compression": "none",
+     "bytes": 1416,
+     "sha256": "0b958aa3dab8a06f059599131711a961fd858d064907a25ea59a0a2a41ab75dc",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3245B0",
+     "compression": "none",
+     "bytes": 1416,
+     "sha256": "0b958aa3dab8a06f059599131711a961fd858d064907a25ea59a0a2a41ab75dc",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "fall": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "land": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

@@ -108,3 +108,12 @@ test('AutoHeal: 10% back when the battle is won', () => {
   step(s, {});
   assert.equal(s.player.hp, 60);
 });
+
+import { REGUPS, REG_MAX } from '../src/battle/navicust.mjs';
+test('RegUP parts: Regular memory 4 + 1/2/3 each, at most 99 (sub_803CFB0)', () => {
+  const [r1, r2, r3] = REGUPS.map(r => r.id);
+  assert.equal(stats([]).reg, 4);
+  assert.equal(stats([{ id: r1, x: 1, y: 1, rot: 0 }, { id: r3, x: 2, y: 1, rot: 0 }]).reg, 8);
+  const many = []; for (let y = 1; y <= 5; y++) for (let x = 1; x <= 5; x++) many.push({ id: r3, x, y, rot: 0 });
+  assert.equal(stats(many).reg, Math.min(REG_MAX, 4 + 3 * 25));
+});

@@ -23,7 +23,13 @@ export const CROSSES = [
 ].map(([name, short, color, tf]) => ({ id: `cross:${name}`, name, short, transformation: tf, cross: true, plus: false, group: 0, bug: 0,
   variants: [{ variant: 0, color }], shape: ONE, compressed: ONE, info: ['Fight as', name.replace('Cross', ''), 'Cross'] }));
 
-const byId = new Map([...PROGRAMS.map(p => [p.id, p]), ...CROSSES.map(c => [c.id, c])]);
+// RegUP parts (app-made, owner decision): the game's RegUP1/2/3 are key items found in the overworld; here they are
+// 1×1 white Plus Parts. Regular memory = 4 + RegUP1 + 2·RegUP2 + 3·RegUP3, at most 99 (sub_803CFB0, rom-verified).
+export const REGUPS = [1, 2, 3].map(n => ({ id: `regup:${n}`, name: `RegUP${n}`, short: `RegUP${n}`, regUp: n, plus: true, group: 0, bug: 0,
+  variants: [{ variant: 0, color: 1 }], shape: ONE, compressed: ONE, info: ['Regular', 'memory', `+${n}MB`] }));
+export const REG_MAX = 99;
+
+const byId = new Map([...PROGRAMS.map(p => [p.id, p]), ...CROSSES.map(c => [c.id, c]), ...REGUPS.map(c => [c.id, c])]);
 export const programOf = id => byId.get(id);
 
 // The shape of an installed part: 7×7, compressed if its code was entered, turned 90° clockwise `rot` times
@@ -118,6 +124,7 @@ export function stats(parts, layout = LAYOUTS[2]) {
     'Attack+1': () => add('attack', 1, 4), 'Speed+1': () => add('speed', 1, 4), 'Charge+1': () => add('charge', 1, 4),
     AttckMAX: () => (s.attack = 4), SpeedMAX: () => (s.speed = 4), ChargMAX: () => (s.charge = 4),
     'HP+50': () => (s.hpPlus += 50), 'HP+100': () => (s.hpPlus += 100), 'HP+200': () => (s.hpPlus += 200),
+    RegUP1: () => add('reg', 1, REG_MAX), RegUP2: () => add('reg', 2, REG_MAX), RegUP3: () => add('reg', 3, REG_MAX),
     'HP+300': () => (s.hpPlus += 300), 'HP+400': () => (s.hpPlus += 400), 'HP+500': () => (s.hpPlus += 500),
   };
   // programs on the line, right to left; of two in one nonzero group only the first applies (byte_2006DD8)

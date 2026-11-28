@@ -293,7 +293,7 @@ export function hitPlayer(s, damage, opts = {}) {
   s.events.push({ type: 'playerHit', damage });
 }
 
-// Buster bug (type 7): a charge shot rolls one of 16 slots — stat 0x14 ones, then stat 0x15 twos, the rest 0 (sub_8013D5E).
+// Buster bug (type 7): each normal buster shot rolls one of 16 slots — stat 0x14 ones, then stat 0x15 twos, the rest 0 (sub_8013D5E).
 function busterBugRoll(s) {
   const [ones, twos] = BUGS.busterTable.value[bug(s, 7)], r = Math.floor(rng(s) * 16);
   return r < ones ? 1 : r < ones + twos ? 2 : 0;
@@ -504,7 +504,6 @@ function stepPlayer(s, input) {
     p.holdT = 0; p.charge = 0;
     if (full) {
       p.state = 'buster'; p.stateT = 0; setAnim(p, 'buster');
-      if (busterBugRoll(s) === 1) { p.busterWait = busterWait(s, p); s.events.push({ type: 'misfire' }); return; } // buster bug: misfire
       hitEnemy(s, rowTarget(s, p.x, p.y), 10 * (1 + s.navi.attack + s.busterUp), { fx: 'charge' }); // (Attack + 1) × 10 (0x8011A7E)
       p.busterWait = busterWait(s, p);
       s.events.push({ type: 'chargeShot' });
@@ -514,6 +513,9 @@ function stepPlayer(s, input) {
   if (input.b && s.queue.length) { useChip(s, s.queue.shift()); return; }
   if (pressedA) {
     p.state = 'buster'; p.stateT = 0; setAnim(p, 'buster');
+    const roll = busterBugRoll(s); // buster bug: a normal shot may misfire (family 0x33) or come out charged (0x16)
+    if (roll === 1) { p.busterWait = busterWait(s, p); s.events.push({ type: 'misfire' }); return; }
+    if (roll === 2) { hitEnemy(s, rowTarget(s, p.x, p.y), 10 * (1 + s.navi.attack + s.busterUp), { fx: 'charge' }); p.busterWait = busterWait(s, p); s.events.push({ type: 'chargeShot' }); return; }
     hitEnemy(s, rowTarget(s, p.x, p.y), 1 + s.navi.attack + s.busterUp, { fx: 'buster' }); // Attack + 1 (sub_801265A)
     p.busterWait = busterWait(s, p);
     return;

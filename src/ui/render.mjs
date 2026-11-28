@@ -561,6 +561,12 @@ export function render(g, s, bank) {
       const [cx, cy] = anchor(f.x, f.y); g.strokeStyle = `rgba(255,120,200,${1 - f.t / 20})`; g.lineWidth = 2;
       g.beginPath(); g.arc(cx, cy - 16, 6 + f.t, 0, 7); g.stroke();
     }
+    if (f.kind === 'star' && bank?.get('shurikenfx')) { // AntiDmg's shuriken (t3 0xC2): falls onto the enemy, then lands
+      const [sx, sy] = anchor(f.x, f.y);
+      if (f.t < 12) sprite(g, bank, 'shurikenfx', 'fall', f.t, sx, sy - 16 - (12 - f.t) * 6, () => {});
+      else if (f.t < 24) sprite(g, bank, 'shurikenfx', 'land', f.t - 12, sx, sy, () => {});
+      continue;
+    }
     if (f.kind === 'star' && f.t < 16) { // AntiDmg's star (app-drawn)
       const [sx, sy] = anchor(f.x, f.y), r = 8 - f.t / 4; g.fillStyle = '#e8e8f0'; g.beginPath();
       for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4 + f.t / 3, rr = k & 1 ? r / 3 : r; g.lineTo(sx + Math.cos(a) * rr, sy - 18 - (16 - f.t) * 2 + Math.sin(a) * rr); }

@@ -123,3 +123,14 @@ test('Confused reverses the D-pad; Bubbled pops on a hit, Elec doubles', () => {
   hitPlayer(s, 10, { element: 'elec' });
   assert.equal(hp - s.player.hp, 20); assert.equal(s.player.bubble, 0);
 });
+
+test('buster bug: normal shots misfire or come out charged at the game\'s odds; the charge shot is untouched', () => {
+  const s = ready({ 7: 3 }); let mis = 0, big = 0, n = 0;
+  s.enemies[0].hp = 1e9; s.player.invuln = 1e9;
+  for (let i = 0; i < 4000; i++) {
+    step(s, { a: i % 30 === 0 });
+    if (i % 30 === 0) { n++; if (s.events.some(e => e.type === 'misfire')) mis++; if (s.events.some(e => e.type === 'chargeShot')) big++; }
+  }
+  assert.ok(mis / n > 0.6 && mis / n < 0.95, `${mis}/${n}`); // 13/16
+  assert.ok(big > 0);
+});

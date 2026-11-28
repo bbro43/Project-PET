@@ -129,7 +129,7 @@ function start() {
   const mode = $('#mode').value;
   const enemies = mode === 'navi' ? naviBattle($('#cpu-navi').value, +$('#cpu-variant').value)
     : formation($('#family').value, +$('#variant').value, +$('#count').value);
-  state = createBattle({ mode: mode === 'navi' ? 'virus' : mode, enemies, field: $('#field').value, seed: (Date.now() & 0x7fffffff), intro: true, folder: equippedFolder(folders), regular: equippedRegular(folders), tag: equippedTag(folders), navi: naviStats(navi) });
+  state = createBattle({ mode: mode === 'navi' ? 'virus' : mode, enemies, field: $('#field').value, seed: (Date.now() & 0x7fffffff), intro: true, folder: equippedFolder(folders), regular: regularThatFits(folders), tag: equippedTag(folders), navi: naviStats(navi) });
   $('#menu').hidden = true; $('#battle').hidden = false;
   showCustom();
   last = performance.now(); acc = 0;
@@ -141,6 +141,8 @@ const folders = loadFolders(DEFAULT_FOLDER);
 const navi = loadNaviCust();
 // The menu screens (chip folder, Navi Customizer) share the battle canvas and the pad.
 let folderOpen = false, screenUI = null;
+// The Regular only counts if it still fits the Regular memory (RegUP parts can be removed).
+const regularThatFits = f => { const i = equippedRegular(f), c = equippedFolder(f)[i]; return i != null && c && (CHIP_DATA[c[0]]?.mb ?? 99) <= naviStats(navi).reg ? i : null; };
 const folderUI = createFolderUI({ getBank: () => bank, folders, onExit: () => quit(), limits: () => naviStats(navi) });
 const naviUI = createNaviCustUI({ getBank: () => bank, navi, onExit: () => quit() });
 const menuButtons = on => document.querySelectorAll('.menu-only').forEach(b => { b.hidden = !on; });

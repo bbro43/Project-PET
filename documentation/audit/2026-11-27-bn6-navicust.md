@@ -66,7 +66,7 @@ Level = min(bug count, 3) (sub_813BF0C); the routine for level 0 is empty. BugSt
 | 3 Panel | 0x12 = 3, 0x13 = 2/3/4 | when MegaMan leaves a panel (move routine, before PanelX = FuturePanelX), (rnd & 7) ≤ 0x13 − 1 → object_crackPanel; not on empty or broken panels (sub_8013CC4, actor type 2 only) | rom-verified |
 | 4 Custom | 0x63 = 4/3/2 | from that turn on the custom screen shows turn − value + 1 fewer chips, at least 2 (sub_802A40C) | rom-verified values; first-turn count recalled |
 | 5 / 6 | 0x28 / 0x26 | encounters (asm29) | no effect |
-| 7 Buster | 0x14 / 0x15 = 6,1 / 10,2 / 13,3 | the charge shot (megamanChargeShotBPwrAtk_init_8011A26) rolls a 16-slot table (sub_8013D5E): 1 → attack 0x33 (sub_8011ADA), 2 → attack 0x16 with (Attack + 1) × 10. The app treats 1 as a misfire; 0x33 / 0x16 are not decoded | table rom-verified; effect unverified |
+| 7 Buster | 0x14 / 0x15 = 6,1 / 10,2 / 13,3 | each normal buster shot (power attack 0, megamanChargeShotBPwrAtk_init_8011A26) rolls a 16-slot table (sub_8013D5E): 1 → family 0x33 (sub_80ED764: buster pose, sound 0xF8, no shot = a misfire), 2 → family 0x16, the charge shot ((Attack + 1) × 10). The charge shot itself (power attack 1) isn't affected. 0.55.0 had this on the charge shot by mistake | rom-verified |
 | 8 | 0xD = 0xFF | turns off Rush / Beat / Tango (sub_8010660) | no effect (those are VS only) |
 | 9 HP | 0x18 += level, 0x16 = 3 | every byte_80102A4[0x18] frames (0, 40, 35, 30, 25, 20, 15, 10) MegaMan loses 1 HP, never below 1 (sub_8010230); each hit raises 0x18 by 1, max 7 (sub_8013F1E → sub_8013F96) | rom-verified |
 | 0xA | 0x62 = 3/2/1 | no program has bug type 0xA | — |
@@ -79,9 +79,9 @@ The ROM's text for SuperArmor is "Won't be pushed!". WindBox / VacuumFan gusts n
 | Effect | Object | Sprite | Notes |
 |---|---|---|---|
 | FstBarr barrier | t4 0x7 (sub_80E0D98, param 1 = stat 6) | 0x0C/0x3D, byte_80E0A14 entry 1: animation 0, palette 0 | drawn half see-through; the game's blend level is not traced |
-| Shield / Reflect | t3 0x2B (sub_80C97E0; Unk_0c 0x214 / 0x114 → param 2 / 1) | 0x0C/0x1B, byte_80C9664: Shield animations 4/5, Reflect 2/3, palette 0 | palette entries 9–15 are 0x03E0 fillers; drawn transparent. Reflect's body uses them, so it shows only in part |
+| Shield / Reflect | t3 0x2B (sub_80C97E0; Unk_0c 0x214 / 0x114 → param 2 / 1) | 0x0C/0x1B, byte_80C9664: Shield animations 4/5, Reflect 2/3, palette 0 | palette entries 9–15 are 0x03E0 fillers; drawn transparent. 0.57.0: the OAM pieces that use them have palette offset +1 (5th OAM byte, high nibble), so the game draws them with the next OBJ palette slot, which the sprite doesn't supply. What the game loads there is not traced |
 | Bubble | t4 0x3C (sub_80E4A6E) | 0x0C/0x20, animation 2 | entries 5–15 are fillers; drawn transparent |
-| AntiDmg star | family 0x5A spawns t1 0x5 (byte_80B8BD4 entry 3 = 0x0C/0x00) | that sprite is a sword slash, so the star is still app-drawn | not resolved |
+| AntiDmg star | family 0x5A only sets AIData 0x48 flag 0x800; a hit then counts as the AntiDmg chip (0xBB, 0x802CF4A) → sub_80105F2 → family 0x47 (sub_80EE90C) → sub_80DD91A → t3 0xC2 | sprite 0x0C/0x2F: sequence 0 falling, 1 landing (0.57.0) | rom-verified |
 
 ## Emotions (0.56.0)
 | Item | Location | Value |
@@ -100,3 +100,6 @@ Not done: the counter ring and the Full Synchro flash are app-drawn; the counter
 
 ## Bubbled (0.56.0)
 OBJECT_FLAGS_BUBBLED 0x80000000, timer CollisionData 0x2C (sub_800E730), sprite t4 0x3C. 150 frames, popped by a hit, Elec ×2, mashing shortens it (N1GP wiki). StarFish's bubbles apply it in the app; their hit modifier 3 (0x80CBBDE) meaning Bubble is not traced.
+
+## RegUP (0.57.0)
+sub_803CFB0: Regular memory = 4 + RegUP1 + 2·RegUP2 + 3·RegUP3 (key items 0x72–0x74), at most 0x63 = 99 → Navi stat 9. The app's RegUP1/2/3 are app-made 1×1 white Plus Parts (owner decision) standing in for the key items.

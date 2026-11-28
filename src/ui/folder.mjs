@@ -51,12 +51,12 @@ export const equippedRegular = f => (f.folders[f.equipped] || f.folders[0]).reg 
 export const equippedTag = f => (f.folders[f.equipped] || f.folders[0]).tag ?? null;
 export const TAG_MEMORY = 60; // two tagged chips may total at most 60 MB (sub_81349E8: 0x3C − tagged MB ≥ chip MB)
 // Select on a folder chip: make it the Regular (again to clear it). Returns a message when not allowed.
-export function setRegular(folder, i) {
+export function setRegular(folder, i, memory = REG_MEMORY) {
   if (folder.reg === i) { folder.reg = null; return null; }
   const d = byName.get(folder.chips[i]?.[0]);
   if (!d) return null;
   if (folder.tag?.includes(i)) return 'A Tag chip can\'t\nbe your Regular.';
-  if (d.mb > REG_MEMORY) return `This chip is too\nbig for your\nRegular memory.`;
+  if (d.mb > memory) return `This chip is too\nbig for your\nRegular memory.`;
   folder.reg = i; return null;
 }
 
@@ -89,6 +89,7 @@ export function folderRule(chips, chip, skip = -1, caps = { mega: MEGA_CAP, giga
 const ROWS = 7, ROW_H = 16;
 
 export function createFolderUI({ getBank, folders, onExit, limits = () => null }) {
+  const regMem = () => limits()?.reg ?? REG_MEMORY; // RegUP parts raise it
   let view = 'folders', slot = folders.equipped, page = 0, msg = null, msgT = 0;
   const pos = [{ top: 0, cur: 0 }, { top: 0, cur: 0 }]; // folder page, pack page
   let held = null; // { side, index }
@@ -128,7 +129,7 @@ export function createFolderUI({ getBank, folders, onExit, limits = () => null }
       else if (k === 'b' || k === 'select') choice = null;
       else if (k === 'a') {
         const F = folders.folders[slot], { at, cur } = choice; choice = null;
-        if (cur === 0) { const why = setRegular(F, at); if (why) say(why); }
+        if (cur === 0) { const why = setRegular(F, at, regMem()); if (why) say(why); }
         else { const r = setTag(F, at, tagPending); tagPending = r.pending; if (r.msg) say(r.msg); }
         saveFolders(folders);
       }
@@ -165,7 +166,7 @@ export function createFolderUI({ getBank, folders, onExit, limits = () => null }
     const L = limits(), why = folderRule(c, chip, fi, L ? { mega: L.mega, giga: L.giga } : undefined);
     if (why) { say(why); held = null; return; }
     if (fi < c.length) c[fi] = [...chip]; else c.push([...chip]);
-    const F = folders.folders[slot]; if (F.reg === fi && (byName.get(chip[0])?.mb ?? 99) > REG_MEMORY) F.reg = null;
+    const F = folders.folders[slot]; if (F.reg === fi && (byName.get(chip[0])?.mb ?? 99) > regMem()) F.reg = null;
     if (F.tag?.includes(fi) && F.tag.reduce((t, j) => t + (byName.get(c[j]?.[0])?.mb ?? 99), 0) > TAG_MEMORY) F.tag = null;
     if (tagPending === fi) tagPending = null;
     held = null; saveFolders(folders);
@@ -222,7 +223,7 @@ export function createFolderUI({ getBank, folders, onExit, limits = () => null }
   }
   function regMemory(g, x, y) { // the Regular memory ("4MB") next to the folder name: a 2-digit field from x (0x8134514), then MB
     const M = getBank()?.menus; if (!M?.regDigits) return;
-    const s = String(REG_MEMORY).padStart(2, ' ');
+    const s = String(regMem()).padStart(2, ' ');
     for (let k = 0; k < 2; k++) if (s[k] !== ' ') g.drawImage(M.regDigits[+s[k]], x + 8 * k, y);
     g.drawImage(M.regMB, x + 16, y);
   }
