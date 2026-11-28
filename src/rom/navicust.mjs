@@ -13,6 +13,7 @@ const hex = s => parseInt(s, 16);
 const u16 = (b, o) => b[o] | (b[o + 1] << 8);
 const u32 = (b, o) => (b[o] | b[o + 1] << 8 | b[o + 2] << 16 | b[o + 3] << 24) >>> 0;
 const A = p => (p & 0x7fffffff) - 0x8000000;
+const CHARMAP = { 0x98: '-', 0x9A: '=', 0x9B: ':', 0x9C: '%', 0x9D: '?', 0x9E: '+', 0xA2: '!', 0xA3: '&', 0xA4: ',', 0xA6: '.', 0xAC: '/', 0x25: '*', 0xA9: "'" };
 export const rgb15 = c => [(c & 31) << 3, ((c >> 5) & 31) << 3, ((c >> 10) & 31) << 3];
 
 export function decodeNaviCust(rom, src) {
@@ -63,9 +64,45 @@ export function decodeNaviCust(rom, src) {
   const colors = [0, 1].map(set => Array.from({ length: 7 }, (_, i) => u16(rom, tables + 14 * set + 2 * i)));
   const pattern = [0, 1].map(set => Array.from({ length: 7 }, (_, i) => u16(rom, tables + 0x1C + 14 * set + 2 * i)));
   const palmap = rom.subarray(tables + 0x1FC + 0x34 * exp, tables + 0x1FC + 0x34 * exp + 49); // byte_813C4E8 + 0x34·n
+  // Colour strip (sub_8136644): BG palette entries 64 + byte_81366C8 (0x7A–0x7F, buffer unk_30019E0) = the board's colours in order (unk_2022B70);
+  // an empty slot takes colour 0 (slots 1–4, inside the frame) or entry 7 (slots 5–6, the background), from off_81366A0[set].
+  // RUN band (sub_813686C / sub_8136B58): BG3 32×3 tile maps unk_20229F0 (map 0) and byte_2022AB0 (map 1), tiles at 0x6008000.
+  const bandMap = addr => {
+    const m = ram.get(addr); if (!m) return null;
+    const w = 256, h = 24, rgba = new Uint8ClampedArray(w * h * 4);
+    for (let i = 0; i < 32 * 3; i++) {
+      const e = u16(m, 2 * i), t = e & 0x3ff, hf = (e >> 10) & 1, vf = (e >> 11) & 1, pal = e >> 12;
+      for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
+        const sx = hf ? 7 - x : x, sy = vf ? 7 - y : y, v = (vram[0x8000 + 32 * t + sy * 4 + (sx >> 1)] >> ((sx & 1) * 4)) & 15;
+        if (!v) continue;
+        const [r, g, b] = rgb15(u16(bgpal, (pal * 16 + v) * 2)), p = (((i >> 5) * 8 + y) * w + (i & 31) * 8 + x) * 4;
+        rgba[p] = r; rgba[p + 1] = g; rgba[p + 2] = b; rgba[p + 3] = 255;
+      }
+    }
+    return { rgba, width: w, height: h };
+  };
+  const band = [bandMap(0x20229F0), bandMap(0x2022AB0)];
+  // Messages (CompText86D55C8, decompressed to eTextScript201D280): a table of u16 offsets, then scripts in the game charmap.
+  const msgs = ram.get(0x201D280);
+  const message = i => {
+    if (!msgs) return null;
+    let o = u16(msgs, 2 * i); const lines = [''];
+    for (let guard = 0; guard < 400; guard++) {
+      const b = msgs[o++];
+      if (b === undefined || b === 0xE7 || b === 0xE6) break;
+      if (b === 0xE8) { o += 3; continue; }
+      if (b === 0xF1) { o += 2; continue; }
+      if (b === 0xE9) { lines.push(''); continue; }
+      if (b >= 0xE4) continue;
+      lines[lines.length - 1] += b === 0 ? ' ' : b <= 10 ? String(b - 1) : b <= 0x24 ? String.fromCharCode(54 + b) : b >= 0x26 && b <= 0x3F ? String.fromCharCode(59 + b) : CHARMAP[b] ?? '';
+    }
+    return lines.filter(l => l.trim());
+  };
+  const strip = src.strip ? { slots: [...rom.subarray(hex(src.strip.slots), hex(src.strip.slots) + 6)],
+    colors: [0, 1].map(k => { const t = u32(rom, hex(src.strip.tables) + 4 * k) - 0x8000000; return Array.from({ length: 8 }, (_, i) => u16(rom, t + 2 * i)); }) } : null;
   const sprite = (addr, seq, palette = 0) => { const b = ram.get(addr), fr = sequenceFrames(b, 0, seq); return fr.map(r => decodeFrame(b, r, { palette })); };
   return {
-    index, overlay: { rgba: over, width: W, height: H }, bgpal, colors, pattern, palmap,
+    index, overlay: { rgba: over, width: W, height: H }, bgpal, colors, pattern, palmap, strip, band, message,
     cursor: sprite(0x20218F0, 0), hand: sprite(0x20218F0, 1), listBar: sprite(0x201DD70, 0)[0],
     menu: sprite(0x20222F0, 0)[0], banners: [0, 1, 2].map(q => sprite(0x20226F0, q)[0]),
   };
@@ -81,10 +118,12 @@ export function buildNaviCust(d) {
   const out = document.createElement('canvas'); out.width = 240; out.height = 160;
   return {
     overlay: canvas(d.overlay), cursor: d.cursor.map(spr), hand: d.hand.map(spr), listBar: spr(d.listBar), menu: spr(d.menu), banners: d.banners.map(spr),
-    colors: d.colors, pattern: d.pattern,
+    colors: d.colors, pattern: d.pattern, message: d.message, bandImage: d.band.map(b => b && canvas(b)),
     // cells: 7×7 of { color (game colour 0–6 or an [r,g,b] for a Cross part), plus, frame, covered, hi (the brighter set 1) }
-    board(cells, set = 0) {
+    // used: the board's colours in the order they were first placed (unk_2022B70)
+    board(cells, set = 0, used = null) {
       pal.set(base);
+      if (d.strip && used) d.strip.slots.forEach((e, i) => { pal[64 + e] = pack(d.strip.colors[0][used[i] || (i < 4 ? 0 : 7)]); });
       for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) {
         const k = d.palmap[7 * y + x]; if (!k) continue;
         const c = cells[y][x], e = 64 + k, set1 = c.hi ? 1 : set;

@@ -28,11 +28,12 @@ const CELL = (x, y) => [3 + 20 * x, 19 + 20 * y]; // board cell (x, y) top-left 
 const ROWS = 4;
 
 export function createNaviCustUI({ getBank, navi, onExit }) {
-  let mode = 'list', cur = 0, top = 0, held = null, heldFrom = null, bx = 3, by = 3, menu = 0, msg = null, compress = false;
+  let mode = 'list', cur = 0, top = 0, held = null, heldFrom = null, bx = 3, by = 3, menu = 0, msg = null, compress = false, running = null;
   const say = t => { msg = t; };
   const layout = LAYOUTS[2];
 
   function input(k) {
+    if (running) return; // the RUN animation plays out
     if (msg) { if (k === 'a' || k === 'b' || k === 'start') msg = null; return; }
     if (mode === 'list') {
       if (k === 'up') { cur = Math.max(0, cur - 1); if (cur < top) top = cur; }
@@ -76,10 +77,16 @@ export function createNaviCustUI({ getBank, navi, onExit }) {
       }
     }
   }
-  function runCheck() {
+  // RUN (sub_813686C → states 0x04–0x1C, 0x20, 0x30, 0x28): the game's chevron band runs along the command line while the
+  // parts on it light up cell by cell (20 frames a cell, 1 px a frame), then all of them blink for 0x50 frames at 2 px a frame,
+  // the band narrows away over 0x50 frames at 3 px, and the message "OK! RUN complete!" (script 1) closes it.
+  const RUN = { cell: 20, cells: 7, fast: 0x50, out: 0x50 };
+  function runCheck() { saveNaviCust(navi); running = { t: 0 }; }
+  function runDone() {
+    running = null;
     const s = stats(navi.parts), bugs = s.run.levels.map((n, t) => n ? `${BUG_NAMES[t] ? BUG_NAMES[t] + ' bug' : 'Bug type ' + t} Lv${n}` : '').filter(Boolean);
-    saveNaviCust(navi);
-    say(bugs.length ? (s.bugStop ? 'RUN! BugStop|holds the bugs.' : `RUN! Bugs:|${bugs.slice(0, 3).join('|')}`) : `RUN! OK.|Programs: ${s.run.programs.length}|Plus Parts: ${s.run.plus.length}`);
+    const N = getBank()?.navicust, game = N?.message?.(1)?.map(l => l.split(/\s{2,}/).pop().trim()).filter(Boolean) || ['OK!', 'RUN complete!'];
+    say([...game, ...(bugs.length && !s.bugStop ? [`Bugs: ${bugs.slice(0, 2).join(', ')}`] : [])].join('|'));
   }
   function tap(x, y) {
     if (msg) { msg = null; return; }
@@ -122,7 +129,28 @@ export function createNaviCustUI({ getBank, navi, onExit }) {
       for (const [x, y] of cellsOf(held)) if (x >= 0 && x < 7 && y >= 0 && y < 7 && layout[y][x])
         cells[y][x] = { color: colorOf(held), plus: P.plus, hi: fits || blink, frame: false };
     }
-    g.drawImage(N.board(cells), 0, 0);
+    if (running) { // RUN: light the parts on the command line, blinking between the normal and bright sets (sub_813C06C)
+      const t = running.t, upto = t < RUN.cell * RUN.cells ? Math.floor(t / RUN.cell) : 6, blink = (t >> 3) & 1;
+      for (let x = 0; x <= upto; x++) {
+        const i = grid[COMMAND_ROW][x] - 1; if (i < 0) continue;
+        for (let y = 0; y < 7; y++) for (let xx = 0; xx < 7; xx++) if (grid[y][xx] - 1 === i) cells[y][xx] = { ...cells[y][xx], hi: !!blink };
+      }
+    }
+    const used = [...new Set(parts.map(colorOf))]; // the colour strip: the board's colours in the order they were placed (unk_2022B70)
+    g.drawImage(N.board(cells, 0, used), 0, 0);
+    if (running) { // the band (BG3 maps 0 / 1, scrolling right from 252), clipped to the board's command line
+      const t = running.t, A = RUN.cell * RUN.cells, B = A + RUN.fast, C = B + RUN.out;
+      const scroll = 252 - (t < A ? t : t < B ? A + 2 * (t - A) : A + 2 * RUN.fast + 3 * (t - B));
+      const img = N.bandImage?.[t < A ? 0 : 1];
+      if (img) {
+        const h = t < B ? 24 : Math.max(0, Math.round(24 * (C - t) / RUN.out)), y0 = 80 + (24 - h) / 2;
+        g.save(); g.beginPath(); g.rect(3, y0, 140, h); g.clip();
+        const x0 = ((-scroll % 256) + 256) % 256;
+        g.drawImage(img, x0 - 256, 80); g.drawImage(img, x0, 80);
+        g.restore();
+      }
+      if (++running.t >= C) runDone();
+    }
     // parts that sit off the board while held: outline only
     if (held) for (const [x, y] of cellsOf(held)) if (x >= 0 && x <= 6 && y >= 0 && y <= 6 && !layout[y][x]) { const [sx, sy] = CELL(x, y); g.strokeStyle = '#f04040'; g.strokeRect(sx + 1.5, sy + 1.5, 16, 16); } // corner cells: off the board
     // list
@@ -137,7 +165,8 @@ export function createNaviCustUI({ getBank, navi, onExit }) {
     g.fillStyle = '#f8f8f8'; g.fillRect(236, 26 + Math.round((16 * ROWS - 10) * cur / (ENTRIES.length - 1)), 2, 10); // list position
     // INFORMATION
     const e = held ? ENTRIES.find(x => x.id === held.id && x.variant === held.variant) : mode === 'list' ? ENTRIES[cur] : (() => { const i = gridOf(parts)[by][bx] - 1; return i >= 0 ? ENTRIES.find(x => x.id === parts[i].id && x.variant === parts[i].variant) : null; })();
-    if (e) { // the game's description (CompText873ECC8), 3 lines of up to 8 characters
+    if (running) text(g, 'RUN...', 150, 111); // script 6
+    else if (e) { // the game's description (CompText873ECC8), 3 lines of up to 8 characters
       const P = programOf(e.id), C = held?.compressed || (mode === 'list' && compress && !e.cross);
       P.info.slice(0, 3).forEach((l, i) => text(g, l, 150, 111 + 12 * i));
       if (C) text(g, 'C', 222, 111, '#f8f040');

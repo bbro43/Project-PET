@@ -4911,7 +4911,11 @@
     ],
     "infoBox": "13565C",
     "tables": "13C2EC",
-    "expand": 2
+    "expand": 2,
+    "strip": {
+     "tables": "1366A0",
+     "slots": "1366C8"
+    }
    },
    "bn6g": {
     "palettes": "137A08",
@@ -4922,7 +4926,11 @@
     ],
     "infoBox": "137438",
     "tables": "13E0CC",
-    "expand": 2
+    "expand": 2,
+    "strip": {
+     "tables": "13847C",
+     "slots": "1384A4"
+    }
    }
   }
  }

@@ -103,3 +103,16 @@ OBJECT_FLAGS_BUBBLED 0x80000000, timer CollisionData 0x2C (sub_800E730), sprite 
 
 ## RegUP (0.57.0)
 sub_803CFB0: Regular memory = 4 + RegUP1 + 2·RegUP2 + 3·RegUP3 (key items 0x72–0x74), at most 0x63 = 99 → Navi stat 9. The app's RegUP1/2/3 are app-made 1×1 white Plus Parts (owner decision) standing in for the key items.
+
+## Colour strip and RUN (0.63.0)
+| Item | Location | Value |
+|---|---|---|
+| Colour list | unk_2022B70 (sub_81366D0 adds a part's colour when it's placed; sub_81366FC removes it when the last part of that colour goes, shifting the rest) | the board's colours in placement order, 6 slots |
+| Colour strip | sub_8136644 | BG palette entries 64 + byte_81366C8 (0x7A–0x7F) = off_81366A0[set][colour]; an empty slot takes entry 0 (slots 1–4, inside the frame) or entry 7 (slots 5–6, the background colour: Falzar 0x1E3C, Gregar 0x3AE1). Gregar tables +0x1DDC |
+| RUN start | sub_813686C | BG3 scroll X = byte_81368C8[layout] (252 for the 5×5 board), band map 0 (unk_20229F0, 32×3) at row dword_8136B9C[layout] (10) |
+| RUN, cell by cell | sub_81368E8… (state 4–0x1C) | every 0x14 frames the next command-line cell; scroll 1 px a frame (sub_8136B10); the parts on cells 0..state/4 blink (sub_813C06C, sets byte_813C188 / byte_813C1A4, frame & 8); map 1 (byte_2022AB0) once state reaches byte_81369B5[layout] |
+| RUN, fast | sub_81369B8 / sub_81369D0 (state 0x20) | 0x50 frames at 2 px; then reloadCurNaviStatBoosts_813c3ac, sound 0x74 |
+| RUN, out | sub_8136A0C (state 0x30) | 0x50 frames at 3 px, the window height counting down (Unk2009740 +2 = t / 4) |
+| RUN, message | state 0x28 → chatbox script 1 of CompText86D55C8 (eTextScript201D280) | "OK! / RUN complete!"; scripts 6–10 "RUN..." |
+
+App readings: the band is clipped to the board (the window registers' exact rectangle is not decoded); "RUN..." is shown in the INFORMATION box during the run; the bug list after "RUN complete!" is the app's addition (the game doesn't list bugs).
