@@ -4829,6 +4829,121 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "sensorfx": {
+   "label": "Sensor (t3 0xA6 sub_80DA07C): sprite 4/5 (the KillerEye sprite), palette Param1",
+   "sources": {
+    "bn6f": {
+     "offset": "246A24",
+     "compression": "none",
+     "bytes": 8100,
+     "sha256": "a0578dba0233b37327b608b79bb18656ca43b21f9446f2ec70cbb7a892e324e3",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "246A24",
+     "compression": "none",
+     "bytes": 8100,
+     "sha256": "a0578dba0233b37327b608b79bb18656ca43b21f9446f2ec70cbb7a892e324e3",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "s0": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "s1": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    },
+    "s2": {
+     "seq": 2,
+     "confidence": "rom-verified"
+    },
+    "s4": {
+     "seq": 4,
+     "confidence": "rom-verified"
+    },
+    "s5": {
+     "seq": 5,
+     "confidence": "rom-verified"
+    },
+    "s7": {
+     "seq": 7,
+     "confidence": "rom-verified"
+    },
+    "s8": {
+     "seq": 8,
+     "confidence": "rom-verified"
+    },
+    "s9": {
+     "seq": 9,
+     "confidence": "rom-verified"
+    },
+    "s10": {
+     "seq": 10,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "sensordot": {
+   "label": "Sensor's scanning dot (t3 0x9F): sprite 0x10/0x50",
+   "sources": {
+    "bn6f": {
+     "offset": "390F44",
+     "compression": "none",
+     "bytes": 128,
+     "sha256": "c3f4c6d0853593850c18dca3da8b49bd4c01e518ac43628d06a923bcd53d35a8",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3904BC",
+     "compression": "none",
+     "bytes": 128,
+     "sha256": "c3f4c6d0853593850c18dca3da8b49bd4c01e518ac43628d06a923bcd53d35a8",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "dot": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "sensorlaser": {
+   "label": "Sensor's laser (t3 0xA0): sprite 0x10/0x51",
+   "sources": {
+    "bn6f": {
+     "offset": "390FC4",
+     "compression": "none",
+     "bytes": 3708,
+     "sha256": "5d28efaf39cda64950e3a42bdb6aa3fcb0cdd16982a556f4f97e8407a65b6e3b",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "39053C",
+     "compression": "none",
+     "bytes": 3708,
+     "sha256": "5d28efaf39cda64950e3a42bdb6aa3fcb0cdd16982a556f4f97e8407a65b6e3b",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "s0": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "s1": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    },
+    "s2": {
+     "seq": 2,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

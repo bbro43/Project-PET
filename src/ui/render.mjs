@@ -228,6 +228,15 @@ export function render(g, s, bank) {
     const [ax, ay] = anchor(h.fx, h.fy);
     sprite(g, bank, 'thunderfx', 'ball', h.t, ax, ay - 12, (g, x, y) => { g.fillStyle = '#ffe060'; g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); }, 0, false);
   }
+  for (const h of s.hazards) if (h.kind === 'raidbomb' && !((h.hit - s.tick) & 4)) { // AirRaid's bomb: its panel flashes (object_highlightPanel)
+    g.fillStyle = 'rgba(255,240,80,.85)'; g.fillRect(h.x * PANEL_W + 3, FIELD_Y + h.y * PANEL_H + 3, PANEL_W - 6, PANEL_H - 9);
+  }
+  for (const f of s.effects) if (f.kind === 'raidblast') { const [ax, ay] = anchor(f.x, f.y); sprite(g, bank, 'bombblast', 'burst', f.t, ax, ay, (g, x, y) => { g.fillStyle = `rgba(255,160,60,${1 - f.t / 24})`; g.beginPath(); g.arc(x, y - 10, 14, 0, 7); g.fill(); }, 0, false); }
+  for (const e of s.enemies) if (e.sensor && e.dot && e.hp > 0) { const [ax, ay] = anchor(e.dot.x, e.dot.y); sprite(g, bank, 'sensordot', 'dot', s.tick, ax, ay, (g, x, y) => { g.fillStyle = '#ff4040'; g.fillRect(x - 2, y - 4, 4, 4); }, 0, false); } // Sensor's dot (sprite 0x10/0x50)
+  for (const h of s.hazards) if (h.kind === 'sensorlaser') for (const [x, y] of h.cells) { // Sensor's laser (sprite 0x10/0x51)
+    const [ax, ay] = anchor(x, y);
+    sprite(g, bank, 'sensorlaser', 's' + h.aim, s.tick - h.start, ax, ay - 16, (g, x, y) => { g.fillStyle = 'rgba(255,80,80,.8)'; g.fillRect(x - 20, y - 2, 40, 4); }, 0, false);
+  }
   for (const h of s.hazards) if (h.kind === 'windgust') { // Wind / Fan gust (sprite 0x0C/0x2E, palette 0 / 2)
     const [ax, ay] = anchor(h.fx, h.y);
     sprite(g, bank, 'windgustfx', 'gust', s.tick, ax, ay - 12, (g, x, y) => { g.strokeStyle = 'rgba(220,240,255,.8)'; g.lineWidth = 2; for (let i = 0; i < 3; i++) { g.beginPath(); g.moveTo(x - 10, y - 6 * i); g.lineTo(x + 10, y - 6 * i); g.stroke(); } }, h.dir > 0 ? 0 : 2, h.dir < 0);

@@ -318,3 +318,19 @@ test('Mine: hides on a free enemy panel and goes off when an enemy steps on it',
   const e = s.enemies.find(e => e.id === 7); e.x = m.x; e.y = m.y; step(s, {});
   assert.equal(e.hp, 4800); assert.equal(s.hazards.some(h => h.kind === 'chipmine'), false);
 });
+
+test('AirRaid: a plane ahead rises, then drops its bombs on the enemies in turn', () => {
+  const s = after('AirRaid1', 0); while (s.timestop) step(s, {});
+  const plane = s.enemies.find(e => e.family === 'AirRaid'); assert.deepEqual([plane.x, plane.y, plane.hp], [2, 1, 30]);
+  for (let i = 0; i < 160; i++) step(s, {});
+  assert.equal(hurt(s).reduce((n, h) => n + h[2], 0), 10 * 10); // 10 bombs of 10
+  assert.equal(plane.hp, 0); // gone after 150 frames
+});
+
+test('Sensor: aims by its row, fires a laser down the line when an enemy is on the dot', () => {
+  const one = s => { s.enemies = [{ id: 7, family: 'Mettaur', x: 5, y: 1, hp: 5000, maxHp: 5000, state: 'idle', stateT: 0, think: 1e9, paralyzed: 1e9, anim: 'idle', animT: 0, element: 'none' }]; };
+  const s = after('Sensor1', 0, one); while (s.timestop) step(s, {});
+  const sn = s.enemies.find(e => e.family === 'Sensor'); assert.deepEqual([sn.x, sn.y, sn.hp], [2, 1, 20]);
+  for (let i = 0; i < 64 + 3 * 8 + 2; i++) step(s, {});
+  assert.ok(sn.fired); assert.deepEqual(hurt(s), [[5, 1, 100]]);
+});

@@ -416,6 +416,24 @@ export const CHIP_BEHAVIOUR = {
   // frames, 0x3C times, then hides on the last (region 1, collision 0x33 / 0x2A, HP 1). It goes off when an enemy steps on
   // it or its panel breaks: the chip's damage, explosion effect 0x47.
   Mine: { kind: 'mine', freeze: true, hold: 120, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // AirRaid (sub 13 → t4 0x4B, sub_80E5F10, hold 0x3C): on a free panel ahead (byte_80E5F68: not 0x0F880080) a fighter
+  // plane t3 0x75 (sub_80D3500: sprite 4/0x18 = FighterPlane, byte_80D34C0[Param1] = [life / 2, bombs, palette, HP]:
+  // [75, 10, 0, 30], [95, 14, 1, 40], [115, 18, 2, 50]). Animation 1, rises 0xA000 a frame for 0x1E frames, animation 2,
+  // then a bomb every 0xA frames (sub_80D3770): the panels with enemies in the columns ahead in turn (sub_80D37F4), 2 / 8
+  // of the time a random enemy panel instead, and the back column of its row when no enemy is there; each bomb (t3 9,
+  // 0x20600) flashes its panel for 6 frames, then explodes (sprite 0x10/0x26, animation 2) with the chip's damage.
+  AirRaid1: { kind: 'place', obj: 'AirRaid', sprite: 'fighterplane', seq: 'idle', pal: 0, hp: 30, life: 150, ahead: true, freeze: true, hold: 60, raid: 10, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  AirRaid2: { kind: 'place', obj: 'AirRaid', sprite: 'fighterplane', seq: 'idle', pal: 1, hp: 40, life: 190, ahead: true, freeze: true, hold: 60, raid: 14, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  AirRaid3: { kind: 'place', obj: 'AirRaid', sprite: 'fighterplane', seq: 'idle', pal: 2, hp: 50, life: 230, ahead: true, freeze: true, hold: 60, raid: 18, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // Sensor (sub 28 → t4 0x65, sub_80E7C40, hold 0x3C): t3 0xA6 (sub_80DA07C) on a free panel ahead: sprite 4/5 (KillerEye),
+  // palette Param1 (0 / 3 / 6), HP Param2 (20 / 30 / 40), Timer 0x2D0. Its row sets the aim (dword_80DA104: top → down,
+  // middle → straight, bottom → up; dword_80DA3E8 −1 / 0 / +1). Animation 10, after 0x28 animation 0, after 0xA [1, 0, 4],
+  // after 0xE [2, 0, 5] and a dot (t3 0x9F, sprite 0x10/0x50) that steps one panel along the line every 8 frames and
+  // starts over at the field's edge (sub_80D9298). An enemy on the dot's panel (0x4000000) fires it: animation [8, 7, 9],
+  // a laser (t3 0xA0, sprite 0x10/0x51, Timer 0x64, collision 0x16) on every panel of the line, and 0x78 frames left.
+  Sensor1: { kind: 'place', obj: 'Sensor', sprite: 'sensorfx', seq: 's10', pal: 0, hp: 20, life: 720, ahead: true, freeze: true, hold: 60, sensor: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  Sensor2: { kind: 'place', obj: 'Sensor', sprite: 'sensorfx', seq: 's10', pal: 3, hp: 30, life: 720, ahead: true, freeze: true, hold: 60, sensor: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  Sensor3: { kind: 'place', obj: 'Sensor', sprite: 'sensorfx', seq: 's10', pal: 6, hp: 40, life: 720, ahead: true, freeze: true, hold: 60, sensor: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

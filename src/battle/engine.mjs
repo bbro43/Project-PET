@@ -271,9 +271,46 @@ function stepPlacedBomb(o, api) {
     let x0 = o.x + 1; while (x0 <= 5 && sideAt(s, x0, y) !== 'e') x0++; // Wind: the first enemy panel in the row (sub_80CD26C); Fan: the back edge (sub_80CD236)
     if (x0 <= 5) s.hazards.push({ kind: 'windgust', owner: 'player', fx: o.wind > 0 ? x0 : 5, y, dir: o.wind, hit: [] });
   }
+  if (o.raid) stepAirRaid(s, o);
+  if (o.sensor) stepSensor(s, o);
   if (--o.life > 0) return;
-  if (o.family === 'BlackBomb' || o.family === 'Cube' || o.family === 'MusicBox' || o.family === 'WindBox') { o.hp = 0; s.effects.push({ kind: 'puff', x: o.x, y: o.y, t: 0 }); } // left alone: it just goes away
+  if (o.family === 'BlackBomb' || o.family === 'Cube' || o.family === 'MusicBox' || o.family === 'WindBox' || o.family === 'AirRaid' || o.family === 'Sensor') { o.hp = 0; s.effects.push({ kind: 'puff', x: o.x, y: o.y, t: 0 }); } // left alone: it just goes away
   else placedBombBurst(s, o);
+}
+// AirRaid's plane (t3 0x75): rises 0x1E frames, then a bomb every 0xA frames.
+function stepAirRaid(s, o) {
+  const t = o.stateT;
+  if (t <= 30) { o.anim = 'bank'; o.z = 0.625 * t; return; }
+  o.anim = 'bomb';
+  if ((t - 31) % 10 !== 0 || (t - 31) / 10 >= o.raid) return;
+  const foes = [];
+  for (let x = o.x + 1; x <= 5; x++) for (let y = 0; y < 3; y++) { const e = at(s, x, y); if (e && e.owner !== 'player') foes.push([x, y]); } // sub_80D37F4
+  let target;
+  if (!foes.length) target = [5, o.y];
+  else {
+    target = foes[(o.cycle = (o.cycle || 0) >= foes.length ? 0 : (o.cycle || 0))]; o.cycle++;
+    const r = Math.floor(rng(s) * 8);
+    if (r === 1 || r === 5) { const c = [3, 4, 5].flatMap(x => [0, 1, 2].map(y => [x, y])).filter(([x, y]) => sideAt(s, x, y) === 'e'); target = c[Math.floor(rng(s) * c.length)] || target; }
+  }
+  s.hazards.push({ kind: 'raidbomb', owner: 'player', x: target[0], y: target[1], hit: s.tick + 6, damage: o.damage, element: o.element });
+}
+// Sensor (t3 0xA6): aims by its row, scans with a dot, fires a laser down the line when an enemy is on the dot.
+function stepSensor(s, o) {
+  const t = o.stateT, aim = [2, 1, 0][o.y], dy = [-1, 0, 1][aim];
+  if (o.fired) return;
+  if (t === 1) o.anim = 's10';
+  if (t === 40) o.anim = 's0';
+  if (t === 50) o.anim = ['s1', 's0', 's4'][aim];
+  if (t === 64) { o.anim = ['s2', 's0', 's5'][aim]; o.dot = { x: o.x + 1, y: o.y + dy, t: 0 }; }
+  if (!o.dot) return;
+  const d = o.dot;
+  if (++d.t >= 8) { d.t = 0; d.x++; d.y += dy; if (d.x > 5 || d.y < 0 || d.y > 2) { d.x = o.x + 1; d.y = o.y + dy; } } // sub_80D9298
+  const e = d.x <= 5 && d.y >= 0 && d.y <= 2 && at(s, d.x, d.y);
+  if (e && e.owner !== 'player') { // fire: a laser on every panel of the line (sub_80DA290)
+    o.dot = null; o.fired = true; o.anim = ['s8', 's7', 's9'][aim]; o.life = 0x78;
+    const cells = []; for (let x = o.x + 1, y = o.y + dy; x <= 5 && y >= 0 && y <= 2; x++, y += dy) cells.push([x, y]);
+    s.hazards.push({ kind: 'sensorlaser', owner: 'player', cells, start: s.tick, until: s.tick + 0x64, damage: o.damage, element: o.element, aim, hit: [] });
+  }
 }
 function hitEnemy(s, e, damage, extra = {}) {
   if (!e || e.hp <= 0 || e.airborne || e.invuln > 0) return; // invuln: e.g. Trumpy's song
@@ -594,7 +631,7 @@ function applySpecial(s, sp) {
   else if (def.kind === 'place' && (def.ahead || def.inRow)) {
     let x = p.x + 1;
     if (def.inRow) while (x <= 5 && !(standable(s, x, p.y) && sideAt(s, x, p.y) === 'e' && !at(s, x, p.y))) x++; // sub_80E3264: the first free enemy panel ahead
-    if (x <= 5 && standable(s, x, p.y) && !at(s, x, p.y)) s.enemies.push({ id: s.nextId++, kind: 'coil', family: def.obj, name: def.obj, owner: 'player', sprite: def.sprite, palette: def.pal || 0, flip: true, x, y: p.y, drawX: x, drawY: p.y, hp: def.hp, maxHp: def.hp, noHp: true, anim: def.seq, animT: 0, state: 'idle', stateT: 0, flash: 0, discharge: 0, life: def.life, damage: sp.damage, element: sp.element, music: def.music, play: def.play, rest: def.rest, wind: def.wind, cycle: 0 });
+    if (x <= 5 && standable(s, x, p.y) && !at(s, x, p.y)) s.enemies.push({ id: s.nextId++, kind: 'coil', family: def.obj, name: def.obj, owner: 'player', sprite: def.sprite, palette: def.pal || 0, flip: true, x, y: p.y, drawX: x, drawY: p.y, hp: def.hp, maxHp: def.hp, noHp: true, anim: def.seq, animT: 0, state: 'idle', stateT: 0, flash: 0, discharge: 0, life: def.life, damage: sp.damage, element: sp.element, music: def.music, play: def.play, rest: def.rest, wind: def.wind, raid: def.raid, sensor: def.sensor, cycle: 0 });
   }
   else if (def.apply) def.apply(s, sp);
 }
@@ -1233,6 +1270,15 @@ function stepHazards(s) {
       const x = Math.round(at_.x), y = Math.round(at_.y), key = x + ',' + y;
       if (y >= 0 && y <= 2 && x >= 0 && x <= 5 && key !== h.last) { h.last = key; const e = at(s, x, y); if (e) hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
       return true;
+    }
+    if (h.kind === 'raidbomb') { // AirRaid's bomb (t3 9): the panel flashes 6 frames, then the blast
+      if (s.tick < h.hit) return true;
+      const e = at(s, h.x, h.y); if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true });
+      s.effects.push({ kind: 'raidblast', x: h.x, y: h.y, t: 0 }); return false;
+    }
+    if (h.kind === 'sensorlaser') { // Sensor's laser (t3 0xA0): 0x64 frames on the line, each enemy hit once
+      for (const [x, y] of h.cells) { const e = at(s, x, y); if (e && e.owner !== 'player' && !h.hit.includes(e.id)) { h.hit.push(e.id); hitEnemy(s, e, h.damage, { element: h.element, chip: true }); } }
+      return s.tick < h.until;
     }
     if (h.kind === 'chipmine') { // Mine (t3 0x4C), hidden: goes off when an enemy steps on its panel or the panel breaks
       const e = at(s, h.x, h.y);
