@@ -78,6 +78,7 @@ export function stepPanels(s, { hurtPlayer, hurtEnemy }) {
     c.t++;
     if (c.type === 'cracked') { if (c.occ && !occ) { c.type = 'broken'; c.t = 0; s.effects.push({ kind: 'panelbreak', x, y, t: 0 }); } }
     else if (c.type === 'broken') { if (c.t >= P.brokenRepair.value) { c.type = 'normal'; c.t = 0; } }
+    else if (c.type.startsWith('road')) { if (c.t >= P.roadRevert.value) { c.type = 'normal'; c.t = 0; } } // roads go back after 1800 frames
     else if (c.type === 'volcano') {
       const due = x <= 2 ? P.volcanoCycle.value : P.volcanoCycle.value / 2;
       if (s.volcanoClock === due) s.hazards.push({ kind: 'volcano', x, y, start: s.tick, hit: s.tick + P.volcanoEruption.value.warn, until: s.tick + P.volcanoEruption.value.warn + P.volcanoEruption.value.burn, damage: P.volcanoEruption.value.damage, done: [] });

@@ -349,6 +349,11 @@ export const CHIP_BEHAVIOUR = {
   // 0x40 frames, then set. PnlRetrn 0: type 2 (normal) on every panel of MegaMan's side; HolyPanl 4: type 5 (holy) under
   // MegaMan; Snctuary 5: holy on every panel of MegaMan's side (sub_80E29F8 / sub_80E2A9A).
   PnlRetrn: { kind: 'panels', freeze: true, hold: 64, type: 'normal', where: 'side', anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // ComingRd / GoingRd (sub 5, byte_80E272C rows 17 / 18): every enemy-side panel (needs 0x20, not 0x80) turns to road type
+  // 0xB (toward MegaMan) / 0xC (away), 0x40 frames of blinking first. On a road (types 9–12, byte_800E538: up, down, left,
+  // right) anything without FlotShoe slides one panel (4 frames), waits 5, and goes again (sub_801A400, sub_80166D0).
+  ComingRd: { kind: 'panels', freeze: true, hold: 64, type: 'road-left', where: 'enemy', anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  GoingRd: { kind: 'panels', freeze: true, hold: 64, type: 'road-right', where: 'enemy', anim: 'idle', lock: 20, confidence: 'rom-verified' },
   HolyPanl: { kind: 'panels', freeze: true, hold: 64, type: 'holy', where: 'self', anim: 'idle', lock: 20, confidence: 'rom-verified' },
   Snctuary: { kind: 'panels', freeze: true, hold: 64, type: 'holy', where: 'side', anim: 'idle', lock: 20, confidence: 'rom-verified' },
   // Cubes (sub 6 → t4 0x37 → t3 0x59): on the panel ahead; byte_80CF934[params[0]]: RockCube 1 (animation 1, HP 0x64 · 2 = 200),
@@ -528,7 +533,9 @@ export const PANELS = {
   grassHeal: v({ ticks: 20, lowHpTicks: 180, lowHp: 9 }, 'rom-verified', '0x801A186: wood-element objects +1 HP when battle counter 0x0E (mod 20) is 0, counter 0x16 (mod 180) when HP ≤ 9'),
   grassFire: v('fire attacks do double damage to whoever stands on grass and burn it back to normal', 'rom-verified', 'applyHeatOnGrassDamage 0x300766C, 0x3007708'),
   iceSlide: v('stepping onto ice keeps you sliding the same way (not aqua, not FloatShoe / AirShoe)', 'rom-verified', '0x801A3DA'),
-  iceSlideTicks: v(6, 'unverified', 'frames per panel while sliding'),
+  iceSlideTicks: v(4, 'rom-verified', 'sub_8016730: Unk_1e = 4 frames a panel, 0xA0000 x / 0x60000 y a frame'),
+  roadRevert: v(1800, 'rom-verified', 'panel audit: roads revert after 1800 frames'),
+  roadPause: v(5, 'rom-verified', 'sub_80166D0 / sub_8016730: AIData Unk_38 = 5 after a road push, counted down before the next (sub_801A36A)'),
   iceFreeze: v(80, 'rom-verified', '0x3007460: an aqua hit on someone standing on ice freezes them (0x50) and the panel turns normal'),
   volcanoCycle: v(140, 'rom-verified', '0x800C438: battle counter 0x8C; columns 1–3 erupt at 140, columns 4–6 at 70'),
   volcanoEruption: v({ warn: 40, burn: 40, damage: 50 }, 'rom-verified', 'object type3 0x07 (0x80C5A58): bubbles 40 frames, flame column 40 frames, 50 damage (sprite 0x10/0x24)'),

@@ -400,3 +400,13 @@ test('BlzrdBal rolls through the row; LifeSync gives every enemy the target\'s H
   while (s.timestop) step(s, {});
   assert.ok(s.enemies.every(e => e.hp === 120));
 });
+
+test('ComingRd / GoingRd: the enemy area becomes road and carries the enemies', async () => {
+  const { panelType } = await import('../src/battle/panels.mjs');
+  const one = s => { s.enemies = [{ id: 7, family: 'Mettaur', x: 4, y: 1, hp: 5000, maxHp: 5000, state: 'idle', stateT: 0, think: 1e9, paralyzed: 1e9, anim: 'idle', animT: 0, element: 'none' }]; };
+  let s = after('ComingRd', 0, one); while (s.timestop) step(s, {});
+  assert.equal(panelType(s, 4, 1), 'road-left'); for (let i = 0; i < 40; i++) step(s, {});
+  assert.equal(s.enemies[0].x, 3);
+  s = after('GoingRd', 0, one); while (s.timestop) step(s, {}); for (let i = 0; i < 40; i++) step(s, {});
+  assert.equal(s.enemies[0].x, 5);
+});

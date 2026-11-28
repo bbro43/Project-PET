@@ -615,7 +615,7 @@ function stepDying(s) {
 // (`hold` frames), object_undimScreen, object_timefreezeEnd. The dim and name lengths are the AreaGrab estimates (GRAB).
 function startSpecial(s, name, def, damage, element) {
   const p = s.player, start = GRAB.dim.value + GRAB.name.value;
-  let cells = def.kind !== 'panels' ? [] : def.where === 'self' ? [[p.x, p.y]] : [0, 1, 2, 3, 4, 5].flatMap(x => [0, 1, 2].map(y => [x, y])).filter(([x, y]) => sideAt(s, x, y) === 'p');
+  let cells = def.kind !== 'panels' ? [] : def.where === 'self' ? [[p.x, p.y]] : [0, 1, 2, 3, 4, 5].flatMap(x => [0, 1, 2].map(y => [x, y])).filter(([x, y]) => sideAt(s, x, y) === (def.where === 'enemy' ? 'e' : 'p') && (def.where !== 'enemy' || standable(s, x, y)));
   let hold = def.hold || 0, order = null;
   if (def.kind === 'geddon') { // every solid panel but MegaMan's (reserved), shuffled (ShuffleByteList_PrimaryRNG), one every 8 frames
     order = [0, 1, 2, 3, 4, 5].flatMap(x => [0, 1, 2].map(y => [x, y])).filter(([x, y]) => standable(s, x, y) && !(x === p.x && y === p.y));
@@ -818,6 +818,19 @@ function stepCircGun(s, ts, sp, c, k, input) {
   c.shots = c.shots.filter(m => !m.done);
   if (c.left === 0 && !c.shots.length && !c.endAt) { c.endAt = k + 0x1E; ts.end = ts.start + c.endAt + GRAB.dim.value; }
 }
+// Roads (types 9–12): byte_800E538 directions; enemies slide 1 panel (4 frames), pause 5, go again.
+const ROAD = { 'road-up': [0, -1], 'road-down': [0, 1], 'road-left': [-1, 0], 'road-right': [1, 0] };
+function stepRoads(s) {
+  for (const e of s.enemies) {
+    if (e.hp <= 0 || e.airborne || e.kind === 'coil' || e.cells || e.owner === 'player') continue;
+    if (e.roadT > 0) { e.roadT--; const k = 1 - e.roadT / 4; e.drawX = e.roadFrom[0] + (e.x - e.roadFrom[0]) * k; e.drawY = e.roadFrom[1] + (e.y - e.roadFrom[1]) * k; if (!e.roadT) { e.drawX = e.x; e.drawY = e.y; e.roadWait = PANELS.roadPause.value; } continue; }
+    if (e.roadWait > 0) { e.roadWait--; continue; }
+    const d = ROAD[panelType(s, e.x, e.y)]; if (!d) continue;
+    const x = e.x + d[0], y = e.y + d[1];
+    if (x < 0 || x > 5 || y < 0 || y > 2 || sideAt(s, x, y) !== sideAt(s, e.x, e.y) || !standable(s, x, y) || at(s, x, y) || (s.player.x === x && s.player.y === y)) continue;
+    e.roadFrom = [e.x, e.y]; e.x = x; e.y = y; e.roadT = 4;
+  }
+}
 // Cursor chips (BurnSqr t1 0x13, Magnum t1 0x14): the cursor steps on its own until the chip button or 0x12C frames.
 export function cursorCells(c, kind) {
   if (kind === 'square') return [[c.x, c.y], [c.x + 1, c.y], [c.x + 1, c.y + 1], [c.x, c.y + 1]];
@@ -926,9 +939,12 @@ function stepPlayer(s, input) {
   if (p.state === 'slide') { // ice: glide one panel at a time until off the ice or blocked
     const T = PANELS.iceSlideTicks.value, [dx, dy] = p.slide;
     p.drawX = p.x + dx * Math.min(1, p.stateT / T); p.drawY = p.y + dy * Math.min(1, p.stateT / T);
-    if (p.stateT >= T) { p.x += dx; p.y += dy; p.drawX = p.drawY = null; p.state = 'idle'; p.stateT = 0; setAnim(p, 'idle'); if (panelType(s, p.x, p.y) !== 'ice') p.slide = null; }
+    if (p.stateT >= T) { p.x += dx; p.y += dy; p.drawX = p.drawY = null; p.state = 'idle'; p.stateT = 0; setAnim(p, 'idle'); if (p.road) { p.road = false; p.slide = null; p.roadWait = PANELS.roadPause.value; } else if (panelType(s, p.x, p.y) !== 'ice') p.slide = null; }
     else return;
   }
+  if (p.roadWait > 0) p.roadWait--;
+  const rd = ROAD[panelType(s, p.x, p.y)];
+  if (rd && !p.slide && !p.roadWait && p.state === 'idle' && !s.navi?.floatShoes) { p.slide = rd; p.road = true; } // sub_801A400: a road pushes him on
   if (p.slide && (p.state === 'idle' || p.state === 'appear')) {
     const [dx, dy] = p.slide, x = p.x + dx, y = p.y + dy;
     if (x >= 0 && x <= 5 && y >= 0 && y < 3 && sideAt(s, x, y) === 'p' && !at(s, x, y) && standable(s, x, y)) { p.state = 'slide'; p.stateT = 0; setAnim(p, 'idle'); return; }
@@ -1530,6 +1546,7 @@ export function step(s, input = {}) {
   s.enemies = s.enemies.filter(e => e.hp > 0 || e.kind !== 'coil');
   stepHazards(s);
   s.attacker = null;
+  stepRoads(s);
   stepPanels(s, {
     hurtPlayer: d => { const p = s.player; if (p.hp > 0) p.hp = Math.max(0, p.hp - d); },
     hurtEnemy: (e, d) => { e.hp = Math.max(0, e.hp - d); if (e.hp === 0) { if (e.kind !== 'coil') s.deleted++; s.events.push({ type: 'delete', target: e.id }); s.effects.push({ kind: 'delete', x: e.x, y: e.y, t: 0 }); if (s.turns[e.family] === e.id) delete s.turns[e.family]; } },
