@@ -679,6 +679,10 @@ function applySpecial(s, sp) {
   else if (def.kind === 'invis') { p.invis = def.ticks; }
   else if (def.kind === 'panels') for (const [x, y] of sp.cells) setPanel(s, x, y, def.type);
   else if (def.kind === 'gauge') s.gaugeMod = { rate: def.rate, t: def.ticks };
+  else if (def.kind === 'hubbatch') { // sub_80E95D8
+    const n = s.navi, lvl = 1 + n.attack + (s.busterUp || 0); if (lvl < 5) n.attack += 5 - lvl;
+    n.speed = 4; n.charge = 4; n.custom = 8; n.floatShoes = n.airShoes = n.underShirt = true; s.chargeTime = CHARGE_TIMES[4];
+  }
   else if (def.kind === 'bugfix') { s.bugs = {}; s.hpBug = null; } // sub_80E49C4
   else if (def.kind === 'trap') s.trap = { kind: def.trap, damage: sp.damage, name: s.timestop?.name };
   else if (def.kind === 'place' && (def.ahead || def.inRow)) {

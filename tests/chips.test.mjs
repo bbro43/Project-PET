@@ -426,3 +426,9 @@ test('ColorPt / DblPoint: take the enemy front column and feed the next chip 10 
   s = after('ColorPt', 0); while (s.timestop) step(s, {}); // every front panel has an enemy: nothing taken
   assert.equal(s.panels[1][3].side, 'e');
 });
+
+test('HubBatc: buster to Attack 5, Speed and Charge max, custom 8, shoes and undershirt', () => {
+  const s = after('HubBatc', 0); while (s.timestop) step(s, {});
+  assert.equal(1 + s.navi.attack + (s.busterUp || 0), 5); assert.equal(s.navi.speed, 4); assert.equal(s.navi.charge, 4); assert.equal(s.navi.custom, 8);
+  assert.ok(s.navi.floatShoes && s.navi.airShoes && s.navi.underShirt);
+});

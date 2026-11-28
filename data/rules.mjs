@@ -516,6 +516,10 @@ export const CHIP_BEHAVIOUR = {
   // bonuses (sub_80E667C). The freeze ends when the last point arrives.
   ColorPt: { kind: 'colorpoint', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   DblPoint: { kind: 'colorpoint', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // HubBatc (sub 38, Param1 0 → t4 0x84, sub_80E95D8, 0x3C): buster Attack raised to 5 (sub_801265A), Speed 4, Charge 4,
+  // CustomLevel 8, FloatShoes / AirShoes / UnderShirt (navi stats 0x1B–0x1D, object flags 0x40030), the custom bug pushed
+  // back a turn, B+Left 0x3B if none. For the rest of the battle.
+  HubBatc: { kind: 'hubbatch', freeze: true, hold: 0x3C, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'B+Left ability 0x3B is not mapped in the app' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },
