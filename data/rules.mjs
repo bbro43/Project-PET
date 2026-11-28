@@ -191,6 +191,13 @@ export const CHIP_BEHAVIOUR = {
   ElcPuls2: { kind: 'pulse', region: 0x15, hold: 60, pal: 2, pull: true, anim: 'idle', lock: 66, confidence: 'rom-verified', note: 'pull = 1 panel toward MegaMan (recalled)' },
   ElcPuls3: { kind: 'pulse', region: 0x15, hold: 60, pal: 0, anim: 'idle', lock: 66, confidence: 'rom-verified' },
   DestPuls: { kind: 'pulse', region: 0x15, hold: 60, pal: 3, anim: 'idle', lock: 66, confidence: 'rom-verified', note: 'status 0x12 (a bug on the target) not in the app' },
+  // AuraHeads (family 0x43, sub_80EE66E → t3 0x92): Heady's head (sprite 4/3 animation 4, palette params[0]) flies from MegaMan's
+  // panel at 12 px a frame (byte_80D74D4) for 3 panels, hitting what it passes; MegaMan recoils. StreamHd (subfamily 1,
+  // params[3] = 1) sends 5, 15 frames apart, each to the far edge (sub_80EE6A4 counts params[0] up to 4).
+  AuraHed1: { kind: 'shell', sprite: 'heady', seq: 'head', speed: 12, pal: 0, fromX: 'self', range: 3, anim: 'idle', lock: 30, confidence: 'rom-verified', note: 'attack 0x1E frames' },
+  AuraHed2: { kind: 'shell', sprite: 'heady', seq: 'head', speed: 12, pal: 1, fromX: 'self', range: 3, anim: 'idle', lock: 30, confidence: 'rom-verified' },
+  AuraHed3: { kind: 'shell', sprite: 'heady', seq: 'head', speed: 12, pal: 2, fromX: 'self', range: 3, anim: 'idle', lock: 30, confidence: 'rom-verified' },
+  StreamHd: { kind: 'shell', sprite: 'heady', seq: 'head', speed: 12, pal: 0, fromX: 'self', count: 5, gap: 15, anim: 'idle', lock: 75, confidence: 'rom-verified', note: '5 heads 15 frames apart (0x0F), each to the far edge' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

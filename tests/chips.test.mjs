@@ -89,3 +89,9 @@ test('ElecPulse: the panel ahead and the next column, once each', () => {
   assert.deepEqual(hurt(s).map(([x, y]) => [x, y]), [[3, 0], [3, 1], [3, 2]]); // from (2,1): (2,1) and column 3
   assert.ok(hurt(s).every(([, , d]) => d === 100));
 });
+
+test('AuraHead flies 3 panels; StreamHd sends 5 to the edge', () => {
+  assert.deepEqual(hurt(after('AuraHed1', 40)).map(([x, y]) => [x, y]), [[3, 1], [4, 1]]); // from (1,1): panels 2–4
+  const s = after('StreamHd', 120);
+  assert.deepEqual(hurt(s).map(([x, y, d]) => [x, y, d]), [[3, 1, 750], [4, 1, 750], [5, 1, 750]]);
+});

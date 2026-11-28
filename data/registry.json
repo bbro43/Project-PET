@@ -2484,7 +2484,7 @@
     },
     "head": {
      "seq": 4,
-     "confidence": "visual-candidate"
+     "confidence": "rom-verified"
     }
    }
   },
