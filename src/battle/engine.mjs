@@ -376,14 +376,14 @@ function useChip(s, chip) {
     for (const [dx, dy] of def.area) hitEnemy(s, at(s, p.x + dx, p.y + dy), damage, { element, paralyze, chip: true });
     if (def.slashFx) s.effects.push({ kind: 'slash', x: p.x, y: p.y, t: 0, area: def.slashFx, flip: true }); // the game's slash, swinging right
   }
-  else if (def.kind === 'throw') { const r = def.release || 0; s.hazards.push({ kind: 'bomb', owner: 'player', x: p.x, y: p.y, tx: p.x + def.range, land: s.tick + r + def.flight, start: s.tick + r, damage, paralyze }); } // the ball leaves the hand on frame 9 (0x80EB69A)
+  else if (def.kind === 'throw') { const r = def.release || 0; s.hazards.push({ kind: 'bomb', owner: 'player', x: p.x, y: p.y, tx: p.x + def.range, land: s.tick + r + def.flight, start: s.tick + r, damage, paralyze, element, region: def.region, hits: def.hits, seed: def.seed }); } // the ball leaves the hand on frame 9 (0x80EB69A)
   else if (def.kind === 'heal') { p.hp = Math.min(p.maxHp, p.hp + def.heal); s.events.push({ type: 'heal', amount: def.heal }); s.effects.push({ kind: 'heal', x: p.x, y: p.y, t: 0 }); } // effect object 6 (0x800E2FC): sprite 0x0C/0x12
   else if (def.kind === 'vulcan') for (let k = 0; k < def.hits; k++) s.hazards.push({ kind: 'pvulcan', owner: 'player', y: p.y, from: p.x, at: s.tick + (def.lead || 0) + k * def.gap, damage, element, paralyze });
   else if (def.kind === 'grab') startGrab(s, def, damage, element);
   else if (def.kind === 'busterup') { s.busterUp++; s.events.push({ type: 'busterUp', level: 1 + s.busterUp }); }
-  else if (def.kind === 'crack') {
-    const x = p.x + 1, y = p.y;
-    if (x <= 5 && standable(s, x, y) && !at(s, x, y)) {
+  else if (def.kind === 'crack') for (const [dx, dy] of REGIONS[def.region || 1]) { // the panels of the area are lifted and sent down their rows
+    const x = p.x + 1 + dx, y = p.y + dy;
+    if (x <= 5 && y >= 0 && y < 3 && standable(s, x, y) && !at(s, x, y)) {
       setPanel(s, x, y, 'broken'); s.effects.push({ kind: 'panelbreak', x, y, t: 0 });
       s.hazards.push({ kind: 'crackshot', owner: 'player', fx: x, x, y, speed: def.speed, damage, element, paralyze });
     }
@@ -809,9 +809,35 @@ function stepHazards(s) {
     }
     if (h.kind === 'bomb') {
       if (s.tick < h.land) return true;
-      if (h.tx <= 5) hitEnemy(s, at(s, h.tx, h.y), h.damage, { paralyze: h.paralyze });
-      s.effects.push({ kind: 'blast', x: h.tx, y: h.y, t: 0 });
+      const solid = h.tx <= 5 && standable(s, h.tx, h.y);
+      if (!solid) { s.effects.push({ kind: 'puff', x: h.tx, y: h.y, t: 0 }); return false; } // fell in a hole (t1 effect 1)
+      const target = at(s, h.tx, h.y);
+      if (h.seed) { // seeds (t3 0x4F): the panel type over 3×3, or only the panel hit if it hit someone (sub_80CE3C4)
+        if (target) hitEnemy(s, target, h.damage, { element: h.element, chip: true });
+        for (const [dx, dy] of REGIONS[target ? 1 : 0xF]) {
+          const x = h.tx + dx, y = h.y + dy;
+          if (x >= 0 && x <= 5 && y >= 0 && y < 3 && panelType(s, x, y) !== 'broken') setPanel(s, x, y, h.seed);
+        }
+        s.effects.push({ kind: 'blast', x: h.tx, y: h.y, t: 0 });
+        return false;
+      }
+      if (h.hits) { // EnergBom (t3 0x11): the landing panel is hit 3 times, 7 frames apart (sub_80C6854)
+        Object.assign(h, { kind: 'multihit', x: h.tx, left: h.hits, next: s.tick, gap: 7 });
+        return true;
+      }
+      for (const [dx, dy] of REGIONS[h.region || 1]) { // the landing area (dword_80C5D7C)
+        const x = h.tx + dx, y = h.y + dy;
+        if (x < 0 || x > 5 || y < 0 || y > 2) continue;
+        hitEnemy(s, at(s, x, y), h.damage, { paralyze: h.paralyze, element: h.element, chip: true });
+        s.effects.push({ kind: 'blast', x, y, t: 0 });
+      }
       return false;
+    }
+    if (h.kind === 'multihit') {
+      if (s.tick < h.next) return true;
+      hitEnemy(s, at(s, h.x, h.y), h.damage, { chip: true }); s.effects.push({ kind: 'blast', x: h.x, y: h.y, t: 0 });
+      h.next = s.tick + h.gap;
+      return --h.left > 0;
     }
     return false;
   });

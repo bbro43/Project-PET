@@ -97,6 +97,7 @@ export const CHIP_BEHAVIOUR = {
   Vulcan1:  { kind: 'vulcan', hits: 3, gap: 11, lead: 2, anim: 'vulcan', lock: 35, confidence: 'rom-verified', note: '0x80EBF6E: a shot every 11 frames, count from dword_80EBFEC (3/4/5/10); t3 0x12 hitscan, region 2 (target + the panel behind); lock = lead + (hits − 1) × 11 + 11' },
   Vulcan2:  { kind: 'vulcan', hits: 4, gap: 11, lead: 2, anim: 'vulcan', lock: 46, confidence: 'rom-verified' },
   Vulcan3:  { kind: 'vulcan', hits: 5, gap: 11, lead: 2, anim: 'vulcan', lock: 57, confidence: 'rom-verified' },
+  SuprVulc: { kind: 'vulcan', hits: 10, gap: 11, lead: 2, anim: 'vulcan', lock: 112, confidence: 'rom-verified', note: 'count 10 (dword_80EBFEC[3])' },
   Sword: sword(0), WideSwrd: sword(1), LongSwrd: sword(2), WideBlde: sword(3), LongBlde: sword(4), LifeSrd: sword(5), DrkSword: sword(6),
   FireSwrd: sword(12), AquaSwrd: sword(13), ElecSwrd: sword(14), BambSwrd: sword(15), FtrSword: sword(9), CrosSwrd: sword(10), DblDream: sword(11),
   StepSwrd: sword(1, { step: 2, note: 'area 4 from byte_80EBA18[1]; params[0] = 1: steps 2 panels forward first (sub_80EB79C), back after (recalled)' }),
@@ -106,8 +107,21 @@ export const CHIP_BEHAVIOUR = {
   GigaCan1: { kind: 'shot', fx: 'explosion', anim: 'cannon', lock: 30, impact: 0xC, confidence: 'rom-verified', note: 'impact area from byte_80EBD34; lock recalled' },
   GigaCan2: { kind: 'shot', fx: 'explosion', anim: 'cannon', lock: 30, impact: 0xC, confidence: 'rom-verified' },
   GigaCan3: { kind: 'shot', fx: 'explosion', anim: 'cannon', lock: 30, impact: 0xC, confidence: 'rom-verified' },
-  MiniBomb: { kind: 'throw', range: 3, flight: 30, release: 9, anim: 'throw', lock: 22, confidence: 'recalled' },
-  CrakShot: { kind: 'crack', anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
+  // Bombs (family 0x12, sub_80EB628): thrown on frame 9, 40 frames in the air (Timer 0x28), 3 panels ahead (velocity byte_80C5D58);
+  // a hole swallows it. Landing area by params[0] (dword_80C5D7C): 0 → area 1, 3 → area 0xF; 2 → the EnergBom object.
+  EnergBom: { kind: 'throw', range: 3, flight: 40, release: 9, hits: 3, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 2 → t3 0x11 (sub_80C68B0 / sub_80C6854): 3 hits on the landing panel, 7 frames apart; lock recalled' },
+  MegEnBom: { kind: 'throw', range: 3, flight: 40, release: 9, hits: 3, anim: 'throw', lock: 22, confidence: 'rom-verified' },
+  BigBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 0xF, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 3 → area 0xF (3×3) on landing' },
+  // Seeds (subfamilies 9 / 12 / 13 → t3 0x4F): the panel type byte_80CE41E[params[0]] = poison / ice / grass over area 0xF, or
+  // only the panel hit when it hits someone (sub_80CE3C4).
+  PoisSeed: { kind: 'throw', range: 3, flight: 40, release: 9, seed: 'poison', anim: 'throw', lock: 22, confidence: 'rom-verified' },
+  IceSeed: { kind: 'throw', range: 3, flight: 40, release: 9, seed: 'ice', anim: 'throw', lock: 22, confidence: 'rom-verified' },
+  GrasSeed: { kind: 'throw', range: 3, flight: 40, release: 9, seed: 'grass', anim: 'throw', lock: 22, confidence: 'rom-verified' },
+  // Panel shots (family 0x22, sub_80EC960): the area dword_80ECA08[subfamily] = 1 / 2 / 4 is lifted and shot.
+  DublShot: { kind: 'crack', region: 2, anim: 'crack', lock: 24, speed: 0.25, confidence: 'rom-verified', note: 'area 2 (front panel + the next); speed and lock as CrakShot (recalled)' },
+  TrplShot: { kind: 'crack', region: 4, anim: 'crack', lock: 24, speed: 0.25, confidence: 'rom-verified', note: 'area 4 (the front column)' },
+  MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
+  CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },
   BusterUp: { kind: 'busterup', anim: 'idle', lock: 20, confidence: 'recalled', note: 'lockout 20 from the ROM' },
   AreaGrab: { kind: 'grab', column: true, anim: 'idle', lock: 1, confidence: 'rom-verified', note: 't4 0x3 0x80E0754: time freeze, a beam (t3 0xF 0x80C6414) on each panel of the first column ahead that is not all MegaMan\'s (0x800D58C)' },

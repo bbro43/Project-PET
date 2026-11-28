@@ -31,3 +31,37 @@ test('swords hit the game\'s areas', () => {
 test('GigaCannons hit the target and the four diagonals around it (area 0xC)', () => {
   assert.deepEqual(hits('GigaCan1'), [[2, 1], [3, 0], [3, 2]]); // target (2,1); its diagonals on MegaMan's side are empty
 });
+
+function after(name, frames, setup = () => {}) {
+  const s = createBattle({ seed: 4, enemies: [] }); confirmCustom(s);
+  s.enemies = [];
+  for (let x = 3; x < 6; x++) for (let y = 0; y < 3; y++) s.enemies.push({ id: 100 + x * 3 + y, family: 'Mettaur', x, y, hp: 5000, maxHp: 5000, state: 'idle', stateT: 0, think: 1e9, paralyzed: 1e9, anim: 'idle', animT: 0, element: 'none' });
+  setup(s);
+  s.player.x = 1; s.player.y = 1; s.player.invuln = 1e9; s.queue = [{ id: 1, name, code: 'A' }];
+  step(s, { b: true }); for (let i = 0; i < frames; i++) step(s, {});
+  return s;
+}
+const hurt = s => s.enemies.filter(e => e.hp < 5000).map(e => [e.x, e.y, 5000 - e.hp]).sort();
+
+test('bombs: MiniBomb one panel 3 ahead, BigBomb 3×3, EnergBom 3 hits', () => {
+  assert.deepEqual(hurt(after('MiniBomb', 80)), [[4, 1, 50]]);
+  assert.equal(hurt(after('BigBomb', 80)).length, 9); // the 3×3 around (4, 1)
+  assert.deepEqual(hurt(after('EnergBom', 120)), [[4, 1, 120]]);
+});
+
+import { panelType } from '../src/battle/panels.mjs';
+test('seeds change the panels: 3×3 on an empty panel, one panel when they hit someone', () => {
+  const s = after('IceSeed', 80, s => { s.enemies = s.enemies.filter(e => !(e.x === 4 && e.y === 1)); });
+  let n = 0; for (let x = 3; x <= 5; x++) for (let y = 0; y < 3; y++) if (panelType(s, x, y) === 'ice') n++;
+  assert.equal(n, 9);
+  const h = after('GrasSeed', 80);
+  let g = 0; for (let x = 0; x < 6; x++) for (let y = 0; y < 3; y++) if (panelType(h, x, y) === 'grass') g++;
+  assert.equal(g, 1); assert.equal(panelType(h, 4, 1), 'grass');
+});
+
+test('panel shots: DublShot lifts 2 panels in the row, TrplShot the front column', () => {
+  const d = after('DublShot', 2, s => { s.enemies = []; });
+  assert.deepEqual([[2, 1], [3, 1]].map(([x, y]) => panelType(d, x, y)), ['broken', 'broken']);
+  const t = after('TrplShot', 2, s => { s.enemies = []; });
+  assert.deepEqual([0, 1, 2].map(y => panelType(t, 2, y)), ['broken', 'broken', 'broken']);
+});
