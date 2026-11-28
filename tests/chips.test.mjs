@@ -267,3 +267,37 @@ test('ElemTrap springs on an elemental attack that misses MegaMan', async () => 
   assert.equal(s.player.hp, 100); assert.equal(s.trap, null); assert.equal(hurt(s).length, 9);
   s = after('ElemTrap', 140); elemTrapSees(s, { element: 'none' }); assert.ok(s.trap);
 });
+
+test('ElemTrap springs on an elemental enemy hazard away from MegaMan', () => {
+  const s = after('ElemTrap', 140); const e = s.enemies.find(e => e.hp > 0);
+  e.element = 'fire'; s.hazards.push({ kind: 'pillar', x: 0, y: 0, start: s.tick, rise: 10, burn: 10, fall: 10, damage: 50, owner: e.id });
+  s.player.x = 2; s.player.y = 2; step(s, {});
+  assert.equal(s.trap, null); assert.equal(s.player.hp, 100);
+});
+
+test('BurnSqr: the 2×2 cursor moves on its own and fires on the chip button', () => {
+  const s = after('BurnSqr1', 0); const ts = s.timestop; assert.ok(ts.special.cursor);
+  while (s.timestop && s.timestop.t < ts.start + 7) step(s, {});
+  assert.deepEqual([ts.special.cursor.x, ts.special.cursor.y], [4, 1]);
+  step(s, { b: true }); for (let i = 0; i < 20; i++) step(s, {});
+  assert.deepEqual(hurt(s), [[4, 1, 100], [4, 2, 100], [5, 1, 100], [5, 2, 100]]);
+  for (let i = 0; i < 120 && s.timestop; i++) step(s, {}); assert.equal(s.timestop, null);
+  const s2 = after('BurnSqr1', 0); for (let i = 0; i < 500 && s2.timestop; i++) step(s2, {}); // fires by itself after 0x12C
+  assert.equal(hurt(s2).length, 4);
+});
+
+test('Magnum: a column while the cursor runs along the row, cracking the panels', async () => {
+  const { panelType } = await import('../src/battle/panels.mjs');
+  const s = after('Magnum', 0); const ts = s.timestop;
+  while (s.timestop.t < ts.start + 1) step(s, {});
+  step(s, { b: true }); for (let i = 0; i < 20; i++) step(s, {});
+  assert.deepEqual(hurt(s), [[3, 0, 130], [3, 1, 130], [3, 2, 130]]);
+  assert.equal(panelType(s, 3, 1), 'cracked');
+});
+
+test('Wind / Fan: a box ahead that blows the enemies along the rows', () => {
+  const one = s => { s.enemies = [{ id: 7, family: 'Mettaur', x: 4, y: 1, hp: 5000, maxHp: 5000, state: 'idle', stateT: 0, think: 1e9, paralyzed: 1e9, anim: 'idle', animT: 0, element: 'none' }]; };
+  let s = after('Wind', 200, one); const box = s.enemies.find(e => e.family === 'WindBox');
+  assert.ok(box); assert.deepEqual([box.x, box.y, box.hp], [2, 1, 40]); assert.equal(s.enemies.find(e => e.id === 7).x, 5);
+  s = after('Fan', 200, one); assert.equal(s.enemies.find(e => e.id === 7).x, 3);
+});

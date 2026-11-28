@@ -266,8 +266,15 @@ function stepPlacedBomb(o, api) {
       else if (o.music === 'timpani') for (const e of foes) e.paralyzed = Math.max(e.paralyzed || 0, 4); // status 0x43: held still
     }
   }
+  if (o.wind && o.stateT >= 1 && (o.stateT - 1) % 12 === 0) { // Wind / Fan: a gust down rows 2, 1, 3 (game) in turn
+    const y = [1, 0, 2][o.cycle++ % 3];
+    s.effects.push({ kind: 'gust', y, dir: o.wind, t: 0 });
+    const foes = s.enemies.filter(e => e.hp > 0 && e.owner !== 'player' && e.kind !== 'coil' && !e.cells && e.y === y && e.x > o.x).sort((a, b) => a.x - b.x);
+    const e = o.wind > 0 ? foes[0] : foes[0];
+    if (e) { const nx = e.x + o.wind; if (nx >= 3 && nx <= 5 && sideAt(s, nx, y) === 'e' && standable(s, nx, y) && !at(s, nx, y)) { e.x = nx; e.drawX = nx; } }
+  }
   if (--o.life > 0) return;
-  if (o.family === 'BlackBomb' || o.family === 'Cube' || o.family === 'MusicBox') { o.hp = 0; s.effects.push({ kind: 'puff', x: o.x, y: o.y, t: 0 }); } // left alone: it just goes away
+  if (o.family === 'BlackBomb' || o.family === 'Cube' || o.family === 'MusicBox' || o.family === 'WindBox') { o.hp = 0; s.effects.push({ kind: 'puff', x: o.x, y: o.y, t: 0 }); } // left alone: it just goes away
   else placedBombBurst(s, o);
 }
 function hitEnemy(s, e, damage, extra = {}) {
@@ -563,7 +570,13 @@ function startSpecial(s, name, def, damage, element) {
     for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rng(s) * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
     hold = 8 * order.length + 8;
   }
-  s.timestop = { name, t: 0, start, special: { def, damage, element, cells, order }, end: start + hold + GRAB.dim.value, beams: [], cells: [] };
+  let cursor = null;
+  if (def.kind === 'cursor') { // Magnum: from the front enemy column (sub_800D5F0)
+    let fx = 5; while (fx > 0 && [0, 1, 2].some(y => sideAt(s, fx - 1, y) === 'e')) fx--;
+    cursor = def.cursor === 'square' ? { x: 4, y: 0, phase: 0, front: 0 } : { x: fx, y: 1, phase: 0, front: fx };
+    hold = 1e6; // ends when it fires
+  }
+  s.timestop = { name, t: 0, start, special: { def, damage, element, cells, order, cursor }, end: start + hold + GRAB.dim.value, beams: [], cells: [] };
 }
 function applySpecial(s, sp) {
   const p = s.player, def = sp.def;
@@ -575,7 +588,7 @@ function applySpecial(s, sp) {
   else if (def.kind === 'place' && (def.ahead || def.inRow)) {
     let x = p.x + 1;
     if (def.inRow) while (x <= 5 && !(standable(s, x, p.y) && sideAt(s, x, p.y) === 'e' && !at(s, x, p.y))) x++; // sub_80E3264: the first free enemy panel ahead
-    if (x <= 5 && standable(s, x, p.y) && !at(s, x, p.y)) s.enemies.push({ id: s.nextId++, kind: 'coil', family: def.obj, name: def.obj, owner: 'player', sprite: def.sprite, palette: 0, flip: true, x, y: p.y, drawX: x, drawY: p.y, hp: def.hp, maxHp: def.hp, noHp: true, anim: def.seq, animT: 0, state: 'idle', stateT: 0, flash: 0, discharge: 0, life: def.life, damage: sp.damage, element: sp.element, music: def.music, play: def.play, rest: def.rest, cycle: 0 });
+    if (x <= 5 && standable(s, x, p.y) && !at(s, x, p.y)) s.enemies.push({ id: s.nextId++, kind: 'coil', family: def.obj, name: def.obj, owner: 'player', sprite: def.sprite, palette: def.pal || 0, flip: true, x, y: p.y, drawX: x, drawY: p.y, hp: def.hp, maxHp: def.hp, noHp: true, anim: def.seq, animT: 0, state: 'idle', stateT: 0, flash: 0, discharge: 0, life: def.life, damage: sp.damage, element: sp.element, music: def.music, play: def.play, rest: def.rest, wind: def.wind, cycle: 0 });
   }
   else if (def.apply) def.apply(s, sp);
 }
@@ -618,8 +631,9 @@ function startGrab(s, def, damage, element) {
   }
   s.timestop = { name: p.chip.name, t: 0, start: GRAB.dim.value + GRAB.name.value, cells, damage, element, beams: [] };
 }
-function stepTimestop(s) {
+function stepTimestop(s, input = {}) {
   const ts = s.timestop, t = ++ts.t, fall = GRAB.beamFall.value;
+  if (ts.special?.cursor) { stepCursor(s, ts, t, input); s.effects = s.effects.filter(f => ++f.t < 24); if (t >= ts.end) s.timestop = null; return; }
   if (ts.special) { // a special chip: its step runs inside the freeze (panel chips: blink, then set at the end of `hold`)
     const sp = ts.special;
     if (sp.def.kind === 'panels') { if (t === ts.start + sp.def.hold) applySpecial(s, sp); }
@@ -640,6 +654,41 @@ function stepTimestop(s) {
   if (t >= ts.start) for (const b of ts.beams) b.z = Math.max(0, 1 - (t - ts.start) / fall);
   s.effects = s.effects.filter(f => ++f.t < 24);
   if (t >= ts.start + fall + GRAB.hold.value + GRAB.dim.value) s.timestop = null;
+}
+// Cursor chips (BurnSqr t1 0x13, Magnum t1 0x14): the cursor steps on its own until the chip button or 0x12C frames.
+export function cursorCells(c, kind) {
+  if (kind === 'square') return [[c.x, c.y], [c.x + 1, c.y], [c.x + 1, c.y + 1], [c.x, c.y + 1]];
+  return (c.fired ?? c.phase) === 0 ? [[c.x, c.y - 1], [c.x, c.y], [c.x, c.y + 1]] : [[c.x - 1, c.y], [c.x, c.y], [c.x + 1, c.y]]; // region 4 / 0x1D
+}
+function stepCursor(s, ts, t, input) {
+  const sp = ts.special, c = sp.cursor, def = sp.def, k = t - ts.start;
+  if (k < 0) return;
+  if (c.fireAt === undefined) {
+    if (k > 0 && k % def.every === 0) {
+      if (def.cursor === 'square') { // ho_80BB170: y = row 2; x 5 → 1; y = row 1; x 1 → 5 (game)
+        if (c.phase === 0) { c.y = 1; c.phase = 1; }
+        else if (c.phase === 1) { if (--c.x === 0) c.phase = 2; }
+        else if (c.phase === 2) { c.y = 0; c.phase = 3; }
+        else if (++c.x === 4) c.phase = 0;
+      } else { // sub_80BB4CE
+        if (c.phase === 0) { if (c.x === 5) { c.x = 4; c.y = 0; c.phase = 1; } else c.x++; }
+        else if (c.y >= 2) { c.x = c.front; c.y = 1; c.phase = 0; } else c.y++;
+      }
+    }
+    if (input.b || k >= 0x12C) { c.fireAt = k + 16; c.fired = c.phase === 0 || def.cursor === 'square' ? 0 : 1; }
+    return;
+  }
+  if (k === c.fireAt) {
+    for (const [x, y] of cursorCells(c, def.cursor)) {
+      if (x < 0 || x > 5 || y < 0 || y > 2) continue;
+      if (def.cursor === 'square' && !standable(s, x, y)) continue; // sub_80BB228: solid panels only
+      const e = at(s, x, y); if (e && e.owner !== 'player') hitEnemy(s, e, sp.damage, { element: sp.element, chip: true });
+      s.effects.push({ kind: 'blast', x, y, t: 0 });
+      if (def.cursor === 'magnum') breakPanel(s, x, y); // object_breakPanel: cracked where someone stands
+    }
+    if (def.cursor === 'magnum') s.effects.push({ kind: 'shake', t: 0 });
+    ts.end = ts.start + c.fireAt + 0x3C + GRAB.dim.value;
+  }
 }
 // Stolen panels go back after the return timer, once nobody stands on them (hand-back order partly decoded).
 function stepArea(s) {
@@ -801,6 +850,10 @@ function stepHazards(s) {
   const p = s.player, spawned = []; // hazards started this frame are added after the pass
   s.hazards = s.hazards.filter(h => {
     s.attacker = h.owner !== undefined ? s.enemies.find(e => e.id === h.owner) : null;
+    if (s.trap?.kind === 'element' && s.attacker && h.owner !== 'player') { // ElemTrap sees an enemy hazard once it can hurt a panel
+      const live = h.hit ?? h.land ?? h.arm ?? h.start;
+      if (live === undefined || s.tick >= live) elemTrapSees(s, { element: h.elem ?? h.element ?? s.attacker.element });
+    }
     if (h.kind === 'pvulcan') { // Vulcan: one shot per gap; each also hits the panel behind its target
       if (s.tick < h.at) return true;
       const t = rowTarget(s, h.from, h.y);
@@ -865,7 +918,6 @@ function stepHazards(s) {
       return false;
     }
     if (h.kind === 'estrike') { // ElementMan: a lit panel, then an elemental strike on it
-      if (s.tick === h.hit) elemTrapSees(s, { element: h.elem });
       if (s.tick === h.hit && p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage, { element: h.elem, sword: h.sword });
       if (s.tick === h.hit && h.panel) setPanel(s, h.x, h.y, h.panel);
       return s.tick < h.hit + 12;
@@ -1265,7 +1317,7 @@ export function step(s, input = {}) {
     return s;
   }
   if (s.banner) { if (++s.banner.t >= BANNER.start) s.banner = null; return s; } // battle frozen under the banner
-  if (s.timestop) { stepTimestop(s); return s; } // time freeze: nothing else moves, the gauge waits
+  if (s.timestop) { stepTimestop(s, input); return s; } // time freeze: nothing else moves, the gauge waits
   s.tick++;
   stepArea(s);
   const gm = s.gaugeMod; if (gm && --gm.t <= 0) s.gaugeMod = null; // SloGauge / FstGauge: 0x10 / 0x40 a frame instead of 0x20

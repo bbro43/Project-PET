@@ -4,7 +4,7 @@
 // Panel geometry and sprite anchors are approximations pending an on-screen trace.
 import { frameAt } from '../rom/bank.mjs';
 import { val } from '../../data/rules.mjs';
-import { chipBehaviour, CHIP_DATA, DELETE, BANNER, emotionOf, dragonAt } from '../battle/engine.mjs';
+import { chipBehaviour, CHIP_DATA, DELETE, BANNER, emotionOf, dragonAt, cursorCells } from '../battle/engine.mjs';
 import { EMOTION } from '../../data/rules.mjs';
 
 // Deleted enemies: drawn into a scratch canvas, then pixelated (mosaic) and faded like the game.
@@ -773,6 +773,8 @@ export function render(g, s, bank) {
     const sp = ts.special;
     if (sp?.cells.length && ts.t >= ts.start && ts.t < ts.start + sp.def.hold && ((ts.t - ts.start) >> 2) & 1) // panel chips: the panels blink (object_setPanelTypeBlink, every 4 frames)
       for (const [x, y] of sp.cells) { const [ax, ay] = anchor(x, y); g.fillStyle = sp.def.type === 'holy' ? 'rgba(255,240,160,.55)' : 'rgba(255,255,255,.45)'; g.fillRect(ax - 20, ay - 14, 40, 24); }
+    if (sp?.cursor && ts.t >= ts.start && sp.cursor.fireAt === undefined && !((ts.t - ts.start) & 4)) // BurnSqr / Magnum cursor: highlighted panels (highlightPanelIfSomeCondition_8109660, Timer2 & 4)
+      for (const [x, y] of cursorCells(sp.cursor, sp.def.cursor)) if (x >= 0 && x <= 5 && y >= 0 && y <= 2) { g.fillStyle = 'rgba(255,240,80,.85)'; g.fillRect(x * PANEL_W + 3, FIELD_Y + y * PANEL_H + 3, PANEL_W - 6, PANEL_H - 9); }
     if (ts.t >= dim) { g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(0, 18, 96, 14); g.font = '10px monospace'; text(g, ts.name, 6, 29, '#fff'); g.font = '8px monospace'; }
     for (const b of ts.beams) {
       const [bx, by] = anchor(b.x, b.y), z = Math.round(b.z * 256);

@@ -386,6 +386,25 @@ export const CHIP_BEHAVIOUR = {
   ElemTrap: { kind: 'trap', freeze: true, hold: 60, trap: 'element', anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'sprung by any enemy Fire / Aqua / Elec / Wood attack aimed at panels; hazards that only check MegaMan\'s own panel spring it only when they hit him' },
   AntiNavi: { kind: 'trap', freeze: true, hold: 60, trap: 'navi', anim: 'idle', lock: 20, confidence: 'rom-verified' },
   AntiRecv: { kind: 'trap', freeze: true, hold: 60, trap: 'recovery', anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // Wind / Fan (sub 8 → t4 0x25, sub_80E30E0): on the panel ahead (needs 0x10, not 0x0F880080) a box t3 0x48
+  // (sub_80CCFFC: sprite 4/9 = the WindBox virus sprite, palette Param1, HP byte_80CCFD4 = 40, Timer 0x5A0). After
+  // 1 frame it blows (sound 0x94 / 0xAD); every 0xC frames a gust t3 0x49 (sub_80CD488) goes down the next row in the order
+  // game rows 2, 1, 3, …; mode byte_80CCFD4[1]: Wind 0 (from the nearest enemy panel, sub_80CD26C), Fan 1 (from the back
+  // edge, sub_80CD236). The freeze holds 0x1E frames.
+  Wind: { kind: 'place', obj: 'WindBox', sprite: 'windbox', seq: 'idle', pal: 0, hp: 40, life: 1440, ahead: true, freeze: true, hold: 30, wind: 1, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'each gust moves the first enemy in its row one panel back (Fan: forward); the gust object t3 0x49 is not decoded' },
+  Fan: { kind: 'place', obj: 'WindBox', sprite: 'windbox', seq: 'idle', pal: 1, hp: 40, life: 1440, ahead: true, freeze: true, hold: 30, wind: -1, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'each gust moves the first enemy in its row one panel forward, staying on the enemy side; the gust object t3 0x49 is not decoded' },
+  // Cursor chips: inside the freeze a copy of MegaMan (t1 0x13 / 0x14) steers a cursor that moves on its own; the chip
+  // button fires (AIData Unk_2c bit 0), or it fires by itself after 0x12C frames. 0x10 frames later the hit, then 0x3C.
+  // BurnSqr (sub 23 → t4 0x59 → t1 0x13): a 2 × 2 square, game x 5 → 1 along rows 2–3, then x 1 → 5 along rows 1–2,
+  // one panel every 6 frames (ho_80BB170, dword_80BB094); fire (sub_80C8DE0, 0x1E04) on each solid (0x10) panel of it.
+  BurnSqr1: { kind: 'cursor', cursor: 'square', every: 6, freeze: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  BurnSqr2: { kind: 'cursor', cursor: 'square', every: 6, freeze: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  BurnSqr3: { kind: 'cursor', cursor: 'square', every: 6, freeze: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // Magnum (sub 24 → t4 0x5B → t1 0x14, sub_80BB398): the cursor runs along game row 2 from the front enemy column to the
+  // back one, then down game column 5, rows 1–3, one step every 0xC frames (sub_80BB4CE). Fired while running along the
+  // row it hits that column (region 4), while running down the column that row (region 0x1D); the panels break
+  // (object_breakPanel_dup2, region type 0xA, 0x0A050601), the screen shakes 0x1E (sub_80BB52E).
+  Magnum: { kind: 'cursor', cursor: 'magnum', every: 12, freeze: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

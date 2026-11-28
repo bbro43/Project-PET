@@ -469,12 +469,12 @@ test('CrakShot breaks the panel in front and sends it into the first enemy in th
 
 test('BusterUp raises the buster by 1; chips without an effect yet do nothing', () => {
   const s = createBattle({ seed: 4, enemies: formation('Mettaur', 2, 1) });
-  s.hand = [{ name: 'BusterUp', code: '*' }, { name: 'Magnum', code: '*' }]; pick(s, 0); pick(s, 1); confirmCustom(s);
+  s.hand = [{ name: 'BusterUp', code: '*' }, { name: 'Snake', code: '*' }]; pick(s, 0); pick(s, 1); confirmCustom(s);
   const e = s.enemies[0]; e.think = 1e9; s.player.y = e.y; s.player.invuln = 1e9;
   step(s, { b: true }); run(s, {}, 30);
   assert.equal(s.busterUp, 1);
   step(s, { b: true }); run(s, {}, 5);
-  assert.ok(s.events.length >= 0); assert.equal(s.player.state === 'chip' && s.player.chip?.name === 'Magnum', false);
+  assert.ok(s.events.length >= 0); assert.equal(s.player.state === 'chip' && s.player.chip?.name === 'Snake', false);
   const hp = e.hp; step(s, { a: true }); step(s, {}); run(s, {}, 2);
   assert.equal(hp - e.hp, 2);
 });
