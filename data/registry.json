@@ -3913,6 +3913,31 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "vulcanhitfx": {
+   "label": "Vulcan hit (t3 0x12 entry 0xC → effect object 0x20), sprite 0x14/0x0F",
+   "sources": {
+    "bn6f": {
+     "offset": "3B00F8",
+     "compression": "none",
+     "bytes": 2456,
+     "sha256": "7ca84778d47a0929d47ee8ebcb46d45bcf3f946e561373e33442ac4e3ff6f9d7",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3AF670",
+     "compression": "none",
+     "bytes": 2456,
+     "sha256": "7ca84778d47a0929d47ee8ebcb46d45bcf3f946e561373e33442ac4e3ff6f9d7",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "hit": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

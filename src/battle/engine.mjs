@@ -186,7 +186,7 @@ function useChip(s, chip) {
   else if (def.kind === 'slash') for (const [dx, dy] of def.area) hitEnemy(s, at(s, p.x + dx, p.y + dy), damage, { element });
   else if (def.kind === 'throw') { const r = def.release || 0; s.hazards.push({ kind: 'bomb', owner: 'player', x: p.x, y: p.y, tx: p.x + def.range, land: s.tick + r + def.flight, start: s.tick + r, damage }); } // the ball leaves the hand on frame 9 (0x80EB69A)
   else if (def.kind === 'heal') { p.hp = Math.min(p.maxHp, p.hp + def.heal); s.events.push({ type: 'heal', amount: def.heal }); s.effects.push({ kind: 'heal', x: p.x, y: p.y, t: 0 }); } // effect object 6 (0x800E2FC): sprite 0x0C/0x12
-  else if (def.kind === 'vulcan') for (let k = 0; k < def.hits; k++) s.hazards.push({ kind: 'pvulcan', owner: 'player', y: p.y, from: p.x, at: s.tick + k * def.gap, damage, element });
+  else if (def.kind === 'vulcan') for (let k = 0; k < def.hits; k++) s.hazards.push({ kind: 'pvulcan', owner: 'player', y: p.y, from: p.x, at: s.tick + (def.lead || 0) + k * def.gap, damage, element });
   else if (def.kind === 'grab') startGrab(s, def, damage, element);
   else if (def.kind === 'busterup') { s.busterUp++; s.events.push({ type: 'busterUp', level: 1 + s.busterUp }); }
   else if (def.kind === 'crack') {
@@ -344,7 +344,7 @@ function stepHazards(s) {
       if (s.tick < h.at) return true;
       const t = rowTarget(s, h.from, h.y);
       if (t) { hitEnemy(s, t, h.damage, { element: h.element }); const b = at(s, t.x + 1, h.y); if (b && b !== t) hitEnemy(s, b, h.damage, { element: h.element }); }
-      s.effects.push({ kind: 'shot', x: t ? t.x : 5, y: h.y, t: 0 });
+      s.effects.push({ kind: 'shot', x: t ? t.x : 5, y: h.y, t: 0, z: t ? [8, 16, 24, 32][(s.tick * 5 + h.at) & 3] : 0, hit: !!t }); // effect object 0x20 at 8/16/24/32 px (dword_80EBFF0)
       return false;
     }
     if (h.kind === 'crackshot') { // CrakShot: the lifted panel slides down the row and hits the first enemy

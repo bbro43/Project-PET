@@ -578,6 +578,10 @@ export function render(g, s, bank) {
       continue;
     }
     const [ax, ay] = anchor(f.x, f.y);
+    if (f.kind === 'shot' && bank?.has?.('vulcanhitfx')) { // Vulcan: the bullet is invisible (t3 0x12); a hit shows effect 0x20
+      if (f.hit) sprite(g, bank, 'vulcanhitfx', 'hit', f.t, ax, ay - f.z, () => {});
+      continue;
+    }
     if (f.kind === 'shot' && f.t > 6) continue;
     const r = f.kind === 'blast' ? 4 + f.t : f.kind === 'delete' ? f.t : f.kind === 'shot' ? 3 + f.t : 6 - f.t / 4;
     if (r <= 0) continue;

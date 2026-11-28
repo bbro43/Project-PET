@@ -478,3 +478,13 @@ test('BusterUp raises the buster by 1; chips without an effect yet do nothing', 
   const hp = e.hp; step(s, { a: true }); step(s, {}); run(s, {}, 2);
   assert.equal(hp - e.hp, 2);
 });
+
+test('Vulcan1 fires 3 shots 11 frames apart after a 2-frame raise (0x80EBF6E, dword_80EBFEC)', () => {
+  const s = createBattle({ seed: 4, enemies: formation('Mettaur', 2, 1) });
+  s.hand = [{ name: 'Vulcan1', code: 'B' }]; pick(s, 0); confirmCustom(s);
+  const e = s.enemies[0]; e.think = 1e9; s.player.y = e.y; s.player.invuln = 1e9; e.hp = 999;
+  const t0 = s.tick; step(s, { b: true });
+  const hits = [];
+  for (let i = 0; i < 60; i++) { step(s, {}); for (const ev of s.events) if (ev.type === 'hit') hits.push(s.tick - t0); }
+  assert.deepEqual(hits, [3, 14, 25]);
+});
