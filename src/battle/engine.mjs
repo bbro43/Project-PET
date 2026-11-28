@@ -632,6 +632,11 @@ function startSpecial(s, name, def, damage, element) {
     for (const [x, y] of order) { s.panels[y][x].side = 'p'; s.panels[y][x].stolenT = 0; s.effects.push({ kind: 'grabland', x, y, t: 0 }); }
     hold = order.length ? 0x1E + 0x1E * order.length + 0x3C : 0x1E;
   }
+  if (def.kind === 'lifesync') { // sub_80E72C8
+    const tgt = at(s, p.x + 2, p.y), others = tgt && !tgt.big && tgt.owner !== 'player' ? s.enemies.filter(e => e !== tgt && e.hp > 0 && e.owner !== 'player' && e.kind !== 'coil' && !e.big) : [];
+    order = others.length ? [tgt, ...others] : [];
+    hold = order.length ? 0x14 + 0x3C + 0x1E : 0;
+  }
   if (def.kind === 'meteors') { // sub_80E42AA: back column first, rows top to bottom, while the column has enemy panels
     order = [];
     for (let x = 5; x >= 0; x--) { const col = [0, 1, 2].filter(y => sideAt(s, x, y) === 'e'); if (!col.length) break; for (const y of col) order.push([x, y]); }
@@ -712,6 +717,8 @@ function stepTimestop(s, input = {}) {
     const sp = ts.special;
     if (sp.def.kind === 'panels') { if (t === ts.start + sp.def.hold) applySpecial(s, sp); }
     else if (sp.def.kind === 'snake') stepSnakes(s, ts, sp, t);
+    else if (sp.def.kind === 'lifesync') { if (sp.order.length && t === ts.start + 0x14 + 0x3C) { const [tgt, ...others] = sp.order; for (const e of others) e.hp = Math.min(e.maxHp ?? tgt.hp, tgt.hp) || tgt.hp; } }
+    else if (sp.def.kind === 'blizzard') { if (t === ts.start + 0x22) s.hazards.push({ kind: 'snowball', owner: 'player', fx: s.player.x * 40 + 10, y: s.player.y, x: s.player.x, damage: sp.damage, base: sp.damage, element: sp.element, size: 0 }); }
     else if (sp.def.kind === 'numberball') { // a ball every 0x12 frames from 0x14; each rolls after 0xE + 0xA
       const k = t - ts.start;
       if (k >= 0x14 && (k - 0x14) % 0x12 === 0 && (k - 0x14) / 0x12 < 4) s.hazards.push({ kind: 'numball', owner: 'player', x: s.player.x + 1, y: s.player.y, fx: (s.player.x + 1) * 40, roll: 0xE + 0xA, damage: sp.damage, element: sp.element, t: 0 });
@@ -1390,6 +1397,13 @@ function stepHazards(s) {
       return s.tick < h.until;
     }
     if (h.kind === 'numball') return stepNumberBall(s, h);
+    if (h.kind === 'snowball') { // BlzrdBal (t3 0xB2 / 0xB7): 3 px a frame, hits each panel it enters, swallows field objects
+      const ahead = Math.round((h.fx + 20) / 40), o = at(s, ahead, h.y);
+      if (o && o.owner === 'player' && o.kind === 'coil') { o.hp = 0; s.effects.push({ kind: 'puff', x: o.x, y: o.y, t: 0 }); h.damage += h.base; h.size++; }
+      h.fx += 3; const x = Math.round(h.fx / 40);
+      if (x !== h.x) { h.x = x; if (x > 5 || !standable(s, x, h.y)) return false; const e = at(s, x, h.y); if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
+      return true;
+    }
     if (h.kind === 'chipmine') { // Mine (t3 0x4C), hidden: goes off when an enemy steps on its panel or the panel breaks
       const e = at(s, h.x, h.y);
       if ((e && e.owner !== 'player' && e.hp > 0) || !standable(s, h.x, h.y)) { if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); s.effects.push({ kind: 'blast', x: h.x, y: h.y, t: 0 }); return false; }

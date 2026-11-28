@@ -391,3 +391,12 @@ test('NumbrBl: 4 balls worth MegaMan\'s HP mod 100; Muramasa caps at 500', () =>
   for (let i = 0; i < 400; i++) step(s, {});
   assert.equal(s.enemies.find(e => e.id === 7).hp, 5000 - 4 * 87);
 });
+
+test('BlzrdBal rolls through the row; LifeSync gives every enemy the target\'s HP', () => {
+  let s = after('BlzrdBal', 0); while (s.timestop) step(s, {}); for (let i = 0; i < 120; i++) step(s, {});
+  assert.deepEqual(hurt(s), [[3, 1, 150], [4, 1, 150], [5, 1, 150]]);
+  s = after('LifeSync', 0, s => { s.enemies[4].hp = 300; }); // (4, 1)... the target is 2 ahead of (1, 1): (3, 1)
+  const tgt = s.enemies.find(e => e.x === 3 && e.y === 1); tgt.hp = 120;
+  while (s.timestop) step(s, {});
+  assert.ok(s.enemies.every(e => e.hp === 120));
+});

@@ -486,6 +486,15 @@ export const CHIP_BEHAVIOUR = {
   // (sub_80C314E → sub_80D73D6 → t3 0x91, sprite 0x10/0x46): each shows 0xE, waits Param2 = 0xA (animation 1), then rolls
   // from the panel ahead at 3 px a frame and bursts on the first thing it touches (collision 4 / 5). Then 0x3C.
   NumbrBl: { kind: 'numberball', freeze: true, hold: 0x14 + 4 * 0x12 + 0x3C, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // BlzrdBal (sub 21 → t4 0x58, sub_80E6FCC, hold 0x78 → sub_80B8BA0 → t1 0x4, a copy of MegaMan): after 0x22 frames
+  // (animation 0xC at 4 left) a snowball t3 0xB2 (sprite 0x10/0x47) starts 10 px ahead of him and rolls 3 px a frame,
+  // hitting each panel it enters (collision 4 / 5); a helper 20 px in front (t3 0xB7, sub_80DC310) swallows field objects
+  // (name ids 0xCD–0xFF, sub_80DC3B2) and each one adds the chip's damage again (animation 1 from the first). It stops
+  // off a solid panel.
+  BlzrdBal: { kind: 'blizzard', freeze: true, hold: 0x78, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'the snowball rolls once time runs again' },
+  // LifeSync (sub 7 → t4 0x5C, sub_80E72C8): a cursor 2 panels ahead in MegaMan's row; if an enemy stands there, every
+  // other enemy is linked to it (0x14, then 0x3C) and gets its HP (sub_80E73A2), then 0x1E. Cybeasts (0x49–0x4E) are left out.
+  LifeSync: { kind: 'lifesync', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

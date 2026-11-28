@@ -237,6 +237,7 @@ export function render(g, s, bank) {
     const [ax, ay] = anchor(x, y);
     sprite(g, bank, 'sensorlaser', 's' + [1, 0, 2][h.aim], s.tick - h.start, ax, ay - [0x10, 0x16, 0x14][h.aim], /* dword_80D9408 / byte_80D9410 */ (g, x, y) => { g.fillStyle = 'rgba(255,80,80,.8)'; g.fillRect(x - 20, y - 2, 40, 4); }, 0, false);
   }
+  for (const h of s.hazards) if (h.kind === 'snowball') { const [ax, ay] = anchor(h.fx / 40, h.y); sprite(g, bank, 'snowballfx', h.size ? 's1' : 's0', s.tick, ax, ay - 8, (g, x, y) => { g.fillStyle = '#e8f4ff'; g.beginPath(); g.arc(x, y - 8, 8 + 3 * Math.min(h.size, 2), 0, 7); g.fill(); }, 0, false); } // BlzrdBal (sprite 0x10/0x47)
   for (const h of s.hazards) if (h.kind === 'numball') { // NumbrBl's ball (sprite 0x10/0x46)
     const [ax, ay] = anchor(h.fx / 40, h.y);
     sprite(g, bank, 'numballfx', h.t <= 0xE ? 'appear' : 'roll', h.t, ax, ay - 8, (g, x, y) => { g.fillStyle = '#f0f0f0'; g.beginPath(); g.arc(x, y - 6, 7, 0, 7); g.fill(); }, 0, false);
@@ -799,6 +800,10 @@ export function render(g, s, bank) {
       const f = ts.t - ts.start - 2 - 10 * k - 30; if (f < 0 || f >= 16) continue;
       const [x, y] = sp.order[k % sp.order.length], [ax, ay] = anchor(x, y), z = 256 - 16 * f;
       sprite(g, bank, 'meteorfx', 'fall', f, ax - z, ay - z, (g, x, y) => { g.fillStyle = '#ff9040'; g.beginPath(); g.arc(x, y - 8, 8, 0, 7); g.fill(); }, 0, false);
+    }
+    if (sp?.def.kind === 'lifesync' && sp.order.length && ts.t >= ts.start + 0x14) { // LifeSync: links from the target to the others
+      const [x0, y0] = anchor(sp.order[0].x, sp.order[0].y); g.strokeStyle = 'rgba(120,255,160,.8)'; g.lineWidth = 2;
+      for (const e of sp.order.slice(1)) { const [x1, y1] = anchor(e.x, e.y); g.beginPath(); g.moveTo(x0, y0 - 16); g.lineTo(x1, y1 - 16); g.stroke(); }
     }
     if (sp?.def.kind === 'snake') for (const n of sp.snakes || []) { // Snake (sprite 0x0C/0x2C): rises from its hole, bites, flies
       const [ax, ay] = anchor(n.x / 40, n.y / 24);

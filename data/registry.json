@@ -5110,6 +5110,35 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "snowballfx": {
+   "label": "BlzrdBal snowball (t3 0xB2 sub_80DB9B8): sprite 0x10/0x47; animation 0, then 1 as it grows (dword_80DBB08)",
+   "sources": {
+    "bn6f": {
+     "offset": "38B438",
+     "compression": "none",
+     "bytes": 1272,
+     "sha256": "b2d0ec1d0cfabef6d240ee4fc5efdc62898de597b1eb6df1f76fe9aef57b124e",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "38A9B0",
+     "compression": "none",
+     "bytes": 1272,
+     "sha256": "b2d0ec1d0cfabef6d240ee4fc5efdc62898de597b1eb6df1f76fe9aef57b124e",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "s0": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "s1": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {
