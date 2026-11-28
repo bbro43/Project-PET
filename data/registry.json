@@ -81,6 +81,11 @@
      "seq": 12,
      "confidence": "rom-verified",
      "note": "CrakShot 0x80EC97C"
+    },
+    "vulcanfire": {
+     "seq": 13,
+     "confidence": "rom-verified",
+     "note": "Vulcan shot 0x80EBF6E sets animation 0xD"
     }
    }
   },
@@ -3774,6 +3779,131 @@
      "compression": "none",
      "bytes": 1388,
      "sha256": "cc395f187fa4778250266e599e27714e963225b476ba29ee6291cf1e172236e7",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "arm": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "hitfx": {
+   "label": "Hit spark (hit effect 0 → t4 0x4 table 0x80E0804), sprite 0x14/0x05",
+   "sources": {
+    "bn6f": {
+     "offset": "3A0DA8",
+     "compression": "none",
+     "bytes": 20616,
+     "sha256": "b80a9a4c52582d35518831ce921e38818b7f2b1ac8a3ce1255cf18010433f7d9",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3A0320",
+     "compression": "none",
+     "bytes": 20616,
+     "sha256": "b80a9a4c52582d35518831ce921e38818b7f2b1ac8a3ce1255cf18010433f7d9",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "buster": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "chargehitfx": {
+   "label": "Charge shot hit (hit effect 5), sprite 0x14/0x04",
+   "sources": {
+    "bn6f": {
+     "offset": "3A000C",
+     "compression": "none",
+     "bytes": 3484,
+     "sha256": "2be7aedc2cab9d0039b4ec307c060b596a8110fa3e2862f4c56aa2b3b3d29828",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "39F584",
+     "compression": "none",
+     "bytes": 3484,
+     "sha256": "2be7aedc2cab9d0039b4ec307c060b596a8110fa3e2862f4c56aa2b3b3d29828",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "hit": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "explosionfx": {
+   "label": "Explosion (hit effect 7; Cannon via t3 0x0 entry 1), sprite 0x14/0x01",
+   "sources": {
+    "bn6f": {
+     "offset": "39AAB8",
+     "compression": "none",
+     "bytes": 3848,
+     "sha256": "1363c1656100007c57a0e9aea261f91d084cee6c79cfffb50fe598e4c0b9f332",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "39A030",
+     "compression": "none",
+     "bytes": 3848,
+     "sha256": "1363c1656100007c57a0e9aea261f91d084cee6c79cfffb50fe598e4c0b9f332",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "burst": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "healfx": {
+   "label": "Recovery sparkle (effect object 6, 0x800E2FC), sprite 0x0C/0x12",
+   "sources": {
+    "bn6f": {
+     "offset": "30D494",
+     "compression": "none",
+     "bytes": 4024,
+     "sha256": "4e4557e21558f0560333598ad3b3c26bed0d36b80c8d41028d837b3ceb105485",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "30CA0C",
+     "compression": "none",
+     "bytes": 4024,
+     "sha256": "4e4557e21558f0560333598ad3b3c26bed0d36b80c8d41028d837b3ceb105485",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "heal": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "swordarm": {
+   "label": "Sword blade held by MegaMan (t1 0x5 entry 3 for every sword subfamily, byte_80EBB64), sprite 0x0C/0x00",
+   "sources": {
+    "bn6f": {
+     "offset": "2EFE48",
+     "compression": "none",
+     "bytes": 15224,
+     "sha256": "1f4e558a970b0981c198cf0707a79194ead3613516fb009d649c73c48caa9491",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2EF3C0",
+     "compression": "none",
+     "bytes": 15224,
+     "sha256": "1f4e558a970b0981c198cf0707a79194ead3613516fb009d649c73c48caa9491",
      "confidence": "rom-verified"
     }
    },

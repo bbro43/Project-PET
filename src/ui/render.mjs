@@ -4,6 +4,7 @@
 // Panel geometry and sprite anchors are approximations pending an on-screen trace.
 import { frameAt } from '../rom/bank.mjs';
 import { val } from '../../data/rules.mjs';
+import { chipBehaviour } from '../battle/engine.mjs';
 
 export const PANEL_W = 40, PANEL_H = 24, FIELD_Y = 72;
 const anchor = (x, y) => [x * PANEL_W + PANEL_W / 2, FIELD_Y + y * PANEL_H + 18];
@@ -98,6 +99,7 @@ const ARMS = {
   vulcan: [{ key: 'vulcanarm', seq: 'arm', dx: 23, dz: 25 }],
   airshot: [{ key: 'airshotarm', seq: 'arm', dx: 18, dz: 24 }],
   throw: [{ key: 'throwball', seq: 'hand', until: 9 }],
+  slash: [{ key: 'swordarm', seq: 'arm' }],
 };
 const CANNON_PAL = { Cannon: 0, HiCannon: 1, 'M-Cannon': 2 };
 function armParts(p) {
@@ -389,7 +391,10 @@ export function render(g, s, bank) {
   if (p.hp > 0 && !(p.invuln > 0 && p.state !== 'flinch' && (s.tick >> 1) & 1)) {
     const [ax, ay] = anchor(p.drawX ?? p.x, p.drawY ?? p.y);
     draw.push({ y: p.y, fn: () => {
-      sprite(g, bank, 'megaman', p.anim, p.animT, ax, ay, placeholderNavi);
+      // Vulcan: raise (animation 0xA), then animation 0xD again for every shot (0x80EBF6E)
+      const gap = p.anim === 'vulcan' && p.chip ? chipBehaviour(p.chip.name)?.gap : 0;
+      const [an, at] = gap && p.animT >= 2 ? ['vulcanfire', (p.animT - 2) % gap] : [p.anim, p.animT];
+      sprite(g, bank, 'megaman', an, at, ax, ay, placeholderNavi);
       for (const a of armParts(p)) sprite(g, bank, a.key, a.seq, a.t, ax + a.dx, ay - a.dz, () => {}, a.pal || 0);
       if (p.frozen && p.paralyzed > 0) { g.fillStyle = 'rgba(180,230,255,.55)'; g.fillRect(ax - 12, ay - 34, 24, 34); } // frozen on ice
       else if (p.paralyzed > 0 && (s.tick >> 1) & 1) { // paralysis: flicker bright
@@ -560,6 +565,12 @@ export function render(g, s, bank) {
       for (let i = 0; i < 3; i++) { const x = x0 + (x1 - x0) * k + i * 10 * f.dir; g.beginPath(); g.moveTo(x, y0 - 8 - i * 6); g.lineTo(x + 14 * f.dir, y0 - 8 - i * 6); g.stroke(); }
       continue;
     }
+    if (f.kind === 'hit' && f.fx) { // t4 0x4 hit effects, sprite category 0x14 (0x80E0804)
+      const [hx, hy] = anchor(f.x, f.y), key = { buster: 'hitfx', charge: 'chargehitfx', explosion: 'explosionfx' }[f.fx];
+      sprite(g, bank, key, { hitfx: 'buster', chargehitfx: 'hit', explosionfx: 'burst' }[key], f.t, hx + f.jx, hy - 14 + f.jy, () => {});
+      continue;
+    }
+    if (f.kind === 'heal' && bank?.has?.('healfx')) { const [hx, hy] = anchor(f.x, f.y); sprite(g, bank, 'healfx', 'heal', f.t, hx, hy, () => {}); continue; }
     if (f.kind === 'note' || f.kind === 'heal') {
       if (f.t > 16) continue;
       const [ax, ay] = anchor(f.x, f.y);

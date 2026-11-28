@@ -139,7 +139,7 @@ function hitEnemy(s, e, damage, extra = {}) {
   if (!e.cells) damage = panelHit(s, e.x, e.y, damage, extra.element).damage;
   e.hp = Math.max(e.sturdy ? 1 : 0, e.hp - damage);
   e.flash = 4;
-  s.effects.push({ kind: 'hit', x: e.x, y: e.y, t: 0, damage });
+  s.effects.push({ kind: 'hit', x: e.x, y: e.y, t: 0, damage, fx: extra.fx, jx: (s.tick * 7) % 15 - 7, jy: (s.tick * 11) % 15 - 7 }); // jitter from the frame count so the battle RNG is untouched // hit effect: t4 0x4 near the target (0x801A0D8, ±7 px)
   s.events.push({ type: 'hit', target: e.id, damage });
   if (extra.push && e.hp > 0) {
     const nx = e.x + 1;
@@ -182,10 +182,10 @@ function useChip(s, chip) {
   if (!def || def.kind === 'plus') { s.effects.push({ kind: 'note', x: p.x, y: p.y, t: 0 }); return; } // effect not implemented yet
   const damage = data.damage + (chip.bonus || 0), element = data.element === 'none' ? undefined : data.element;
   p.state = 'chip'; p.stateT = 0; p.chip = { ...chip, lock: def.lock }; setAnim(p, def.anim);
-  if (def.kind === 'shot') hitEnemy(s, rowTarget(s, p.x, p.y), damage, { push: def.push, element });
+  if (def.kind === 'shot') hitEnemy(s, rowTarget(s, p.x, p.y), damage, { push: def.push, element, fx: def.fx });
   else if (def.kind === 'slash') for (const [dx, dy] of def.area) hitEnemy(s, at(s, p.x + dx, p.y + dy), damage, { element });
   else if (def.kind === 'throw') { const r = def.release || 0; s.hazards.push({ kind: 'bomb', owner: 'player', x: p.x, y: p.y, tx: p.x + def.range, land: s.tick + r + def.flight, start: s.tick + r, damage }); } // the ball leaves the hand on frame 9 (0x80EB69A)
-  else if (def.kind === 'heal') { p.hp = Math.min(p.maxHp, p.hp + def.heal); s.events.push({ type: 'heal', amount: def.heal }); s.effects.push({ kind: 'heal', x: p.x, y: p.y, t: 0 }); }
+  else if (def.kind === 'heal') { p.hp = Math.min(p.maxHp, p.hp + def.heal); s.events.push({ type: 'heal', amount: def.heal }); s.effects.push({ kind: 'heal', x: p.x, y: p.y, t: 0 }); } // effect object 6 (0x800E2FC): sprite 0x0C/0x12
   else if (def.kind === 'vulcan') for (let k = 0; k < def.hits; k++) s.hazards.push({ kind: 'pvulcan', owner: 'player', y: p.y, from: p.x, at: s.tick + k * def.gap, damage, element });
   else if (def.kind === 'grab') startGrab(s, def, damage, element);
   else if (def.kind === 'busterup') { s.busterUp++; s.events.push({ type: 'busterUp', level: 1 + s.busterUp }); }
@@ -292,7 +292,7 @@ function stepPlayer(s, input) {
     p.holdT = 0; p.charge = 0;
     if (full) {
       p.state = 'buster'; p.stateT = 0; setAnim(p, 'buster');
-      hitEnemy(s, rowTarget(s, p.x, p.y), val('chargeShotDamage') * (1 + s.busterUp));
+      hitEnemy(s, rowTarget(s, p.x, p.y), val('chargeShotDamage') * (1 + s.busterUp), { fx: 'charge' });
       s.events.push({ type: 'chargeShot' });
       return;
     }
@@ -300,7 +300,7 @@ function stepPlayer(s, input) {
   if (input.b && s.queue.length) { useChip(s, s.queue.shift()); return; }
   if (pressedA) {
     p.state = 'buster'; p.stateT = 0; setAnim(p, 'buster');
-    hitEnemy(s, rowTarget(s, p.x, p.y), val('busterDamage') + s.busterUp);
+    hitEnemy(s, rowTarget(s, p.x, p.y), val('busterDamage') + s.busterUp, { fx: 'buster' });
     return;
   }
   const d = DIRS[input.dir];

@@ -34,9 +34,9 @@ export const val = key => RULES[key].value;
 // CHIP_BEHAVIOUR says what each chip does in battle; chips not listed here can be picked but do nothing yet.
 // Families share a behaviour; the number in a Recov name is its heal.
 export const CHIP_BEHAVIOUR = {
-  Cannon:   { kind: 'shot', anim: 'cannon', lock: 30, confidence: 'recalled' },
-  HiCannon: { kind: 'shot', anim: 'cannon', lock: 30, confidence: 'recalled' },
-  'M-Cannon': { kind: 'shot', anim: 'cannon', lock: 30, confidence: 'recalled' },
+  Cannon:   { kind: 'shot', fx: 'explosion', anim: 'cannon', lock: 30, confidence: 'recalled' },
+  HiCannon: { kind: 'shot', fx: 'explosion', anim: 'cannon', lock: 30, confidence: 'recalled' },
+  'M-Cannon': { kind: 'shot', fx: 'explosion', anim: 'cannon', lock: 30, confidence: 'recalled' },
   AirShot:  { kind: 'shot', push: true, anim: 'airshot', lock: 16, confidence: 'recalled' },
   Vulcan1:  { kind: 'vulcan', hits: 3, gap: 6, anim: 'vulcan', lock: 30, confidence: 'recalled', note: 'each shot also hits the panel behind its target' },
   Vulcan2:  { kind: 'vulcan', hits: 4, gap: 6, anim: 'vulcan', lock: 36, confidence: 'recalled' },
