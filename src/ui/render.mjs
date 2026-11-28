@@ -627,17 +627,22 @@ export function render(g, s, bank) {
   }
 
   // HUD
-  if (bank?.custom) { // HP in the game's white 8×16 digits (the custom screen's digit set, dword_86E411C)
-    g.fillStyle = '#e8f0f8'; g.fillRect(2, 1, 42, 18); g.fillStyle = '#304068'; g.fillRect(3, 2, 40, 16);
+  if (bank?.custom) { // HP box (byte_801EDFC) and HP in the game's white 8×16 digits (dword_86E411C)
+    if (bank.custom.hpBox) g.drawImage(bank.custom.hpBox(), 0, 0);
+    else { g.fillStyle = '#e8f0f8'; g.fillRect(2, 1, 42, 18); g.fillStyle = '#304068'; g.fillRect(3, 2, 40, 16); }
     const hp = String(Math.max(0, p.hp));
-    for (let k = 0; k < hp.length; k++) g.drawImage(bank.custom.digit(+hp[k], 0), 42 - 8 * (hp.length - k), 2);
+    for (let k = 0; k < hp.length; k++) g.drawImage((bank.custom.hpDigit || bank.custom.digit)(+hp[k], 0), 41 - 8 * (hp.length - k), 0);
   } else {
     g.fillStyle = '#183058'; g.fillRect(2, 2, 34, 13);
     g.strokeStyle = '#a8c8f0'; g.lineWidth = 1; g.strokeRect(2.5, 2.5, 33, 12);
     text(g, String(p.hp), 33, 12, p.hp <= p.maxHp / 4 ? '#ff8080' : '#fff', 'right');
   }
   const full = s.gauge >= val('customGaugeTicks');
-  if (s.phase !== 'custom') { // the game hides the gauge while the custom window is open
+  if (s.phase !== 'custom' && bank?.custom?.gauge) { // the game's gauge (word_801ED6C at column 6), value 0–0x4000
+    const v = Math.min(0x4000, Math.round(s.gauge * 0x4000 / val('customGaugeTicks')));
+    const state = v >= 0x4000 ? 3 : v >= 0x2A00 ? 2 : v >= 0x1500 ? 1 : 0; // 0x801C5F4
+    g.drawImage(bank.custom.gauge(v, state), 48, 0);
+  } else if (s.phase !== 'custom') { // the game hides the gauge while the custom window is open
     g.fillStyle = '#183058'; g.fillRect(56, 4, 128, 8);
     g.fillStyle = full ? ((s.tick >> 3) & 1 ? '#ffe070' : '#ff9040') : '#60b0ff';
     g.fillRect(57, 5, 126 * s.gauge / val('customGaugeTicks'), 6);

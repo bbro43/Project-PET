@@ -1,3 +1,3 @@
 /* Bump app on every release; bump assets whenever shipped asset/data files change. */
-self.PROJECT_PET_RELEASE = { app: '0.45.0', assets: '48' };
+self.PROJECT_PET_RELEASE = { app: '0.46.0', assets: '49' };
 self.SIGNAL_YARD_RELEASE = self.PROJECT_PET_RELEASE; // legacy name used by 0.1.x

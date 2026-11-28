@@ -4427,8 +4427,8 @@
   }
  },
  "customscreen": {
-  "label": "Custom screen: frame tiles (tile 0 at tiles), tilemap byte_86E625C (byte_86E64B4 with CrossSelect), palettes byte_86E587C (4, by chip class), code strips dword_86E591C, damage digits dword_86E411C, element icons dword_86E3598 + colour sets byte_86E3B18, code letters dword_86E2E98 (8×16, at tile (2,9)); selected-chip column: side tiles 0x88/0x89 of the frame tiles (h-flipped on the right), 16×16 boxes dword_86E601C with palette 0x872CFF4 (Gregar 0x872AF30); battle message font: 8×16 glyphs A–Z, bar fill, '!', bar ends at 0x86F133C (Gregar 0x86EF2C0), palette 0x86F2900 (Gregar 0x86F0884); battle text font dword_86B7AE0 (Gregar 0x86B5A2C), 64 bytes per character code (charmap: space 0, digits 1–10, A–Z 0x0B, a–z 0x26), palette byte_86BEC80 (Gregar 0x86BCBCC)",
-  "note": "Layout from the tile rects in byte_8027B2C (0x80268AC): name 8×2 tiles at (2,1), picture 7×6 at (2,3), element 2×2 at (3,9), damage 3×2 at (6,9), 10 slots (icon 2×2 + code 2×1) from (1,13) every 2 tiles across and 3 down, selected column 2×10 at (12,3). Frame pixel-checked against the owner's screenshot (0 differing pixels outside the layers the game draws later). Column pixel-checked against the owner's custom-screen sheet; the box palette was found by its colours (one match in the ROM), not traced to code. Font located by matching the owner's font sheet against the ROM's tiles (one match); the glyph order was read from the tiles. The code that composes the banners was not traced. The text palette is the one copied to BG palette 13's slot (0x3001B40, copyMemory_8001850); the chip name line uses palette 13 (byte_801D944) with no colour shift, but the slot base is inferred.",
+  "label": "Custom screen: frame tiles (tile 0 at tiles), tilemap byte_86E625C (byte_86E64B4 with CrossSelect), palettes byte_86E587C (4, by chip class), code strips dword_86E591C, damage digits dword_86E411C, element icons dword_86E3598 + colour sets byte_86E3B18, code letters dword_86E2E98 (8×16, at tile (2,9)); selected-chip column: side tiles 0x88/0x89 of the frame tiles (h-flipped on the right), 16×16 boxes dword_86E601C with palette 0x872CFF4 (Gregar 0x872AF30); battle message font: 8×16 glyphs A–Z, bar fill, '!', bar ends at 0x86F133C (Gregar 0x86EF2C0), palette 0x86F2900 (Gregar 0x86F0884); battle text font dword_86B7AE0 (Gregar 0x86B5A2C), 64 bytes per character code (charmap: space 0, digits 1–10, A–Z 0x0B, a–z 0x26), palette 13 = dword_86E1C78 (Gregar 0x86DFBFC); battle HUD: custom gauge word_801ED6C and HP box byte_801EDFC with their tiles and palettes (see src/rom/custom.mjs)",
+  "note": "Layout from the tile rects in byte_8027B2C (0x80268AC): name 8×2 tiles at (2,1), picture 7×6 at (2,3), element 2×2 at (3,9), damage 3×2 at (6,9), 10 slots (icon 2×2 + code 2×1) from (1,13) every 2 tiles across and 3 down, selected column 2×10 at (12,3). Frame pixel-checked against the owner's screenshot (0 differing pixels outside the layers the game draws later). Column pixel-checked against the owner's custom-screen sheet; the box palette was found by its colours (one match in the ROM), not traced to code. Font located by matching the owner's font sheet against the ROM's tiles (one match); the glyph order was read from the tiles. The code that composes the banners was not traced. The chip name line uses BG palette 13 (byte_801D944) with no colour shift; palette 13 is dword_86E1C78, loaded to 0x3001B00 by list off_801ECB4 (BG palette 0 = 0x3001960).",
   "sources": {
    "bn6f": {
     "tiles": "6E1D18",
@@ -4511,7 +4511,16 @@
     },
     "text": {
      "glyphs": "6B7AE0",
-     "palette": "6BEC80"
+     "palette": "6E1C78"
+    },
+    "hud": {
+     "gaugeTiles": "6E489C",
+     "gaugeTiles2": "6E4C1C",
+     "boxTiles": "6E1638",
+     "palette": "6E1C78",
+     "statePalettes": "6E1CD8",
+     "gauge": "1ED6C",
+     "box": "1EDFC"
     }
    },
    "bn6g": {
@@ -4595,7 +4604,16 @@
     },
     "text": {
      "glyphs": "6B5A2C",
-     "palette": "6BCBCC"
+     "palette": "6DFBFC"
+    },
+    "hud": {
+     "gaugeTiles": "6E2820",
+     "gaugeTiles2": "6E2BA0",
+     "boxTiles": "6DF5BC",
+     "palette": "6DFBFC",
+     "statePalettes": "6DFC5C",
+     "gauge": "1ED6C",
+     "box": "1EDFC"
     }
    }
   }
