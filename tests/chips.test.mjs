@@ -385,3 +385,9 @@ test('BugFix clears the bugs; Otenko feeds the next chip; CircGun marks 4 panels
   step(s, { b: true }); while (s.timestop) step(s, {});
   assert.equal(hurt(s).length, 4); assert.ok(hurt(s).every(h => h[2] === 150));
 });
+
+test('NumbrBl: 4 balls worth MegaMan\'s HP mod 100; Muramasa caps at 500', () => {
+  const s = after('NumbrBl', 0, s => { s.player.hp = 87; s.enemies = [{ id: 7, family: 'Mettaur', x: 4, y: 1, hp: 5000, maxHp: 5000, state: 'idle', stateT: 0, think: 1e9, paralyzed: 1e9, anim: 'idle', animT: 0, element: 'none' }]; });
+  for (let i = 0; i < 400; i++) step(s, {});
+  assert.equal(s.enemies.find(e => e.id === 7).hp, 5000 - 4 * 87);
+});

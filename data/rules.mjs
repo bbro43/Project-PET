@@ -149,7 +149,7 @@ export const CHIP_BEHAVIOUR = {
   Sword: sword(0), WideSwrd: sword(1), LongSwrd: sword(2), WideBlde: sword(3), LongBlde: sword(4), LifeSrd: sword(5), DrkSword: sword(6),
   FireSwrd: sword(12), AquaSwrd: sword(13), ElecSwrd: sword(14), BambSwrd: sword(15), FtrSword: sword(9), CrosSwrd: sword(10), DblDream: sword(11),
   StepSwrd: sword(1, { step: 2, note: 'area 4 from byte_80EBA18[1]; params[0] = 1: steps 2 panels forward first (sub_80EB79C), back after (recalled)' }),
-  Muramasa: sword(8, { damageFromLostHp: true, note: 'area 2; damage = HP MegaMan has lost, at most 999 (recalled)' }),
+  Muramasa: sword(8, { damageFromLostHp: true, note: 'area 2; damage code 1020 → sub_8010BD0: MaxHP − HP, at most 0x1F4 = 500' }),
   // GigaCannons (family 0x14, sub 4–6): the Cannon / HiCannon / M-Cannon arm (byte_80EBD2C) and impact area 0xC, the four
   // diagonal panels around the target (byte_80EBD34 → sub_80C4FFE).
   GigaCan1: { kind: 'shot', fx: 'explosion', anim: 'cannon', lock: 30, impact: 0xC, confidence: 'rom-verified', note: 'impact area from byte_80EBD34; lock recalled' },
@@ -481,6 +481,11 @@ export const CHIP_BEHAVIOUR = {
   // 0x168 frames, arms it: the next params[1] = 4 panels it leaves each get a marker (t3 0x8A) that hits 0x14 + 4 × params[0]
   // = 28 frames later (0x0A050001, solid panels only). Then 0x1E.
   CircGun: { kind: 'cursor', cursor: 'circgun', every: 3, freeze: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // NumbrBl (sub 22 → t4 0x69, sub_80E7F80 → sub_80C31F0 → t1 0x45, a copy of MegaMan): damage code 1021 → sub_8010BF0 =
+  // MegaMan's HP mod 100, taken when the chip is used. Inside the freeze: 0x14, then params[0] = 4 balls, 0x12 frames apart
+  // (sub_80C314E → sub_80D73D6 → t3 0x91, sprite 0x10/0x46): each shows 0xE, waits Param2 = 0xA (animation 1), then rolls
+  // from the panel ahead at 3 px a frame and bursts on the first thing it touches (collision 4 / 5). Then 0x3C.
+  NumbrBl: { kind: 'numberball', freeze: true, hold: 0x14 + 4 * 0x12 + 0x3C, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

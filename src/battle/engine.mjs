@@ -471,7 +471,7 @@ function useChip(s, chip) {
     p.state = 'chip'; p.stateT = 0; p.chip = { ...chip, lock: def.lock }; setAnim(p, 'idle');
     s.effects.push({ kind: 'capsule', x: p.x, y: p.y, t: 0, life: 16 }); return;
   }
-  let damage = data.damage + (chip.bonus || 0);
+  let damage = (data.damage === 1021 ? p.hp % 100 : data.damage) + (chip.bonus || 0); // 1021: NumbrBl, sub_8010BF0 = HP mod 100
   const mood = emotionOf(s);
   if ((data.flags & 2) && damage > 0 && (mood === 'synchro' || mood === 'angry')) { // Full Synchro / Angry: double damage, then it's used up (sub_8012A38)
     damage *= 2; s.events.push({ type: 'emotionBoost', emotion: mood });
@@ -495,7 +495,7 @@ function useChip(s, chip) {
       let k = 0; while (k < def.step && p.x + k + 1 <= 5 && !at(s, p.x + k + 1, p.y) && standable(s, p.x + k + 1, p.y)) k++;
       p.x += k; p.home = home;
     }
-    if (def.damageFromLostHp) damage = Math.min(999, p.maxHp - p.hp); // Muramasa
+    if (def.damageFromLostHp) damage = Math.min(500, p.maxHp - p.hp); // Muramasa: sub_8010BD0
     for (const [dx, dy] of def.area) hitEnemy(s, at(s, p.x + dx, p.y + dy), damage, { element, paralyze, chip: true });
     if (def.slashFx) s.effects.push({ kind: 'slash', x: p.x, y: p.y, t: 0, area: def.slashFx, flip: true }); // the game's slash, swinging right
   }
@@ -712,6 +712,11 @@ function stepTimestop(s, input = {}) {
     const sp = ts.special;
     if (sp.def.kind === 'panels') { if (t === ts.start + sp.def.hold) applySpecial(s, sp); }
     else if (sp.def.kind === 'snake') stepSnakes(s, ts, sp, t);
+    else if (sp.def.kind === 'numberball') { // a ball every 0x12 frames from 0x14; each rolls after 0xE + 0xA
+      const k = t - ts.start;
+      if (k >= 0x14 && (k - 0x14) % 0x12 === 0 && (k - 0x14) / 0x12 < 4) s.hazards.push({ kind: 'numball', owner: 'player', x: s.player.x + 1, y: s.player.y, fx: (s.player.x + 1) * 40, roll: 0xE + 0xA, damage: sp.damage, element: sp.element, t: 0 });
+      s.hazards = s.hazards.filter(h => h.kind !== 'numball' || stepNumberBall(s, h));
+    }
     else if (sp.def.kind === 'guardianstrike') { // sub_80D4E64: region 0x85 / 0x84, shake 0x3C
       if (t === ts.start) {
         if (sp.def.target === 'player') hitPlayer(s, sp.damage, { element: sp.element });
@@ -746,6 +751,15 @@ function stepTimestop(s, input = {}) {
   if (t >= ts.start) for (const b of ts.beams) b.z = Math.max(0, 1 - (t - ts.start) / fall);
   s.effects = s.effects.filter(f => ++f.t < 24);
   if (t >= ts.start + fall + GRAB.hold.value + GRAB.dim.value) s.timestop = null;
+}
+// NumbrBl's ball (t3 0x91): shows, waits, then rolls 3 px a frame and bursts on the first thing it touches.
+function stepNumberBall(s, h) {
+  if (++h.t <= h.roll) return true;
+  h.fx += 3; h.x = Math.round(h.fx / 40);
+  if (h.x > 5) return false;
+  const e = at(s, h.x, h.y);
+  if (e) { hitEnemy(s, e, h.damage, { element: h.element, chip: true }); s.effects.push({ kind: 'hit', x: h.x, y: h.y, t: 0, damage: 0, jx: 0, jy: 0 }); return false; }
+  return true;
 }
 // Snake (t3 0x72 / 0x73): one snake per hole, flying 16 px a frame at the nearest enemy (row first, then column).
 function snakeTarget(s, hx, hy) { // sub_80D2D40
@@ -1375,6 +1389,7 @@ function stepHazards(s) {
       if (e && e.owner !== 'player') { hitEnemy(s, e, h.damage, { element: h.element, chip: true, paralyze: val('chipParalyzeTicks') }); return false; }
       return s.tick < h.until;
     }
+    if (h.kind === 'numball') return stepNumberBall(s, h);
     if (h.kind === 'chipmine') { // Mine (t3 0x4C), hidden: goes off when an enemy steps on its panel or the panel breaks
       const e = at(s, h.x, h.y);
       if ((e && e.owner !== 'player' && e.hp > 0) || !standable(s, h.x, h.y)) { if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); s.effects.push({ kind: 'blast', x: h.x, y: h.y, t: 0 }); return false; }

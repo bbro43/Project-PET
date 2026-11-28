@@ -5081,6 +5081,35 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "numballfx": {
+   "label": "NumbrBl ball (t3 0x91 sub_80D729C): sprite 0x10/0x46",
+   "sources": {
+    "bn6f": {
+     "offset": "38B160",
+     "compression": "none",
+     "bytes": 728,
+     "sha256": "8fa1ec518d3fd272338e35d23c3451c4d26119eb2bd745b794551c8c2f69bfbd",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "38A6D8",
+     "compression": "none",
+     "bytes": 728,
+     "sha256": "8fa1ec518d3fd272338e35d23c3451c4d26119eb2bd745b794551c8c2f69bfbd",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "appear": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "roll": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {
