@@ -293,6 +293,12 @@ export function hitPlayer(s, damage, opts = {}) {
   s.events.push({ type: 'playerHit', damage });
 }
 
+// The nearest column ahead of x holding an enemy (sub_80ED040), or the back column.
+function nearestEnemyColumn(s, x) {
+  let best = 5;
+  for (const e of s.enemies) if (e.hp > 0 && e.x > x && e.x < best) best = e.x;
+  return best;
+}
 // Buster bug (type 7): each normal buster shot rolls one of 16 slots — stat 0x14 ones, then stat 0x15 twos, the rest 0 (sub_8013D5E).
 function busterBugRoll(s) {
   const [ones, twos] = BUGS.busterTable.value[bug(s, 7)], r = Math.floor(rng(s) * 16);
@@ -389,6 +395,34 @@ function useChip(s, chip) {
     if (x <= 5 && standable(s, x, y)) s.hazards.push({ kind: 'shell', owner: 'player', fx: x, x, y, speed: def.speed / 40, pal: def.pal, sprite: def.sprite, seq: def.seq, toX: def.range ? x + def.range : 5, damage, element, start, hit: [] });
   }
   else if (def.kind === 'pulse') s.hazards.push({ kind: 'pulse', owner: 'player', x: p.x + 1, y: p.y, start: s.tick, hold: def.hold, region: def.region, pal: def.pal, pull: def.pull, paralyze: def.status === 'paralyze' ? val('chipParalyzeTicks') : paralyze, damage, element, hit: [] });
+  else if (def.kind === 'widewave') s.hazards.push({ kind: 'widewave', owner: 'player', fx: p.x, x: p.x, y: p.y, speed: def.speed / 40, damage, element, start: s.tick, hit: [] });
+  else if (def.kind === 'tankcan') {
+    const target = rowTarget(s, p.x, p.y);
+    if (target) hitEnemy(s, target, damage, { element, fx: 'explosion', chip: true });
+    else for (const dy of [-1, 0, 1]) { // the back edge: the last column's three rows, cracked
+      const y = p.y + dy; if (y < 0 || y > 2) continue;
+      hitEnemy(s, at(s, 5, y), damage, { element, fx: 'explosion', chip: true });
+      s.effects.push({ kind: 'blast', x: 5, y, t: 0 }); crackPanel(s, 5, y);
+    }
+  }
+  else if (def.kind === 'machgun') s.hazards.push({ kind: 'machgun', owner: 'player', col: nearestEnemyColumn(s, p.x), row: 2, dir: -1, left: def.shots, every: def.every, next: s.tick + 10, damage, element });
+  else if (def.kind === 'needles') {
+    const foes = s.enemies.filter(e => e.hp > 0).slice(0, 3);
+    if (foes.length === 2) foes.push(foes[0].hp < foes[1].hp ? foes[0] : foes[1].hp < foes[0].hp ? foes[1] : foes[Math.floor(rng(s) * 2)]);
+    while (foes.length && foes.length < 3) foes.push(foes[0]);
+    foes.forEach((e, k) => s.hazards.push({ kind: 'needle', owner: 'player', x: e.x, y: e.y, at: s.tick + def.delay + k * def.every, damage, element }));
+  }
+  else if (def.kind === 'tornado') {
+    const bugsOn = [1, 2, 3, 7].filter(t => bug(s, t)).length + (bug(s, 9) ? 2 : 0); // stats set by the bug table, as sub_800FE52 counts them
+    const spots = def.byBugs ? def.byBugs[Math.min(3, bugsOn)] : [[0, 0]];
+    for (const [dx, dy] of spots) {
+      const x = p.x + 2 + dx, y = p.y + dy;
+      if (x > 5 || y < 0 || y > 2 || !standable(s, x, y)) continue;
+      let el = element, dmg = damage, pal = def.byBugs ? 3 : 0; // palettes byte_80CA064: kind 1 → 0, Static → 3, fire 4, wood 1, aqua 5
+      if (def.panelElement) { const k = { volcano: ['fire', 4], grass: ['wood', 1], ice: ['aqua', 5] }[panelType(s, x, y)]; if (k) { [el, pal] = k; dmg *= 2; setPanel(s, x, y, 'normal'); } }
+      s.hazards.push({ kind: 'chiptwister', owner: 'player', x, y, start: s.tick, every: def.every, life: def.life, damage: dmg, element: el, pal });
+    }
+  }
   else if (def.kind === 'burner') s.hazards.push({ kind: 'flame', owner: 'player', x: p.x + 1, y: p.y, born: s.tick, life: def.life, spread: def.spread, wide: def.wide, crack: def.crack, damage, element, hit: [] });
   else if (def.kind === 'busterup') { s.busterUp++; s.events.push({ type: 'busterUp', level: 1 + s.busterUp }); }
   else if (def.kind === 'crack') for (const [dx, dy] of REGIONS[def.region || 1]) { // the panels of the area are lifted and sent down their rows
@@ -872,6 +906,36 @@ function stepHazards(s) {
         if (h.pull && e.hp > 0 && !e.cells) { const nx = e.x - 1; if (nx >= 3 && !at(s, nx, e.y) && standable(s, nx, e.y)) e.x = nx; }
       }
       return s.tick - h.start < h.hold;
+    }
+    if (h.kind === 'widewave') { // WideShot (t3 0x3B): its column, rows y−1..y+1, hits each enemy once
+      if (h.x > 5) return false;
+      for (const dy of [-1, 0, 1]) { const e = at(s, h.x, h.y + dy); if (e && !h.hit.includes(e.id)) { h.hit.push(e.id); hitEnemy(s, e, h.damage, { element: h.element, chip: true }); } }
+      h.fx += h.speed; h.x = Math.round(h.fx);
+      return true;
+    }
+    if (h.kind === 'machgun') { // MachGun: one shot per `every` frames, sweeping the nearest enemy column
+      if (s.tick < h.next) return true;
+      hitEnemy(s, at(s, h.col, h.row), h.damage, { element: h.element, chip: true });
+      s.effects.push({ kind: 'hit', x: h.col, y: h.row, t: 0, fx: 'buster', damage: 0, jx: 0, jy: 0 });
+      const r = h.row + h.dir;
+      if (r < 0 || r > 2) { // the edge: turn round; step toward the nearest enemy column if it moved
+        h.dir = -h.dir; const c = nearestEnemyColumn(s, p.x);
+        if (c === h.col) h.row += h.dir; else h.col += c > h.col ? 1 : -1;
+      } else h.row = r;
+      h.next = s.tick + h.every;
+      return --h.left > 0;
+    }
+    if (h.kind === 'needle') { // AquaNeedle: lands on the panel at its time
+      if (s.tick < h.at) return true;
+      hitEnemy(s, at(s, h.x, h.y), h.damage, { element: h.element, chip: true });
+      s.effects.push({ kind: 'hit', x: h.x, y: h.y, t: 0, fx: 'buster', damage: 0, jx: 0, jy: 0 });
+      return false;
+    }
+    if (h.kind === 'chiptwister') { // Tornado (t3 0x31): hits its panel every `every` frames
+      const age = s.tick - h.start;
+      if (age >= h.life) return false; // frames 0, 4, … 28: 8 hits
+      if (age % h.every === 0) hitEnemy(s, at(s, h.x, h.y), h.damage, { element: h.element, chip: true });
+      return true;
     }
     if (h.kind === 'multihit') {
       if (s.tick < h.next) return true;

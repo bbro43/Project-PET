@@ -119,7 +119,7 @@ const ARMS = {
   throw: [{ key: 'throwball', seq: 'hand', until: 9 }],
   slash: [{ key: 'swordarm', seq: 'arm' }],
 };
-const CANNON_PAL = { Cannon: 0, HiCannon: 1, 'M-Cannon': 2, GigaCan1: 0, GigaCan2: 1, GigaCan3: 2 }; // byte_80EBD2C
+const CANNON_PAL = { Cannon: 0, HiCannon: 1, 'M-Cannon': 2, GigaCan1: 0, GigaCan2: 1, GigaCan3: 2, TankCan1: 0, TankCan2: 1, TankCan3: 2 }; // byte_80EBD2C
 function armParts(p) {
   const list = (p.state === 'buster' || p.state === 'chip') && ARMS[p.anim];
   if (!list) return [];
@@ -196,6 +196,10 @@ export function render(g, s, bank) {
 
   // ChargeMan's train cars (drawn facing left like ChargeMan)
   const car = bank?.get('traincar');
+  for (const h of s.hazards) if (h.kind === 'widewave') { // WideShot wave (sprite 0x10/0x37): forming, then travelling
+    const [ax, ay] = anchor(h.fx, h.y), t = s.tick - h.start;
+    sprite(g, bank, 'widefx', t < 9 ? 'form' : 'wave', t < 9 ? t : t - 9, ax, ay - 16, (g, x, y) => { g.fillStyle = 'rgba(120,190,255,.8)'; g.beginPath(); g.ellipse(x, y, 8, 40, 0, 0, 7); g.fill(); }, 0, false);
+  }
   for (const h of s.hazards) if (h.kind === 'pulse') { // ElecPulse (sprite 0x10/0x40)
     const [ax, ay] = anchor(h.x, h.y);
     sprite(g, bank, 'pulsefx', 'pulse', s.tick - h.start, ax, ay - 16, (g, x, y) => { g.strokeStyle = '#e080ff'; g.lineWidth = 2; g.beginPath(); g.ellipse(x, y, 8, 14, 0, 0, 7); g.stroke(); }, h.pal, true);
@@ -264,6 +268,10 @@ export function render(g, s, bank) {
     }
   }
 
+  for (const h of s.hazards) if (h.kind === 'chiptwister') { // Tornado / Static chips (sprite 0x0C/0x17)
+    const [ax, ay] = anchor(h.x, h.y);
+    sprite(g, bank, 'twisterfx', 'spin', s.tick - h.start, ax, ay, (g, x, y) => { g.strokeStyle = '#cfe'; g.lineWidth = 2; for (let i = 0; i < 4; i++) { g.beginPath(); g.ellipse(x, y - 6 - i * 8, 4 + i * 3, 3, 0, 0, 7); g.stroke(); } }, h.pal, false);
+  }
   // TenguMan tornadoes
   const torn = bank?.get('tornado');
   for (const h of s.hazards) if ((h.kind === 'tornado' || h.kind === 'twister') && h.x !== undefined) {

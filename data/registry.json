@@ -4189,6 +4189,60 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "widefx": {
+   "label": "WideShot wave (t3 0x3B, sub_80CB4D4): sprite 0x10/0x37; animation 0 forming, 1 travelling",
+   "sources": {
+    "bn6f": {
+     "offset": "3805D4",
+     "compression": "none",
+     "bytes": 3436,
+     "sha256": "456266da242d7b1ffc1b834f172433eddfa45d01559272cac6feaff3c61734bd",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "37FB4C",
+     "compression": "none",
+     "bytes": 3436,
+     "sha256": "456266da242d7b1ffc1b834f172433eddfa45d01559272cac6feaff3c61734bd",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "form": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "wave": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "twisterfx": {
+   "label": "Tornado chip twister (t3 0x31, sub_80C9F98): sprite 0x0C/0x17, animation 0, palette byte_80CA064[kind]",
+   "sources": {
+    "bn6f": {
+     "offset": "312FB4",
+     "compression": "none",
+     "bytes": 2320,
+     "sha256": "0cfd4d29e2790eabadf72641759e363f6ee412eac7db19196b96b1f88f54f714",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "31252C",
+     "compression": "none",
+     "bytes": 2320,
+     "sha256": "0cfd4d29e2790eabadf72641759e363f6ee412eac7db19196b96b1f88f54f714",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "spin": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

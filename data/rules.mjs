@@ -198,6 +198,37 @@ export const CHIP_BEHAVIOUR = {
   AuraHed2: { kind: 'shell', sprite: 'heady', seq: 'head', speed: 12, pal: 1, fromX: 'self', range: 3, anim: 'idle', lock: 30, confidence: 'rom-verified' },
   AuraHed3: { kind: 'shell', sprite: 'heady', seq: 'head', speed: 12, pal: 2, fromX: 'self', range: 3, anim: 'idle', lock: 30, confidence: 'rom-verified' },
   StreamHd: { kind: 'shell', sprite: 'heady', seq: 'head', speed: 12, pal: 0, fromX: 'self', count: 5, gap: 15, anim: 'idle', lock: 75, confidence: 'rom-verified', note: '5 heads 15 frames apart (0x0F), each to the far edge' },
+  // Spreaders (family 0x25 → t3 0x12): an invisible shot, one panel a frame; on a hit it splashes over area
+  // byte_80C68D4[params[0] · 6] = 0xF (3×3 round the panel hit) (sub_80C6A50).
+  Spreadr1: { kind: 'shot', fx: 'buster', impact: 0xF, anim: 'buster', lock: 20, confidence: 'rom-verified', note: 'attack 0x14 frames' },
+  Spreadr2: { kind: 'shot', fx: 'buster', impact: 0xF, anim: 'buster', lock: 20, confidence: 'rom-verified' },
+  Spreadr3: { kind: 'shot', fx: 'buster', impact: 0xF, anim: 'buster', lock: 20, confidence: 'rom-verified' },
+  // WideShot / SuprSpr (family 0x30 → t3 0x3B): a wave over area 4 (its row and the rows above and below) from MegaMan's
+  // panel, X velocity byte_80CB58C[param] = 3 px (WideSht, param 0) / 6 px (SuprSpr, param 3) a frame; sprite 0x10/0x37.
+  WideSht: { kind: 'widewave', speed: 3, anim: 'buster', lock: 34, confidence: 'rom-verified', note: 'params from dword_80ED618; attack ends 0x0E + 0x14 frames after the throw' },
+  SuprSpr: { kind: 'widewave', speed: 6, anim: 'buster', lock: 34, confidence: 'rom-verified' },
+  // TankCannons (family 0x24 → t3 0x3C): a shell one panel a frame down the row; it explodes on the first enemy, or, reaching
+  // the back edge, over the last column's three rows (area 4, 0xA05FF04) and cracks those panels (params[1] = 1) (sub_80CB7BC).
+  TankCan1: { kind: 'tankcan', anim: 'cannon', lock: 38, confidence: 'rom-verified', note: 'arm out 0x0F frames, fire, then 0x14 + 3 frames (lock approximate)' },
+  TankCan2: { kind: 'tankcan', anim: 'cannon', lock: 38, confidence: 'rom-verified' },
+  TankCan3: { kind: 'tankcan', anim: 'cannon', lock: 38, confidence: 'rom-verified' },
+  // MachGuns (family 0x29, sub_80ECF48 / sub_80ECF8E): 9 shots, one every 9 frames (Unk_10 = 8), into the nearest column holding
+  // an enemy (sub_80ED040), starting in the bottom row and stepping up; at an edge the direction turns and, if the nearest
+  // enemy column has moved, the aim steps one column toward it instead of moving row. Each shot hits its panel (t3 sub_80C5F2C).
+  MachGun1: { kind: 'machgun', shots: 9, every: 9, anim: 'vulcan', lock: 9 * 9 + 10, confidence: 'rom-verified' },
+  MachGun2: { kind: 'machgun', shots: 9, every: 9, anim: 'vulcan', lock: 9 * 9 + 10, confidence: 'rom-verified' },
+  MachGun3: { kind: 'machgun', shots: 9, every: 9, anim: 'vulcan', lock: 9 * 9 + 10, confidence: 'rom-verified' },
+  // AquaNeedles (family 0x32 → t4 0x40): 3 needles, 8 frames apart from frame 0x0D, each onto an enemy's panel: the first three
+  // enemies, or with two the one with less HP twice (a tie: random), or one enemy three times (sub_80E5174).
+  AquaNdl1: { kind: 'needles', count: 3, every: 8, delay: 13, anim: 'throw', lock: 30, confidence: 'rom-verified', note: 'attack 0x0F + 0x0F frames' },
+  AquaNdl2: { kind: 'needles', count: 3, every: 8, delay: 13, anim: 'throw', lock: 30, confidence: 'rom-verified' },
+  AquaNdl3: { kind: 'needles', count: 3, every: 8, delay: 13, anim: 'throw', lock: 30, confidence: 'rom-verified' },
+  // Tornado / Static (family 0x2F → t3 0x31): a twister 2 panels ahead, hitting every 4 frames for 32 frames (8 hits)
+  // (byte_80CA064, sub_80CA0B0). Tornado (kind 1) on volcano / grass / ice turns fire / wood / aqua, sets the panel normal and does
+  // double damage (byte_80CA25C, sub_80C9F98). Static places twisters by MegaMan's bug count (sub_800FE52, up to 3):
+  // off_80CA160 = 1, 2, 4 or 6 panels round the panel 2 ahead.
+  Tornado: { kind: 'tornado', every: 4, life: 32, panelElement: true, anim: 'buster', lock: 42, confidence: 'rom-verified', note: 'twister at Unk_10 0x20 of 0x2A' },
+  Static: { kind: 'tornado', every: 4, life: 32, byBugs: [[[0, 0]], [[0, 0], [1, 0]], [[0, 0], [1, 0], [0, -1], [0, 1]], [[0, 0], [1, 0], [0, -1], [0, 1], [1, -1], [1, 1]]], anim: 'buster', lock: 42, confidence: 'rom-verified', note: 'bug count: stats 0x31, 0x13, 0x14, 0x16, 0x54, 0x24, 0x18, 0x19 each add 1; 0x54 and 0x19 are not modelled' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

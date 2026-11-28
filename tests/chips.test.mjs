@@ -49,7 +49,7 @@ test('bombs: MiniBomb one panel 3 ahead, BigBomb 3×3, EnergBom 3 hits', () => {
   assert.deepEqual(hurt(after('EnergBom', 120)), [[4, 1, 120]]);
 });
 
-import { panelType } from '../src/battle/panels.mjs';
+import { panelType, setPanel } from '../src/battle/panels.mjs';
 test('seeds change the panels: 3×3 on an empty panel, one panel when they hit someone', () => {
   const s = after('IceSeed', 80, s => { s.enemies = s.enemies.filter(e => !(e.x === 4 && e.y === 1)); });
   let n = 0; for (let x = 3; x <= 5; x++) for (let y = 0; y < 3; y++) if (panelType(s, x, y) === 'ice') n++;
@@ -94,4 +94,36 @@ test('AuraHead flies 3 panels; StreamHd sends 5 to the edge', () => {
   assert.deepEqual(hurt(after('AuraHed1', 40)).map(([x, y]) => [x, y]), [[3, 1], [4, 1]]); // from (1,1): panels 2–4
   const s = after('StreamHd', 120);
   assert.deepEqual(hurt(s).map(([x, y, d]) => [x, y, d]), [[3, 1, 750], [4, 1, 750], [5, 1, 750]]);
+});
+
+test('Spreader splashes 3×3 round the panel hit; WideShot sweeps three rows', () => {
+  assert.equal(hurt(after('Spreadr1', 30)).length, 6); // target (3,1): 3×3 covers columns 2–4 (enemies stand from x 3)
+  assert.equal(hurt(after('WideSht', 80)).length, 9);
+});
+
+test('TankCannon: the first enemy in the row, or the back column when the row is empty', () => {
+  assert.deepEqual(hurt(after('TankCan1', 5)).map(([x, y]) => [x, y]), [[3, 1]]);
+  const s = after('TankCan1', 5, s => { s.enemies = s.enemies.filter(e => e.y !== 1); });
+  assert.deepEqual(hurt(s).map(([x, y]) => [x, y]), [[5, 0], [5, 2]]);
+  assert.equal(panelType(s, 5, 1), 'cracked');
+});
+
+test('MachGun: 9 shots sweeping the nearest enemy column from the bottom row', () => {
+  const s = after('MachGun1', 120);
+  const hits = hurt(s);
+  assert.equal(hits.reduce((n, [, , d]) => n + d / 30, 0), 9);
+  assert.ok(hits.every(([x]) => x === 3 || x === 4));
+});
+
+test('AquaNeedle: 3 needles on 3 enemies; one enemy takes all three', () => {
+  assert.equal(hurt(after('AquaNdl1', 60)).length, 3);
+  const s = after('AquaNdl1', 60, s => { s.enemies = s.enemies.slice(0, 1); });
+  assert.deepEqual(hurt(s).map(([, , d]) => d), [120]);
+});
+
+test('Tornado: 8 hits 2 panels ahead; on volcano it turns fire, doubles and clears the panel', () => {
+  const s = after('Tornado', 60, s => { s.player.x = 1; });
+  assert.deepEqual(hurt(s), [[3, 1, 160]]); // 20 × 8
+  const v = after('Tornado', 60, s => { setPanel(s, 3, 1, 'volcano'); });
+  assert.equal(hurt(v)[0][2], 320); assert.equal(panelType(v, 3, 1), 'normal');
 });
