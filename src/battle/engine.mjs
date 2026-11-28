@@ -40,20 +40,28 @@ export function survivalWave(n, pickFamily = i => PLAYABLE_FAMILIES[i % PLAYABLE
   return Array.from({ length: count }, (_, i) => [pickFamily(n + i), variant]);
 }
 
-export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0, 1), seed = 1, folder = DEFAULT_FOLDER, regular = null, tag = null, field = 'normal', intro = false } = {}) {
+// Navi Customizer results (src/battle/navicust.mjs stats): HP+, Attack / Speed / Charge levels, Custom, SuperArmor,
+// UnderShirt. Charge times powerAttackChargeTimes_8020404 row 1; buster wait byte_80209CC [Speed][panels to target].
+export const CHARGE_TIMES = [100, 90, 80, 70, 60];
+const BUSTER_WAIT = [[4, 8, 12, 16, 20, 24], [3, 7, 10, 14, 17, 20], [3, 6, 9, 12, 15, 17], [2, 4, 6, 8, 10, 12], [2, 3, 4, 5, 6, 7]];
+const NO_NAVI = { hpPlus: 0, attack: 0, speed: 0, charge: 0, custom: 5, flags: new Set() };
+
+export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0, 1), seed = 1, folder = DEFAULT_FOLDER, regular = null, tag = null, field = 'normal', intro = false, navi = NO_NAVI } = {}) {
   const s = {
     intro, banner: null,
     tick: 0, seed: seed >>> 0, mode, wave: 1, deleted: 0,
     phase: 'custom', phaseT: 0, gauge: 0, events: [],
     player: {
-      x: 1, y: 1, hp: val('megamanHp'), maxHp: val('megamanHp'),
+      x: 1, y: 1, hp: val('megamanHp') + (navi.hpPlus || 0), maxHp: val('megamanHp') + (navi.hpPlus || 0),
       state: 'idle', stateT: 0, anim: 'idle', animT: 0, dest: null,
       holdT: 0, charge: 0, prevA: false, invuln: 0, chip: null,
     },
     enemies: [], hazards: [], effects: [], nextId: 1, turns: {},
     folder: folder.map(([name, code], i) => ({ id: i, chip: CHIP_DATA[name]?.id ?? 0, name, code })),
     draw: [], hand: [], picked: [], queue: [], handBonus: 0, busterUp: 0,
+    navi: { attack: navi.attack || 0, speed: navi.speed || 0, charge: navi.charge || 0, custom: navi.custom ?? 5, superArmor: !!navi.flags?.has('superArmor'), underShirt: !!navi.flags?.has('underShirt') },
   };
+  s.chargeTime = CHARGE_TIMES[s.navi.charge];
   s.panels = createPanels(field, () => rng(s));
   s.draw = deal(s, s.folder, regular, tag);
   spawn(s, mode === 'survival' ? survivalWave(1, k => pickSurvival(s, k)) : enemies);
@@ -113,7 +121,7 @@ function spawn(s, list) {
 }
 
 function refillHand(s) {
-  const size = Math.min(val('maxHand'), val('handSize') + s.handBonus);
+  const size = Math.min(val('maxHand'), (s.navi?.custom ?? val('handSize')) + s.handBonus); // Custom level (Navi stat 0xA, 5 at start)
   while (s.hand.length < size && s.draw.length) s.hand.push(s.draw.shift());
   s.handBonus = 0;
 }
@@ -191,20 +199,23 @@ function hitEnemy(s, e, damage, extra = {}) {
   }
 }
 
-function hitPlayer(s, damage, opts = {}) {
+export function hitPlayer(s, damage, opts = {}) {
   const p = s.player;
   if (p.invuln > 0 || p.hp <= 0) return;
   const element = opts.element ?? s.attacker?.element;
   const ph = panelHit(s, p.x, p.y, damage, element);
   damage = ph.damage;
   if (ph.freeze && !opts.paralyze) opts = { ...opts, paralyze: ph.freeze, frozen: true }; // aqua on ice: frozen solid (0x3007460)
+  const before = p.hp;
   p.hp = Math.max(0, p.hp - damage);
+  if (p.hp === 0 && before > 1 && s.navi?.underShirt) p.hp = 1; // UnderShirt: a hit from above 1 HP leaves 1 HP
   if (opts.paralyze) { // paralysis: no flinch and no flashing; MegaMan just freezes (DarkMech waits for this)
     p.paralyzed = opts.paralyze; p.frozen = !!opts.frozen; p.state = 'paralyzed'; p.stateT = 0; setAnim(p, 'idle'); p.holdT = 0; p.charge = 0; p.dest = null;
     s.events.push({ type: 'playerHit', damage, paralyze: true });
     return;
   }
   p.paralyzed = 0; p.frozen = false;
+  if (s.navi?.superArmor) { p.invuln = val('invincibleTicks'); s.events.push({ type: 'playerHit', damage }); return; } // SuperArmor: no flinch
   p.state = 'flinch'; p.stateT = 0; setAnim(p, 'flinch');
   p.invuln = val('invincibleTicks'); p.holdT = 0; p.charge = 0; p.dest = null;
   s.events.push({ type: 'playerHit', damage });
@@ -212,6 +223,11 @@ function hitPlayer(s, damage, opts = {}) {
 
 const setAnim = (a, anim) => { a.anim = anim; a.animT = 0; };
 const frontX = (e, y) => e.cells ? Math.min(...e.cells.filter(c => c[1] === y).map(c => c[0])) : e.x;
+// Buster recovery: 5 ticks, then byte_80209CC[Speed][empty panels before the target, max 5] (0x80EB502).
+function busterWait(s, p) {
+  const t = rowTarget(s, p.x, p.y), panels = Math.min(5, t ? frontX(t, p.y) - p.x - 1 : 5 - p.x);
+  return 5 + BUSTER_WAIT[s.navi.speed][Math.max(0, panels)];
+}
 const rowTarget = (s, x, y) => s.enemies.filter(e => e.hp > 0 && !e.airborne && (e.cells ? e.cells.some(c => c[1] === y) : e.y === y) && frontX(e, y) > x).sort((a, b) => frontX(a, y) - frontX(b, y))[0];
 
 function useChip(s, chip) {
@@ -337,19 +353,20 @@ function stepPlayer(s, input) {
   }
   // Charge accumulates while A is held in any non-flinch state.
   // Charge counts every held tick (sub_8012EBC): the aura shows from chargeDelay, full at chargeTime.
-  if (input.a) { p.holdT++; p.charge = Math.min(val('chargeTime'), p.charge + 1); }
+  if (input.a) { p.holdT++; p.charge = Math.min(s.chargeTime, p.charge + 1); }
   if (p.state === 'appear' && p.stateT >= val('moveAppearTicks')) { p.state = 'idle'; setAnim(p, 'idle'); }
-  if ((p.state === 'buster' && p.stateT >= val('busterCooldown')) || (p.state === 'chip' && p.stateT >= p.chip.lock)) {
+  if ((p.state === 'buster' && p.stateT >= (p.busterWait ?? val('busterCooldown'))) || (p.state === 'chip' && p.stateT >= p.chip.lock)) {
     p.state = 'idle'; p.chip = null; setAnim(p, 'idle');
   }
   if (p.state !== 'idle') { if (releasedA) { p.holdT = 0; p.charge = 0; } return; }
 
   if (releasedA) {
-    const full = p.charge >= val('chargeTime');
+    const full = p.charge >= s.chargeTime;
     p.holdT = 0; p.charge = 0;
     if (full) {
       p.state = 'buster'; p.stateT = 0; setAnim(p, 'buster');
-      hitEnemy(s, rowTarget(s, p.x, p.y), val('chargeShotDamage') * (1 + s.busterUp), { fx: 'charge' });
+      hitEnemy(s, rowTarget(s, p.x, p.y), 10 * (1 + s.navi.attack + s.busterUp), { fx: 'charge' }); // (Attack + 1) × 10 (0x8011A7E)
+      p.busterWait = busterWait(s, p);
       s.events.push({ type: 'chargeShot' });
       return;
     }
@@ -357,7 +374,8 @@ function stepPlayer(s, input) {
   if (input.b && s.queue.length) { useChip(s, s.queue.shift()); return; }
   if (pressedA) {
     p.state = 'buster'; p.stateT = 0; setAnim(p, 'buster');
-    hitEnemy(s, rowTarget(s, p.x, p.y), val('busterDamage') + s.busterUp, { fx: 'buster' });
+    hitEnemy(s, rowTarget(s, p.x, p.y), 1 + s.navi.attack + s.busterUp, { fx: 'buster' }); // Attack + 1 (sub_801265A)
+    p.busterWait = busterWait(s, p);
     return;
   }
   const d = DIRS[input.dir];

@@ -6,6 +6,7 @@ import { buildField } from './field.mjs';
 import { buildChipArt } from './chips.mjs';
 import { buildCustom } from './custom.mjs';
 import { buildMenus } from './menus.mjs';
+import { decodeNaviCust, buildNaviCust } from './navicust.mjs';
 
 function toCanvas(f) {
   const canvas = document.createElement('canvas');
@@ -34,7 +35,7 @@ export const SOURCE_ORDER = ['bn6g', 'bn6f', 'bn5tc', 'bn5tp', 'bn4rs', 'bn4bm']
 export function pickSources(registry, imported, order = SOURCE_ORDER) {
   const ids = [...order.filter(id => imported.includes(id)), ...imported.filter(id => !order.includes(id))];
   const pick = {};
-  for (const part of ['field', 'chipart', 'customscreen', 'menus']) { // battle field panels, chip icons and pictures
+  for (const part of ['field', 'chipart', 'customscreen', 'menus', 'navicust']) { // battle field panels, chip icons and pictures
     const id = ids.find(id => registry[part]?.sources[id]);
     if (id) Object.defineProperty(pick, '$' + part, { value: id, enumerable: false });
   }
@@ -57,9 +58,10 @@ export function buildBank(roms, registry, order = SOURCE_ORDER) {
     chips: from.$chipart ? buildChipArt(roms[from.$chipart], registry.chipart.sources[from.$chipart]) : null,
     custom: from.$customscreen ? buildCustom(roms[from.$customscreen], registry.customscreen.sources[from.$customscreen]) : null,
     menus: from.$menus ? buildMenus(roms[from.$menus], registry.menus.sources[from.$menus]) : null,
+    navicust: from.$navicust ? buildNaviCust(decodeNaviCust(roms[from.$navicust], registry.navicust.sources[from.$navicust])) : null,
     has: key => key in blocks,
     sourceOf: key => from[key] || null,
-    sources: [...new Set([...Object.values(from), from.$field, from.$chipart, from.$customscreen, from.$menus].filter(Boolean))],
+    sources: [...new Set([...Object.values(from), from.$field, from.$chipart, from.$customscreen, from.$menus, from.$navicust].filter(Boolean))],
     get(key, palette = 0) {
       const id = key + ':' + palette;
       if (cache.has(id)) return cache.get(id);

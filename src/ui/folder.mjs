@@ -75,20 +75,20 @@ export function setTag(folder, i, pending = null) {
 }
 
 // Why adding `chip` to `chips` (with slot `skip` being replaced) would break a rule, or null.
-export function folderRule(chips, chip, skip = -1) {
+export function folderRule(chips, chip, skip = -1, caps = { mega: MEGA_CAP, giga: GIGA_CAP }) { // caps: MegaLevel / GigaLevel (Navi Customizer)
   const d = byName.get(chip[0]);
   if (!d) return 'Unknown chip.';
   const rest = chips.filter((_, i) => i !== skip);
   const same = rest.filter(c => c[0] === chip[0]).length;
-  if (d.class === 'mega') { if (same) return 'You can only use\n1 of the same\nMegaChip.'; if (rest.filter(c => byName.get(c[0])?.class === 'mega').length >= MEGA_CAP) return `You can use only\n${MEGA_CAP} MegaChips.`; }
-  if (d.class === 'giga') { if (same) return 'You can only use\n1 of the same\nGigaChip.'; if (rest.filter(c => byName.get(c[0])?.class === 'giga').length >= GIGA_CAP) return `You can use only\n${GIGA_CAP} GigaChips.`; }
+  if (d.class === 'mega') { if (same) return 'You can only use\n1 of the same\nMegaChip.'; if (rest.filter(c => byName.get(c[0])?.class === 'mega').length >= caps.mega) return `You can use only\n${caps.mega} MegaChips.`; }
+  if (d.class === 'giga') { if (same) return 'You can only use\n1 of the same\nGigaChip.'; if (rest.filter(c => byName.get(c[0])?.class === 'giga').length >= caps.giga) return `You can use only\n${caps.giga} GigaChips.`; }
   if (same >= copyLimit(d.mb)) return `The total capacity\nfor this chip is\n${copyLimit(d.mb)}.`;
   return null;
 }
 
 const ROWS = 7, ROW_H = 16;
 
-export function createFolderUI({ getBank, folders, onExit }) {
+export function createFolderUI({ getBank, folders, onExit, limits = () => null }) {
   let view = 'folders', slot = folders.equipped, page = 0, msg = null, msgT = 0;
   const pos = [{ top: 0, cur: 0 }, { top: 0, cur: 0 }]; // folder page, pack page
   let held = null; // { side, index }
@@ -162,7 +162,7 @@ export function createFolderUI({ getBank, folders, onExit }) {
     const side = page, i = pos[page].cur, c = chips();
     if (!held || held.side === side) { held = { side, index: i }; return; }
     const fi = side === 0 ? i : held.index, pi = side === 1 ? i : held.index, chip = pack[pi];
-    const why = folderRule(c, chip, fi);
+    const L = limits(), why = folderRule(c, chip, fi, L ? { mega: L.mega, giga: L.giga } : undefined);
     if (why) { say(why); held = null; return; }
     if (fi < c.length) c[fi] = [...chip]; else c.push([...chip]);
     const F = folders.folders[slot]; if (F.reg === fi && (byName.get(chip[0])?.mb ?? 99) > REG_MEMORY) F.reg = null;

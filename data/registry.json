@@ -4707,5 +4707,33 @@
     ]
    }
   }
+ },
+ "navicust": {
+  "label": "NAVICUSTOMIZER screen (sub_81356F4 → sub_8135B94) and board colour tables (sub_813C1C0)",
+  "note": "palettes: 3-entry palette list (src, variant, dest, size) resolved through sub_811FB84 (theme 0; resolve = the literal pool holding its two table pointers); data: decompAndCopyData list; infoBox: BG3 tilemap 10×6; tables: byte_813C2EC (colours, +0x1C pattern colours, +0x1FC cell→palette maps by Expand Memory). Gregar: screen code +0x1DDC, tables +0x1DE0.",
+  "sources": {
+   "bn6f": {
+    "palettes": "135C2C",
+    "data": "135C64",
+    "resolve": [
+     "11FBB8",
+     "11FBD0"
+    ],
+    "infoBox": "13565C",
+    "tables": "13C2EC",
+    "expand": 2
+   },
+   "bn6g": {
+    "palettes": "137A08",
+    "data": "137A40",
+    "resolve": [
+     "121994",
+     "1219AC"
+    ],
+    "infoBox": "137438",
+    "tables": "13E0CC",
+    "expand": 2
+   }
+  }
  }
 }

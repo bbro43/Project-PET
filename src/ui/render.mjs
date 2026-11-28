@@ -414,8 +414,8 @@ export function render(g, s, bank) {
       sprite(g, bank, 'megaman', an, at, ax, ay, placeholderNavi);
       for (const a of armParts(p)) sprite(g, bank, a.key, a.seq, a.t, ax + a.dx, ay - a.dz, () => {}, a.pal || 0);
       if (p.charge >= val('chargeDelay')) { // the charge aura (t4 0x8): charging from 10 held ticks, charged at full; palette 2, arm offset (2, 0)
-        const full = p.charge >= val('chargeTime');
-        sprite(g, bank, 'chargefx', full ? 'charged' : 'charging', p.holdT - val(full ? 'chargeTime' : 'chargeDelay'), ax + 2, ay, () => {}, 2);
+        const full = p.charge >= (s.chargeTime ?? val('chargeTime'));
+        sprite(g, bank, 'chargefx', full ? 'charged' : 'charging', p.holdT - (full ? (s.chargeTime ?? val('chargeTime')) : val('chargeDelay')), ax + 2, ay, () => {}, 2);
       }
       if (p.frozen && p.paralyzed > 0) { g.fillStyle = 'rgba(180,230,255,.55)'; g.fillRect(ax - 12, ay - 34, 24, 34); } // frozen on ice
       else if (p.paralyzed > 0 && (s.tick >> 1) & 1) { // paralysis: flicker bright
@@ -658,9 +658,9 @@ export function render(g, s, bank) {
     text(g, full ? 'CUSTOM  L/R' : 'CUSTOM', 120, 22, '#cfe4ff', 'center');
   }
   if (p.charge > 0 && !bank?.get('chargefx')) { // no ROM: a plain charge bar
-    g.fillStyle = p.charge >= val('chargeTime') ? ((s.tick >> 2) & 1 ? '#ff60c0' : '#60ffff') : '#3aa0ff';
+    g.fillStyle = p.charge >= (s.chargeTime ?? val('chargeTime')) ? ((s.tick >> 2) & 1 ? '#ff60c0' : '#60ffff') : '#3aa0ff';
     const [ax, ay] = anchor(p.x, p.y);
-    g.fillRect(ax - 12, ay + 3, 24 * p.charge / val('chargeTime'), 2);
+    g.fillRect(ax - 12, ay + 3, 24 * p.charge / (s.chargeTime ?? val('chargeTime')), 2);
   }
   if (s.queue.length) { // the next chip's name on tile rows 18–19 at the left (0x801C6EE), with its power
     const c = s.queue[0], dmg = (CHIP_DATA[c.name]?.damage || 0) + (c.bonus || 0);

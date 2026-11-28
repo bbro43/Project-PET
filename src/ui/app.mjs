@@ -5,6 +5,7 @@ import { saveRom, loadRom, listRoms } from '../rom/store.mjs';
 import { buildBank, pickSources, SOURCE_ORDER } from '../rom/bank.mjs';
 import { render, preview } from './render.mjs';
 import { createFolderUI, loadFolders, equippedFolder, equippedRegular, equippedTag } from './folder.mjs';
+import { createNaviCustUI, loadNaviCust, naviStats } from './navicust.mjs';
 
 const $ = s => document.querySelector(s);
 const release = self.PROJECT_PET_RELEASE;
@@ -128,7 +129,7 @@ function start() {
   const mode = $('#mode').value;
   const enemies = mode === 'navi' ? naviBattle($('#cpu-navi').value, +$('#cpu-variant').value)
     : formation($('#family').value, +$('#variant').value, +$('#count').value);
-  state = createBattle({ mode: mode === 'navi' ? 'virus' : mode, enemies, field: $('#field').value, seed: (Date.now() & 0x7fffffff), intro: true, folder: equippedFolder(folders), regular: equippedRegular(folders), tag: equippedTag(folders) });
+  state = createBattle({ mode: mode === 'navi' ? 'virus' : mode, enemies, field: $('#field').value, seed: (Date.now() & 0x7fffffff), intro: true, folder: equippedFolder(folders), regular: equippedRegular(folders), tag: equippedTag(folders), navi: naviStats(navi) });
   $('#menu').hidden = true; $('#battle').hidden = false;
   showCustom();
   last = performance.now(); acc = 0;
@@ -136,25 +137,31 @@ function start() {
 }
 // ---------- chip folder (CHIP FOLDER / FOLDER EDIT from the BN6 ROM) ----------
 const folders = loadFolders(DEFAULT_FOLDER);
-let folderOpen = false;
-const folderUI = createFolderUI({ getBank: () => bank, folders, onExit: () => quit() });
+// ---------- Navi Customizer (NAVICUSTOMIZER from the BN6 ROM) ----------
+const navi = loadNaviCust();
+// The menu screens (chip folder, Navi Customizer) share the battle canvas and the pad.
+let folderOpen = false, screenUI = null;
+const folderUI = createFolderUI({ getBank: () => bank, folders, onExit: () => quit(), limits: () => naviStats(navi) });
+const naviUI = createNaviCustUI({ getBank: () => bank, navi, onExit: () => quit() });
 const menuButtons = on => document.querySelectorAll('.menu-only').forEach(b => { b.hidden = !on; });
-function openFolder() {
-  folderOpen = true; state = null; menuButtons(true);
+function openScreen(ui) {
+  folderOpen = true; screenUI = ui; state = null; menuButtons(true);
   $('#menu').hidden = true; $('#battle').hidden = false; $('#custom').hidden = true;
   cancelAnimationFrame(raf); raf = requestAnimationFrame(folderFrame);
 }
+const openFolder = () => openScreen(folderUI);
 function folderFrame() {
-  for (const k of ['up', 'down', 'left', 'right', 'a', 'b', 'l', 'r', 'select', 'start']) if (pressed.has(k)) folderUI.input(k);
+  for (const k of ['up', 'down', 'left', 'right', 'a', 'b', 'l', 'r', 'select', 'start']) if (pressed.has(k)) screenUI.input(k);
   pressed.clear();
-  folderUI.draw(screen);
+  screenUI.draw(screen);
   raf = requestAnimationFrame(folderFrame);
 }
 $('#folder-btn').addEventListener('click', openFolder);
+$('#navicust-btn').addEventListener('click', () => openScreen(naviUI));
 $('#screen').addEventListener('click', ev => {
   if (!folderOpen) return;
   const r = $('#screen').getBoundingClientRect();
-  folderUI.tap((ev.clientX - r.left) * 240 / r.width, (ev.clientY - r.top) * 160 / r.height);
+  screenUI.tap((ev.clientX - r.left) * 240 / r.width, (ev.clientY - r.top) * 160 / r.height);
 });
 function quit() {
   folderOpen = false; menuButtons(false);
