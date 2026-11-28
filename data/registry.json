@@ -5260,8 +5260,8 @@
     }
    }
   },
-  "golemhandfx": {
-   "label": "GolmHit hand (t3 0xAE sub_80DB324): sprite 0x0C/0x62",
+  "justconefx": {
+   "label": "JustcOne hand (t3 0xAE sub_80DB324): sprite 0x0C/0x62",
    "sources": {
     "bn6f": {
      "offset": "34BEB8",
@@ -5281,6 +5281,35 @@
    "sequences": {
     "fall": {
      "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "golmhitfx": {
+   "label": "GolmHit fist (t4 0x3F sub_80E4DD0): sprite 0x10/0x30, palette = chip level",
+   "sources": {
+    "bn6f": {
+     "offset": "37D8E0",
+     "compression": "none",
+     "bytes": 4716,
+     "sha256": "dd04685db6152cce0dc0c27ce30ee0acd022767583a633be3c6da976e863c90b",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "37CE58",
+     "compression": "none",
+     "bytes": 4716,
+     "sha256": "dd04685db6152cce0dc0c27ce30ee0acd022767583a633be3c6da976e863c90b",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "fly": {
+     "seq": 4,
+     "confidence": "rom-verified"
+    },
+    "punch": {
+     "seq": 3,
      "confidence": "rom-verified"
     }
    }

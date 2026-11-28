@@ -533,14 +533,22 @@ export const CHIP_BEHAVIOUR = {
   SandWrm1: { kind: 'sandworm', anim: 'idle', lock: 1, confidence: 'rom-verified' },
   SandWrm2: { kind: 'sandworm', anim: 'idle', lock: 1, confidence: 'rom-verified' },
   SandWrm3: { kind: 'sandworm', anim: 'idle', lock: 1, confidence: 'rom-verified' },
-  // GolmHit (sub 21, sub_80DB4B4 → t3 0xAE): a hand (sprite 0x0C/0x62) drops on the enemies' middle panel of their second
+  // Family 0x1C subfamily → off_80EC3F0 index: 17 sub_80C6330, 19 sub_80DB4B4 (JustcOne), 20 sub_80CD4AC, 21 sub_80E4FCA
+  // (GolmHit), 22 sub_80C9ECE (ColArmy). (0.86.0 had JustcOne's hand under GolmHit.)
+  // JustcOne (sub 19, sub_80DB4B4 → t3 0xAE): a hand (sprite 0x0C/0x62) drops on the enemies' middle panel of their second
   // column (ROM 5, 2) from 0x100 px up and behind, 16 px a frame for 16 frames. Only if that panel holds something
   // (0xF800010): it hits it (chip damage), hits the 8 panels round it for 100 (regions 0x405FF0A / 0x405FF0C = panel lists
   // 0xA and 0xC, damage (r6 & 0xFFFFF000) + 0x64), cracks the 3×3 (list 0xF), shakes 0x2D frames (sub_80DB3B4, sub_80DB4CE).
   // Then it stays 0x1E frames, blinking.
-  GolmHit1: { kind: 'golemhit', anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'the 100 for the 8 round panels is read from the region\'s damage word' },
-  GolmHit2: { kind: 'golemhit', anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'the 100 for the 8 round panels is read from the region\'s damage word' },
-  GolmHit3: { kind: 'golemhit', anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'the 100 for the 8 round panels is read from the region\'s damage word' },
+  JustcOne: { kind: 'justcone', anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'the 100 for the 8 round panels is read from the region\'s damage word' },
+  // GolmHit (sub 21, sub_80E4FCA → t4 0x3F, sprite 0x10/0x30, palette params[0]): aims at the nearest enemy-side panel in
+  // MegaMan's row (filter 0x10000 / not 0x20); flies in 0x5F px back and 0x28 up at 0x20.8 / 12.5 px a frame for 2 frames,
+  // then 10 px back and 0x1E up at 5 / 15 px for 2 more (animation 4, then 3). On a standing panel (flag 0x10) it hits that
+  // panel and the ones above and below that stand (0x1505FF01, sub_80E5050), shakes 0x1E, cracks only if params[2] (never for
+  // the chips), and stays 0x2D frames; over a hole it hits that one panel and is gone.
+  GolmHit1: { kind: 'golmhit', anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  GolmHit2: { kind: 'golmhit', anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  GolmHit3: { kind: 'golmhit', anim: 'idle', lock: 1, confidence: 'rom-verified' },
   // Lance (sub 4, sub_80D2596 → t3 0x6F ×3): in the enemies' back column (ROM column 6), all three rows; each lance starts
   // 0x40 px further back, comes in 8 px a frame for 8 frames, hits its panel on frame 6 (0x4040401), then stays 0x14
   // frames, flickering (sub_80D2514 / sub_80D255A). Sprite 0x0C/0x44 turned to face MegaMan.

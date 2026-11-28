@@ -515,7 +515,11 @@ function useChip(s, chip) {
     const bx = e.x + 1; if (bx > 5 || !standable(s, bx, e.y) || at(s, bx, e.y)) continue;
     s.hazards.push({ kind: 'sandworm', owner: 'player', bx, y: e.y, fx: bx, start: s.tick, last: bx, pal: data.params?.[0] || 0, damage, element });
   }
-  else if (def.kind === 'golemhit') s.hazards.push({ kind: 'golemhand', owner: 'player', x: 4, y: 1, start: s.tick, land: s.tick + 16, until: s.tick + 16 + 0x1E, damage, element }); // sub_80DB4B4: ROM panel (5, 2)
+  else if (def.kind === 'golmhit') { // sub_80E4DD0: the nearest enemy-side panel in MegaMan's row
+    let x = p.x + 1; while (x <= 5 && sideAt(s, x, p.y) === 'p') x++; if (x > 5) x = p.x + 1;
+    s.hazards.push({ kind: 'golmfist', owner: 'player', x, y: p.y, start: s.tick, hit: s.tick + 4, until: s.tick + 4 + 0x2D, pal: data.params?.[0] || 0, damage, element });
+  }
+  else if (def.kind === 'justcone') s.hazards.push({ kind: 'golemhand', owner: 'player', x: 4, y: 1, start: s.tick, land: s.tick + 16, until: s.tick + 16 + 0x1E, damage, element }); // sub_80DB4B4: ROM panel (5, 2)
   else if (def.kind === 'lance') for (let y = 0; y < 3; y++) s.hazards.push({ kind: 'lance', owner: 'player', x: 5, y, start: s.tick, hit: s.tick + 6, until: s.tick + 8 + 0x14, damage, element }); // sub_80D2596: the back column, rows 1–3
   else if (def.kind === 'fullcust') s.gauge = val('customGaugeTicks'); // sub_800AF34: SetCustGauge 0x4000
   else if (def.kind === 'boomer') s.hazards.push({ kind: 'boomer', owner: 'player', fx: 0, fy: 2, leg: 0, vx: def.speed[0] / 40, vy: def.speed[1] / 24, last: null, damage, element }); // from the bottom row's back corner
@@ -1480,6 +1484,14 @@ function stepHazards(s) {
       const k = s.tick - h.start + 1; h.fx = h.bx - Math.min(1, k / 0x10);
       const x = Math.round(h.fx); if (x !== h.last) { h.last = x; const e = at(s, x, h.y); if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
       return k < 0x10 + 20;
+    }
+    if (h.kind === 'golmfist') { // t4 0x3F: lands on frame 4
+      if (s.tick === h.hit) {
+        if (!standable(s, h.x, h.y)) { const e = at(s, h.x, h.y); if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); return false; }
+        for (const y of [h.y, h.y - 1, h.y + 1]) if (y >= 0 && y <= 2 && standable(s, h.x, y)) { const e = at(s, h.x, y); s.effects.push({ kind: 'bombblast', x: h.x, y, t: 0 }); if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
+        s.effects.push({ kind: 'shake', t: 0, life: 0x1E });
+      }
+      return s.tick < h.until;
     }
     if (h.kind === 'golemhand') { // t3 0xAE: lands after 16 frames; only something on the panel sets it off
       if (s.tick === h.land && at(s, h.x, h.y)) {

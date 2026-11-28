@@ -466,9 +466,14 @@ test('SandWrm: a worm from the panel behind each enemy with a free panel there',
   assert.deepEqual(hurt(s), [[3, 1, 130], [4, 0, 130]]); // (3,0) has an enemy behind it; (5,2) is in the back column
 });
 
-test('GolmHit: the hand on the middle of the second enemy column; chip damage there, 100 round it, nothing on an empty panel', () => {
-  let s = after('GolmHit1', 30);
-  assert.deepEqual(hurt(s), [[3, 0, 100], [3, 1, 100], [3, 2, 100], [4, 0, 100], [4, 1, 140], [4, 2, 100], [5, 0, 100], [5, 1, 100], [5, 2, 100]]);
-  s = after('GolmHit1', 30, s => { s.enemies = s.enemies.filter(e => !(e.x === 4 && e.y === 1)); });
+test('JustcOne: the hand on the middle of the second enemy column; chip damage there, 100 round it, nothing on an empty panel', () => {
+  let s = after('JustcOne', 30);
+  assert.deepEqual(hurt(s), [[3, 0, 100], [3, 1, 100], [3, 2, 100], [4, 0, 100], [4, 1, 220], [4, 2, 100], [5, 0, 100], [5, 1, 100], [5, 2, 100]]);
+  s = after('JustcOne', 30, s => { s.enemies = s.enemies.filter(e => !(e.x === 4 && e.y === 1)); });
   assert.deepEqual(hurt(s), []);
+});
+
+test('GolmHit: the first enemy column in MegaMan’s row, that panel and the ones above and below', () => {
+  assert.deepEqual(hurt(after('GolmHit1', 10)), [[3, 0, 140], [3, 1, 140], [3, 2, 140]]);
+  const s = after('GolmHit2', 0); s.hazards.forEach(h => { h.y = 0; }); for (let i = 0; i < 10; i++) step(s, {}); assert.deepEqual(hurt(s), [[3, 0, 190], [3, 1, 190]]); // top row: no panel above
 });
