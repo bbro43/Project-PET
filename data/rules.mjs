@@ -21,6 +21,7 @@ export const RULES = {
   flinchTicks: v(28, 'rom-verified', 'candidate flinch sequence 1 = 4+2+2+2+2+4+5+3 (fits observed hitstun feel; trace pending)'),
   invincibleTicks: v(120, 'unverified', 'post-hit invincibility'),
   customGaugeTicks: v(512, 'rom-verified', 'gauge 0x4000, +0x20 a frame (0x801BE70, 0x801DFB8); FastGauge 0x40 / SlowGauge 0x10 (0x80141A0)'),
+  chipParalyzeTicks: v(120, 'unverified', 'paralysis from a WhiCapsl-tagged attack: the timer (collision data +0x1C, counted down in 0x80175B8, shortened by button presses for MegaMan) is set in collision code not traced yet; same estimate as the DarkMech ball'),
   addBonus: v(5, 'recalled', 'ADD: no chips this turn, 5 more next turn'),
   maxHand: v(10, 'recalled'),
   handSize: v(5, 'recalled', 'Custom 1 draws 5 chips'),
@@ -50,7 +51,8 @@ export const CHIP_BEHAVIOUR = {
   BusterUp: { kind: 'busterup', anim: 'idle', lock: 20, confidence: 'recalled', note: 'lockout 20 from the ROM' },
   AreaGrab: { kind: 'grab', column: true, anim: 'idle', lock: 1, confidence: 'rom-verified', note: 't4 0x3 0x80E0754: time freeze, a beam (t3 0xF 0x80C6414) on each panel of the first column ahead that is not all MegaMan\'s (0x800D58C)' },
   PanlGrab: { kind: 'grab', column: false, anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'same chip action with param 0: one beam on the edge panel of MegaMan\'s row (object_getEdgePanelMatchingRow)' },
-  'Atk+10': { kind: 'plus', confidence: 'recalled', note: 'added to the attack chip picked before it' },
+  'Atk+10': { kind: 'plus', anim: 'idle', lock: 20, confidence: 'recalled', note: 'added to the attack chip picked before it; used alone it only pops (0x8010488)' },
+  WhiCapsl: { kind: 'plus', adds: 'paralyze', anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'description "Add an effect: Paralyze" (TextScriptChipDescriptions0 #184); used alone: smoke puff t4 0x14 (sprite 0x14/0x02 animation 1) rising 2 px a frame from 48 px up, sound 0x90 (0x8010488 / 0x80E1CF8)' },
 };
 
 // Area stealing (AreaGrab / PanlGrab).

@@ -469,12 +469,12 @@ test('CrakShot breaks the panel in front and sends it into the first enemy in th
 
 test('BusterUp raises the buster by 1; chips without an effect yet do nothing', () => {
   const s = createBattle({ seed: 4, enemies: formation('Mettaur', 2, 1) });
-  s.hand = [{ name: 'BusterUp', code: '*' }, { name: 'WhiCapsl', code: '*' }]; pick(s, 0); pick(s, 1); confirmCustom(s);
+  s.hand = [{ name: 'BusterUp', code: '*' }, { name: 'RockCube', code: '*' }]; pick(s, 0); pick(s, 1); confirmCustom(s);
   const e = s.enemies[0]; e.think = 1e9; s.player.y = e.y; s.player.invuln = 1e9;
   step(s, { b: true }); run(s, {}, 30);
   assert.equal(s.busterUp, 1);
   step(s, { b: true }); run(s, {}, 5);
-  assert.ok(s.events.length >= 0); assert.equal(s.player.state === 'chip' && s.player.chip?.name === 'WhiCapsl', false);
+  assert.ok(s.events.length >= 0); assert.equal(s.player.state === 'chip' && s.player.chip?.name === 'RockCube', false);
   const hp = e.hp; step(s, { a: true }); step(s, {}); run(s, {}, 2);
   assert.equal(hp - e.hp, 2);
 });
@@ -500,4 +500,19 @@ test('intro: BATTLE START! freezes the battle; deleted enemies dissolve over 53 
   assert.equal(s.phase, 'win'); assert.ok(e.deadT <= 1);
   run(s, {}, 100);
   assert.equal(e.deadT, DELETE.hold + DELETE.fade);
+});
+
+test('WhiCapsl after an attack chip paralyzes what it hits; alone it pops (0x8010488)', () => {
+  const s = createBattle({ seed: 4, enemies: formation('Mettaur', 0, 1) });
+  s.hand = [{ name: 'Cannon', code: '*' }, { name: 'WhiCapsl', code: '*' }, { name: 'WhiCapsl', code: '*' }]; pick(s, 0); pick(s, 1); confirmCustom(s);
+  assert.equal(s.queue.length, 1); assert.equal(s.queue[0].status, 'paralyze');
+  const e = s.enemies[0]; e.think = 1e9; e.hp = 999; s.player.y = e.y; s.player.invuln = 1e9;
+  step(s, { b: true });
+  assert.ok(e.paralyzed > 0, 'paralyzed');
+  const x = e.x, y = e.y; e.think = 0; run(s, {}, 60);
+  assert.deepEqual([e.x, e.y], [x, y], 'no AI while paralyzed');
+  const s2 = createBattle({ seed: 4, enemies: formation('Mettaur', 0, 1) });
+  s2.hand = [{ name: 'WhiCapsl', code: '*' }]; pick(s2, 0); confirmCustom(s2);
+  assert.equal(s2.queue[0].name, 'WhiCapsl');
+  step(s2, { b: true }); assert.ok(s2.effects.some(f => f.kind === 'capsule'));
 });

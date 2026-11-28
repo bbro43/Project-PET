@@ -105,7 +105,10 @@ export function confirmCustom(s) {
   s.queue = [];
   for (const c of s.picked.map(i => ({ ...s.hand[i], bonus: 0 }))) {
     const b = chipBehaviour(c.name);
-    if (b?.kind === 'plus') { const prev = s.queue[s.queue.length - 1]; if (prev) prev.bonus += CHIP_DATA[c.name].damage; continue; }
+    if (b?.kind === 'plus') { // attaches to the attack chip before it; alone it is used as itself (a puff)
+      const prev = s.queue[s.queue.length - 1], pk = prev && chipBehaviour(prev.name)?.kind;
+      if (prev && ['shot', 'slash', 'throw', 'vulcan', 'crack'].includes(pk)) { prev.bonus += CHIP_DATA[c.name].damage; if (b.adds) prev.status = b.adds; continue; }
+    }
     s.queue.push(c);
   }
   s.hand = s.hand.filter((_, i) => !s.picked.includes(i));
@@ -143,6 +146,7 @@ function hitEnemy(s, e, damage, extra = {}) {
   if (!e.cells) damage = panelHit(s, e.x, e.y, damage, extra.element).damage;
   e.hp = Math.max(e.sturdy ? 1 : 0, e.hp - damage);
   e.flash = 4;
+  if (extra.paralyze && e.hp > 0 && e.kind !== 'coil') { e.paralyzed = extra.paralyze; s.events.push({ type: 'paralyze', target: e.id }); }
   s.effects.push({ kind: 'hit', x: e.x, y: e.y, t: 0, damage, fx: extra.fx, jx: (s.tick * 7) % 15 - 7, jy: (s.tick * 11) % 15 - 7 }); // jitter from the frame count so the battle RNG is untouched // hit effect: t4 0x4 near the target (0x801A0D8, ±7 px)
   s.events.push({ type: 'hit', target: e.id, damage });
   if (extra.push && e.hp > 0) {
@@ -183,21 +187,26 @@ const rowTarget = (s, x, y) => s.enemies.filter(e => e.hp > 0 && !e.airborne && 
 function useChip(s, chip) {
   const p = s.player, def = chipBehaviour(chip.name), data = CHIP_DATA[chip.name] || { damage: 0, element: 'none' };
   s.events.push({ type: 'chip', name: chip.name, ready: !!def });
-  if (!def || def.kind === 'plus') { s.effects.push({ kind: 'note', x: p.x, y: p.y, t: 0 }); return; } // effect not implemented yet
+  if (!def) { s.effects.push({ kind: 'note', x: p.x, y: p.y, t: 0 }); return; } // effect not implemented yet
+  if (def.kind === 'plus') { // used on its own: the capsule pops (t4 0x14 via 0x8010488)
+    p.state = 'chip'; p.stateT = 0; p.chip = { ...chip, lock: def.lock }; setAnim(p, 'idle');
+    s.effects.push({ kind: 'capsule', x: p.x, y: p.y, t: 0, life: 16 }); return;
+  }
   const damage = data.damage + (chip.bonus || 0), element = data.element === 'none' ? undefined : data.element;
+  const paralyze = chip.status === 'paralyze' ? val('chipParalyzeTicks') : 0;
   p.state = 'chip'; p.stateT = 0; p.chip = { ...chip, lock: def.lock }; setAnim(p, def.anim);
-  if (def.kind === 'shot') hitEnemy(s, rowTarget(s, p.x, p.y), damage, { push: def.push, element, fx: def.fx });
-  else if (def.kind === 'slash') for (const [dx, dy] of def.area) hitEnemy(s, at(s, p.x + dx, p.y + dy), damage, { element });
-  else if (def.kind === 'throw') { const r = def.release || 0; s.hazards.push({ kind: 'bomb', owner: 'player', x: p.x, y: p.y, tx: p.x + def.range, land: s.tick + r + def.flight, start: s.tick + r, damage }); } // the ball leaves the hand on frame 9 (0x80EB69A)
+  if (def.kind === 'shot') hitEnemy(s, rowTarget(s, p.x, p.y), damage, { push: def.push, element, fx: def.fx, paralyze });
+  else if (def.kind === 'slash') for (const [dx, dy] of def.area) hitEnemy(s, at(s, p.x + dx, p.y + dy), damage, { element, paralyze });
+  else if (def.kind === 'throw') { const r = def.release || 0; s.hazards.push({ kind: 'bomb', owner: 'player', x: p.x, y: p.y, tx: p.x + def.range, land: s.tick + r + def.flight, start: s.tick + r, damage, paralyze }); } // the ball leaves the hand on frame 9 (0x80EB69A)
   else if (def.kind === 'heal') { p.hp = Math.min(p.maxHp, p.hp + def.heal); s.events.push({ type: 'heal', amount: def.heal }); s.effects.push({ kind: 'heal', x: p.x, y: p.y, t: 0 }); } // effect object 6 (0x800E2FC): sprite 0x0C/0x12
-  else if (def.kind === 'vulcan') for (let k = 0; k < def.hits; k++) s.hazards.push({ kind: 'pvulcan', owner: 'player', y: p.y, from: p.x, at: s.tick + (def.lead || 0) + k * def.gap, damage, element });
+  else if (def.kind === 'vulcan') for (let k = 0; k < def.hits; k++) s.hazards.push({ kind: 'pvulcan', owner: 'player', y: p.y, from: p.x, at: s.tick + (def.lead || 0) + k * def.gap, damage, element, paralyze });
   else if (def.kind === 'grab') startGrab(s, def, damage, element);
   else if (def.kind === 'busterup') { s.busterUp++; s.events.push({ type: 'busterUp', level: 1 + s.busterUp }); }
   else if (def.kind === 'crack') {
     const x = p.x + 1, y = p.y;
     if (x <= 5 && standable(s, x, y) && !at(s, x, y)) {
       setPanel(s, x, y, 'broken'); s.effects.push({ kind: 'panelbreak', x, y, t: 0 });
-      s.hazards.push({ kind: 'crackshot', owner: 'player', fx: x, x, y, speed: def.speed, damage, element });
+      s.hazards.push({ kind: 'crackshot', owner: 'player', fx: x, x, y, speed: def.speed, damage, element, paralyze });
     }
   }
 }
@@ -360,14 +369,14 @@ function stepHazards(s) {
     if (h.kind === 'pvulcan') { // Vulcan: one shot per gap; each also hits the panel behind its target
       if (s.tick < h.at) return true;
       const t = rowTarget(s, h.from, h.y);
-      if (t) { hitEnemy(s, t, h.damage, { element: h.element }); const b = at(s, t.x + 1, h.y); if (b && b !== t) hitEnemy(s, b, h.damage, { element: h.element }); }
+      if (t) { hitEnemy(s, t, h.damage, { element: h.element, paralyze: h.paralyze }); const b = at(s, t.x + 1, h.y); if (b && b !== t) hitEnemy(s, b, h.damage, { element: h.element, paralyze: h.paralyze }); }
       s.effects.push({ kind: 'shot', x: t ? t.x : 5, y: h.y, t: 0, z: t ? [8, 16, 24, 32][(s.tick * 5 + h.at) & 3] : 0, hit: !!t }); // effect object 0x20 at 8/16/24/32 px (dword_80EBFF0)
       return false;
     }
     if (h.kind === 'crackshot') { // CrakShot: the lifted panel slides down the row and hits the first enemy
       h.fx += h.speed; h.x = Math.round(h.fx);
       const e = at(s, h.x, h.y);
-      if (e) { hitEnemy(s, e, h.damage, { element: h.element }); s.effects.push({ kind: 'blast', x: h.x, y: h.y, t: 0 }); return false; }
+      if (e) { hitEnemy(s, e, h.damage, { element: h.element, paralyze: h.paralyze }); s.effects.push({ kind: 'blast', x: h.x, y: h.y, t: 0 }); return false; }
       return h.fx < 6;
     }
     if (h.kind === 'volcano') { // volcano eruption (object type3 0x07): bubbles, then a flame column hits whoever stands there
@@ -578,7 +587,7 @@ function stepHazards(s) {
     }
     if (h.kind === 'bomb') {
       if (s.tick < h.land) return true;
-      if (h.tx <= 5) hitEnemy(s, at(s, h.tx, h.y), h.damage);
+      if (h.tx <= 5) hitEnemy(s, at(s, h.tx, h.y), h.damage, { paralyze: h.paralyze });
       s.effects.push({ kind: 'blast', x: h.tx, y: h.y, t: 0 });
       return false;
     }
@@ -612,7 +621,7 @@ export function step(s, input = {}) {
   if (input.l && s.gauge >= val('customGaugeTicks') && s.player.state === 'idle') { openCustom(s); return s; }
   stepPlayer(s, input);
   const api = virusApi(s);
-  for (const e of [...s.enemies]) if (e.hp > 0) { s.attacker = e; (e.kind === 'navi' ? stepNavi : e.kind === 'coil' ? stepCoil : stepVirus)(e, api); }
+  for (const e of [...s.enemies]) if (e.hp > 0) { if (e.paralyzed > 0) { e.paralyzed--; continue; } s.attacker = e; (e.kind === 'navi' ? stepNavi : e.kind === 'coil' ? stepCoil : stepVirus)(e, api); }
   s.attacker = null;
   s.enemies = s.enemies.filter(e => e.hp > 0 || e.kind !== 'coil');
   stepHazards(s);

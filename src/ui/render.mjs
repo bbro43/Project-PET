@@ -445,6 +445,7 @@ export function render(g, s, bank) {
     }
     draw.push({ y: e.drawY ?? e.y, fn: () => {
       sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, fallback, e.palette, flip); // ROM sprites face right; Navis and viruses face MegaMan
+      if (e.paralyzed > 0 && (s.tick >> 1) & 1) { g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.6; sprite(g, bank, e.sprite, e.anim, e.animT, ax, ay, () => {}, e.palette, flip); g.restore(); } // paralysed: flicker bright (app-drawn)
       if (e.family === 'Cragger' && !e.fist) sprite(g, bank, 'craggerarm', e.anim, e.animT, ax, ay, () => {}, e.palette, flip);
       if (e.kind === 'coil' && e.discharge > 0 && !bank?.has('eleccoil')) { g.strokeStyle = '#80f0ff'; g.lineWidth = 2; g.beginPath(); g.moveTo(ax, FIELD_Y); g.lineTo(ax, FIELD_Y + 3 * PANEL_H); g.stroke(); }
       if (e.guard) { g.fillStyle = 'rgba(200,230,255,.7)'; g.fillRect(ax - 18, ay - 34, 3, 28); }
@@ -614,6 +615,10 @@ export function render(g, s, bank) {
     const [ax, ay] = anchor(f.x, f.y);
     if (f.kind === 'shot' && bank?.has?.('vulcanhitfx')) { // Vulcan: the bullet is invisible (t3 0x12); a hit shows effect 0x20
       if (f.hit) sprite(g, bank, 'vulcanhitfx', 'hit', f.t, ax, ay - f.z, () => {});
+      continue;
+    }
+    if (f.kind === 'capsule') { // 4 px ahead, 48 px up, rising 2 px a frame (0x8010488 / 0x80E1D54)
+      if (f.t < (f.life ?? 16)) sprite(g, bank, 'capsulefx', 'puff', f.t, ax + 4, ay - 48 - 2 * f.t, (g, x, y) => { g.fillStyle = 'rgba(240,240,240,.8)'; g.beginPath(); g.arc(x, y, 3 + f.t / 2, 0, 7); g.fill(); });
       continue;
     }
     if (f.kind === 'deleteburst' && bank?.has?.('deletefx')) { if (f.t < (f.life ?? 22)) sprite(g, bank, 'deletefx', 'burst', f.t, ax, ay - 14, () => {}); continue; }

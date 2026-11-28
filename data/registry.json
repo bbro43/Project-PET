@@ -3963,6 +3963,31 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "capsulefx": {
+   "label": "Capsule puff (t4 0x14, 0x80E1CF8): sprite 0x14/0x02, animation 1, palette from Param1 (0)",
+   "sources": {
+    "bn6f": {
+     "offset": "39B9C0",
+     "compression": "none",
+     "bytes": 4892,
+     "sha256": "10f2850ca7213a55bc5e689ea81cc7f79f34350831b4aeebb6ddd9bb0bba4503",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "39AF38",
+     "compression": "none",
+     "bytes": 4892,
+     "sha256": "10f2850ca7213a55bc5e689ea81cc7f79f34350831b4aeebb6ddd9bb0bba4503",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "puff": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {
