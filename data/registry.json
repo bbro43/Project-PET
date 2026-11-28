@@ -4642,5 +4642,33 @@
     }
    }
   }
+ },
+ "menus": {
+  "label": "BN6 menu screens: CHIP FOLDER (chipFolder_initGfx_812386C) and FOLDER EDIT (0x8133EC0). Each entry is the address of the screen's palette list (src, variant, dest, size) and decompAndCopyData list (src | LZ flag, dest, size), read from the ROM itself.",
+  "note": "Decoded on device by src/rom/menus.mjs. Gregar's code for these menus sits 0x1DDC later than Falzar's. Gregar's palettes are green (the owner's screenshots), Falzar's orange. Background settings: screen mode 0x10 (byte_8001618): BG1 tiles 0x6000000, BG0 0x6008000.",
+  "sources": {
+   "bn6f": {
+    "chipFolder": {
+     "palettes": "12391C",
+     "data": "123964"
+    },
+    "folderEdit": {
+     "palettes": "133F70",
+     "data": "133FB8"
+    },
+    "confidence": "rom-verified"
+   },
+   "bn6g": {
+    "chipFolder": {
+     "palettes": "1256F8",
+     "data": "125740"
+    },
+    "folderEdit": {
+     "palettes": "135D4C",
+     "data": "135D94"
+    },
+    "confidence": "rom-verified"
+   }
+  }
  }
 }

@@ -1,9 +1,10 @@
-import { createBattle, step, pick, unpick, confirmCustom, addCustom, CHIP_DATA, chipBehaviour, canPick, formation, PLAYABLE_FAMILIES, virusName, PLAYABLE_NAVIS, naviVariants, naviBattle } from '../battle/engine.mjs';
+import { createBattle, step, pick, unpick, confirmCustom, addCustom, DEFAULT_FOLDER, CHIP_DATA, chipBehaviour, canPick, formation, PLAYABLE_FAMILIES, virusName, PLAYABLE_NAVIS, naviVariants, naviBattle } from '../battle/engine.mjs';
 import BN6 from '../../data/bn6-viruses.mjs';
 import { identify, extractRoms, sha1Hex } from '../rom/gba.mjs';
 import { saveRom, loadRom, listRoms } from '../rom/store.mjs';
 import { buildBank, pickSources, SOURCE_ORDER } from '../rom/bank.mjs';
 import { render, preview } from './render.mjs';
+import { createFolderUI, loadFolders, equippedFolder } from './folder.mjs';
 
 const $ = s => document.querySelector(s);
 const release = self.PROJECT_PET_RELEASE;
@@ -69,7 +70,7 @@ async function loadBank() {
     try {
       // Every imported ROM is a source; each sprite comes from the first ROM in SOURCE_ORDER that has it.
       const list = await listRoms().catch(() => []);
-      const picked = pickSources(registry, list.map(r => r.id)), need = new Set([...Object.values(picked), picked.$field, picked.$chipart, picked.$customscreen].filter(Boolean));
+      const picked = pickSources(registry, list.map(r => r.id)), need = new Set([...Object.values(picked), picked.$field, picked.$chipart, picked.$customscreen, picked.$menus].filter(Boolean));
       const roms = {};
       for (const r of list) if (need.has(r.id)) { const o = await loadRom(r.id); if (o) roms[r.id] = new Uint8Array(o.bytes); }
       bank = buildBank(roms, registry);
@@ -127,13 +128,35 @@ function start() {
   const mode = $('#mode').value;
   const enemies = mode === 'navi' ? naviBattle($('#cpu-navi').value, +$('#cpu-variant').value)
     : formation($('#family').value, +$('#variant').value, +$('#count').value);
-  state = createBattle({ mode: mode === 'navi' ? 'virus' : mode, enemies, field: $('#field').value, seed: (Date.now() & 0x7fffffff), intro: true });
+  state = createBattle({ mode: mode === 'navi' ? 'virus' : mode, enemies, field: $('#field').value, seed: (Date.now() & 0x7fffffff), intro: true, folder: equippedFolder(folders) });
   $('#menu').hidden = true; $('#battle').hidden = false;
   showCustom();
   last = performance.now(); acc = 0;
   cancelAnimationFrame(raf); raf = requestAnimationFrame(frame);
 }
+// ---------- chip folder (CHIP FOLDER / FOLDER EDIT from the BN6 ROM) ----------
+const folders = loadFolders(DEFAULT_FOLDER);
+let folderOpen = false;
+const folderUI = createFolderUI({ getBank: () => bank, folders, onExit: () => quit() });
+function openFolder() {
+  folderOpen = true; state = null;
+  $('#menu').hidden = true; $('#battle').hidden = false; $('#custom').hidden = true;
+  cancelAnimationFrame(raf); raf = requestAnimationFrame(folderFrame);
+}
+function folderFrame() {
+  for (const k of ['up', 'down', 'left', 'right', 'a', 'b', 'l', 'r']) if (pressed.has(k)) folderUI.input(k);
+  pressed.clear();
+  folderUI.draw(screen);
+  raf = requestAnimationFrame(folderFrame);
+}
+$('#folder-btn').addEventListener('click', openFolder);
+$('#screen').addEventListener('click', ev => {
+  if (!folderOpen) return;
+  const r = $('#screen').getBoundingClientRect();
+  folderUI.tap((ev.clientX - r.left) * 240 / r.width, (ev.clientY - r.top) * 160 / r.height);
+});
 function quit() {
+  folderOpen = false;
   cancelAnimationFrame(raf); state = null;
   $('#battle').hidden = true; $('#menu').hidden = false; $('#custom').hidden = true;
 }
@@ -300,6 +323,7 @@ for (const b of document.querySelectorAll('[data-k]')) {
 }
 const KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', x: 'a', X: 'a', z: 'b', Z: 'b', a: 'l', A: 'l', s: 'r', S: 'r' };
 addEventListener('keydown', e => {
+  if (folderOpen && KEYS[e.key]) { e.preventDefault(); press(KEYS[e.key]); return; } // repeats scroll the lists
   if (!state || !KEYS[e.key]) return;
   e.preventDefault();
   if (state.phase === 'custom' && !romCustom() && (e.key === 'Enter' || KEYS[e.key] === 'a')) return;

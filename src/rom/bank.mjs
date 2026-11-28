@@ -5,6 +5,7 @@ import { openBlock, sequenceFrames, decodeFrame } from './sprite.mjs';
 import { buildField } from './field.mjs';
 import { buildChipArt } from './chips.mjs';
 import { buildCustom } from './custom.mjs';
+import { buildMenus } from './menus.mjs';
 
 function toCanvas(f) {
   const canvas = document.createElement('canvas');
@@ -33,7 +34,7 @@ export const SOURCE_ORDER = ['bn6g', 'bn6f', 'bn5tc', 'bn5tp', 'bn4rs', 'bn4bm']
 export function pickSources(registry, imported, order = SOURCE_ORDER) {
   const ids = [...order.filter(id => imported.includes(id)), ...imported.filter(id => !order.includes(id))];
   const pick = {};
-  for (const part of ['field', 'chipart', 'customscreen']) { // battle field panels, chip icons and pictures
+  for (const part of ['field', 'chipart', 'customscreen', 'menus']) { // battle field panels, chip icons and pictures
     const id = ids.find(id => registry[part]?.sources[id]);
     if (id) Object.defineProperty(pick, '$' + part, { value: id, enumerable: false });
   }
@@ -55,9 +56,10 @@ export function buildBank(roms, registry, order = SOURCE_ORDER) {
     field: from.$field ? buildField(roms[from.$field], registry.field.sources[from.$field]) : null,
     chips: from.$chipart ? buildChipArt(roms[from.$chipart], registry.chipart.sources[from.$chipart]) : null,
     custom: from.$customscreen ? buildCustom(roms[from.$customscreen], registry.customscreen.sources[from.$customscreen]) : null,
+    menus: from.$menus ? buildMenus(roms[from.$menus], registry.menus.sources[from.$menus]) : null,
     has: key => key in blocks,
     sourceOf: key => from[key] || null,
-    sources: [...new Set([...Object.values(from), from.$field, from.$chipart, from.$customscreen].filter(Boolean))],
+    sources: [...new Set([...Object.values(from), from.$field, from.$chipart, from.$customscreen, from.$menus].filter(Boolean))],
     get(key, palette = 0) {
       const id = key + ':' + palette;
       if (cache.has(id)) return cache.get(id);
