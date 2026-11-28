@@ -12,15 +12,16 @@ export const COLOR_NAMES = ['', 'White', 'Yellow', 'Pink', 'Red', 'Blue', 'Green
 // Inner 5×5 (byte_813C640): only neighbours inside it count for the same-colour rule.
 const INNER = (x, y) => x >= 1 && x <= 5 && y >= 1 && y <= 5;
 
-// Cross parts (app-made): one per BN6 Cross, a 1×1 program in its own colour; only one Cross can be set.
+// Cross parts (app-made, owner decision): one per BN6 Cross, a 1×1 program in one of the game's six colours
+// (1 white 2 yellow 3 pink 4 red 5 blue 6 green), so the colour rules apply to them like any program. Only the
+// first one on the command line counts. `transformation` is the game's TF_ number.
+const ONE = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]];
 export const CROSSES = [
-  ['HeatCross', '#f05028', 1], ['ElecCross', '#f8d030', 2], ['SlashCross', '#a0a8c0', 3], ['EraseCross', '#8048c0', 4],
-  ['ChargeCross', '#30c8b0', 5], ['SpoutCross', '#40a0f8', 6], ['TomahawkCross', '#70a040', 7], ['TenguCross', '#d03060', 8],
-  ['GroundCross', '#a07040', 9], ['DustCross', '#808080', 10],
-].map(([name, rgb, tf]) => ({ id: `cross:${name}`, name, rgb, transformation: tf, cross: true, plus: false, group: 0, bug: 0, variants: [{ variant: 0, color: 0 }],
-  shape: [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]] }));
-const SHORT = { HeatCross: 'HeatCross', ElecCross: 'ElecCross', SlashCross: 'SlashCrs', EraseCross: 'EraseCrs', ChargeCross: 'ChrgCross', SpoutCross: 'SpoutCrs', TomahawkCross: 'TmhkCross', TenguCross: 'TenguCrs', GroundCross: 'GrndCross', DustCross: 'DustCross' };
-CROSSES.forEach(c => { c.compressed = c.shape; c.short = SHORT[c.name]; });
+  ['HeatCross', 'HeatCros', 4, 1], ['ElecCross', 'ElecCros', 2, 2], ['SlashCross', 'SlshCros', 1, 3], ['EraseCross', 'ErasCros', 3, 4],
+  ['ChargeCross', 'ChrgCros', 6, 5], ['SpoutCross', 'SpotCros', 5, 6], ['TomahawkCross', 'TmhkCros', 6, 7], ['TenguCross', 'TngCross', 4, 8],
+  ['GroundCross', 'GrndCros', 2, 9], ['DustCross', 'DustCros', 1, 10],
+].map(([name, short, color, tf]) => ({ id: `cross:${name}`, name, short, transformation: tf, cross: true, plus: false, group: 0, bug: 0,
+  variants: [{ variant: 0, color }], shape: ONE, compressed: ONE, info: ['Fight as', name.replace('Cross', ''), 'Cross'] }));
 
 const byId = new Map([...PROGRAMS.map(p => [p.id, p]), ...CROSSES.map(c => [c.id, c])]);
 export const programOf = id => byId.get(id);
@@ -39,7 +40,7 @@ export function cellsOf(part) {
   for (let r = 0; r < 7; r++) for (let c = 0; c < 7; c++) if (s[r][c]) out.push([part.x + c - 3, part.y + r - 3]);
   return out;
 }
-export const colorOf = part => part.id.startsWith?.('cross:') ? 0 : byId.get(part.id).variants.find(v => v.variant === part.variant)?.color ?? byId.get(part.id).variants[0].color;
+export const colorOf = part => byId.get(part.id).variants.find(v => v.variant === part.variant)?.color ?? byId.get(part.id).variants[0].color;
 
 // 7×7 grid of installed-part indexes + 1 (0 = empty).
 export function gridOf(parts) {
@@ -76,7 +77,6 @@ export function run(parts, layout = LAYOUTS[2]) {
   parts.forEach((p, i) => { if (onLine.has(i)) return; if (P(i).plus) plus.push(i); else bugs[P(i).bug]++; });
   // same colour touching (sub_813BD24 → sub_813BE38): each neighbour of the same colour adds its bug type
   parts.forEach((p, i) => {
-    if (P(i).cross) return;
     const seen = new Set();
     for (const [x, y] of cellsOf(p)) for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
       const X = x + dx, Y = y + dy;
@@ -85,10 +85,10 @@ export function run(parts, layout = LAYOUTS[2]) {
       if (j < 0 || j === i || seen.has(j)) continue;
       seen.add(j);
     }
-    for (const j of seen) if (!P(j).cross && colorOf(parts[j]) === colorOf(p)) bugs[P(j).bug]++;
+    for (const j of seen) if (colorOf(parts[j]) === colorOf(p)) bugs[P(j).bug]++;
   });
   // more than 4 colours (sub_813BEA8): 5 → type 0xB + 1, 6 → type 0xC + 2
-  const colors = new Set(parts.filter((_, i) => !P(i).cross).map(colorOf));
+  const colors = new Set(parts.map(colorOf));
   if (colors.size === 5) bugs[0xB]++; else if (colors.size > 5) bugs[0xC] += 2;
   // parts on the frame (sub_813C584): each adds its bug type once
   const onFrame = new Set(); for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) if (layout[y][x] === 3 && g[y][x]) onFrame.add(g[y][x] - 1);

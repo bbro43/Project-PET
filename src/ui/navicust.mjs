@@ -1,6 +1,6 @@
 // NAVICUSTOMIZER: the BN6 screen decoded from the ROM (bank.navicust), the game's board colours and rules
 // (src/battle/navicust.mjs). Parts list on the right (names from the ROM), INFORMATION below it.
-// List: Up/Down pick, A take, Select compress (when the code is "entered": the app lets every part compress),
+// INFORMATION: the game's descriptions. List: Up/Down pick, A take, Select compress (when the code is "entered": the app lets every part compress),
 // Left to the board. Holding a part: D-pad move, L/R turn, A place, B put back.
 // Board: A on a part → Move / Remove; Right (at the edge) or B back to the list. Start: RUN (checks, saves).
 import { PROGRAMS, CROSSES, LAYOUTS, COMMAND_ROW, COLOR_NAMES, programOf, cellsOf, colorOf, gridOf, canPlace, run, stats } from '../battle/navicust.mjs';
@@ -16,19 +16,8 @@ export const naviStats = n => stats(n.parts);
 // The list: every program in each of its colours, then the Cross parts.
 const ENTRIES = [
   ...PROGRAMS.flatMap(p => p.variants.map(v => ({ id: p.id, variant: v.variant, color: v.color, name: p.name, plus: p.plus }))),
-  ...CROSSES.map(c => ({ id: c.id, variant: 0, color: 0, rgb: c.rgb, name: c.short, full: c.name, cross: true })),
+  ...CROSSES.map(c => ({ id: c.id, variant: 0, color: c.variants[0].color, name: c.short, cross: true })),
 ];
-// INFORMATION text (the app's own wording; the game's descriptions are compressed text not decoded yet)
-const INFO = {
-  SuprArmr: 'No flinch', Custom1: 'Custom +1', Custom2: 'Custom +2', MegFldr1: 'MegaChip +1', MegFldr2: 'MegaChip +2',
-  GigFldr1: 'GigaChip +1', FstBarr: 'Barrier at|start', Shield: 'B+Left:|Shield', Reflect: 'B+Left:|Reflect', AntiDmg: 'B+Left:|AntiDmg',
-  FlotShoe: 'No panel|effects', AirShoes: 'Stand on|holes', UnderSht: 'Survive KO|at 1 HP', ChpShufl: 'Shuffle the|hand', NumbrOpn: 'Show enemy|numbers',
-  SneakRun: 'Fewer weak|viruses', OilBody: 'Fire body', Fish: 'Aqua body', Battery: 'Elec body', Jungle: 'Wood body', Collect: 'More chips|dropped',
-  Millions: 'Lottery', Humor: 'Jokes', Poem: 'Poems', SlipRunr: 'No random|battles', AutoHeal: 'Heal after|battle', BustPack: 'Atk,Spd,Chg|+3',
-  BodyPack: 'Armor,shoe|shirt', FldrPak1: 'MegFldr1|+ Custom1', FldrPak2: 'MegFldr2|+ Custom2', BugStop: 'Stops bugs',
-  Rush: 'Rush helps', Beat: 'Beat helps', Tango: 'Tango helps', 'Attack+1': 'Attack +1', 'Speed+1': 'Speed +1', 'Charge+1': 'Charge +1',
-  AttckMAX: 'Attack MAX', SpeedMAX: 'Speed MAX', ChargMAX: 'Charge MAX',
-};
 // Bug types by the Navi stat their effect sets (byte_813CC18): 1 ProcessingBug (0x31), 2 EmotionBug (0x24),
 // 4 TurnsUntilCustBugActivates (0x63); the others' stats are unnamed in the disassembly, so they show as numbers.
 const BUG_NAMES = ['', 'Processing', 'Emotion', '', 'Custom'];
@@ -109,8 +98,7 @@ export function createNaviCustUI({ getBank, navi, onExit }) {
     const tg = t.getContext('2d'); tg.drawImage(c, 0, 0); tg.globalCompositeOperation = 'source-atop'; tg.fillStyle = color; tg.fillRect(0, 0, t.width, 9);
     g.drawImage(t, x, y);
   }
-  const rgbOf = e => e.cross ? e.rgb : (() => { const c = getBank()?.navicust?.colors[0][e.color] ?? 0x7fff; return `rgb(${(c & 31) << 3},${(c >> 5 & 31) << 3},${(c >> 10 & 31) << 3})`; })();
-  const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const rgbOf = e => { const c = getBank()?.navicust?.colors[0][e.color] ?? 0x7fff; return `rgb(${(c & 31) << 3},${(c >> 5 & 31) << 3},${(c >> 10 & 31) << 3})`; };
 
   function draw(g) {
     const N = getBank()?.navicust;
@@ -122,14 +110,14 @@ export function createNaviCustUI({ getBank, navi, onExit }) {
       const i = grid[y][x] - 1, frame = layout[y][x] === 3;
       if (i < 0) return { color: 0, frame };
       const P = programOf(parts[i].id);
-      return { color: P.cross ? hexRgb(P.rgb) : colorOf(parts[i]), plus: P.plus, frame: false, covered: frame };
+      return { color: colorOf(parts[i]), plus: P.plus, frame: false, covered: frame };
     }));
     let fits = true;
     if (held) {
       const P = programOf(held.id); fits = canPlace(parts, held, layout);
       const blink = (performance.now() >> 7) & 1;
       for (const [x, y] of cellsOf(held)) if (x >= 0 && x < 7 && y >= 0 && y < 7 && layout[y][x])
-        cells[y][x] = { color: P.cross ? hexRgb(P.rgb) : colorOf(held), plus: P.plus, hi: fits || blink, frame: false };
+        cells[y][x] = { color: colorOf(held), plus: P.plus, hi: fits || blink, frame: false };
     }
     g.drawImage(N.board(cells), 0, 0);
     // parts that sit off the board while held: outline only
@@ -146,10 +134,10 @@ export function createNaviCustUI({ getBank, navi, onExit }) {
     g.fillStyle = '#f8f8f8'; g.fillRect(236, 26 + Math.round((16 * ROWS - 10) * cur / (ENTRIES.length - 1)), 2, 10); // list position
     // INFORMATION
     const e = held ? ENTRIES.find(x => x.id === held.id && x.variant === held.variant) : mode === 'list' ? ENTRIES[cur] : (() => { const i = gridOf(parts)[by][bx] - 1; return i >= 0 ? ENTRIES.find(x => x.id === parts[i].id && x.variant === parts[i].variant) : null; })();
-    if (e) {
-      const lines = [e.name, ...(e.cross ? ['Fight as', e.full.replace('Cross', ' Cross')] : (INFO[e.name] || (e.name.startsWith('HP+') ? 'MaxHP' + e.name.slice(2) : '')).split('|')),
-        e.cross ? '' : `${COLOR_NAMES[e.color]}${(held?.compressed || (mode === 'list' && compress)) ? ' C' : ''}`];
-      lines.slice(0, 3).forEach((l, i) => text(g, l, 150, 112 + 13 * i));
+    if (e) { // the game's description (CompText873ECC8), 3 lines of up to 8 characters
+      const P = programOf(e.id), C = held?.compressed || (mode === 'list' && compress && !e.cross);
+      P.info.slice(0, 3).forEach((l, i) => text(g, l, 150, 111 + 12 * i));
+      if (C) text(g, 'C', 222, 111, '#f8f040');
     }
     // cursor on the board
     if (mode === 'board' || mode === 'menu') {

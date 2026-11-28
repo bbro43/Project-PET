@@ -24,6 +24,7 @@ export const RULES = {
   chipParalyzeTicks: v(120, 'unverified', 'paralysis from a WhiCapsl-tagged attack: the timer (collision data +0x1C, counted down in 0x80175B8, shortened by button presses for MegaMan) is set in collision code not traced yet; same estimate as the DarkMech ball'),
   addBonus: v(5, 'recalled', 'ADD: no chips this turn, 5 more next turn'),
   maxHand: v(10, 'recalled'),
+  firstBarrierHp: v(10, 'unverified', 'FstBarr starts the battle with the Barrier object (sub_80E0D98); its HP is read as the Barrier chip\'s 10'),
   handSize: v(5, 'recalled', 'Custom 1 draws 5 chips'),
   maxSelect: v(5, 'recalled'),
   folderSize: v(30, 'recalled'),

@@ -72,8 +72,9 @@ export function stepPanels(s, { hurtPlayer, hurtEnemy }) {
   const p = s.player;
   s.volcanoClock = (s.volcanoClock ?? P.volcanoCycle.value) - 1;
   if (s.volcanoClock <= 0) s.volcanoClock = P.volcanoCycle.value;
+  const float = s.navi?.floatShoes; // FlotShoe: MegaMan floats, so stepping off a cracked panel doesn't break it
   for (let y = 0; y < 3; y++) for (let x = 0; x < 6; x++) {
-    const c = s.panels[y][x], occ = occupied(s, x, y);
+    const c = s.panels[y][x], occ = float && p.x === x && p.y === y ? s.enemies.some(e => e.hp > 0 && !e.airborne && e.x === x && e.y === y) : occupied(s, x, y);
     c.t++;
     if (c.type === 'cracked') { if (c.occ && !occ) { c.type = 'broken'; c.t = 0; s.effects.push({ kind: 'panelbreak', x, y, t: 0 }); } }
     else if (c.type === 'broken') { if (c.t >= P.brokenRepair.value) { c.type = 'normal'; c.t = 0; } }
@@ -85,7 +86,7 @@ export function stepPanels(s, { hurtPlayer, hurtEnemy }) {
   }
   // poison: 1 HP every 7 frames while standing on it
   const poisoned = o => { o.poisonT = (o.poisonT ?? P.poisonTicks.value - 1) - 1; if (o.poisonT < 0) { o.poisonT = P.poisonTicks.value - 1; return true; } return false; };
-  if (p.hp > 0 && p.state !== 'vanish' && panelType(s, p.x, p.y) === 'poison') { if (poisoned(p)) hurtPlayer(1); } else p.poisonT = undefined;
+  if (p.hp > 0 && p.state !== 'vanish' && !float && panelType(s, p.x, p.y) === 'poison') { if (poisoned(p)) hurtPlayer(1); } else p.poisonT = undefined;
   for (const e of s.enemies) {
     if (e.hp <= 0 || e.airborne || e.kind === 'coil') continue;
     const t = panelType(s, e.x, e.y);

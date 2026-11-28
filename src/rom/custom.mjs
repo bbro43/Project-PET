@@ -52,7 +52,7 @@ export function decodeCustom(rom, src) {
   };
   // Battle text font (renderTextGfx 0x8045F8C with dword_86B7AE0): 8×16 per character code, 8 px apart, palette index 1 fill, 2 outline.
   const textPal = src.text ? readPalette(rom, hex(src.text.palette)) : null;
-  const CHARS = { ' ': 0, '*': 0x25, '-': 0x98, '=': 0x9A, ':': 0x9B, '%': 0x9C, '?': 0x9D, '+': 0x9E, '!': 0xA2, '&': 0xA3, ',': 0xA4, '.': 0xA6, '/': 0xAC };
+  const CHARS = { ' ': 0, '*': 0x25, '-': 0x98, '=': 0x9A, ':': 0x9B, '%': 0x9C, '?': 0x9D, '+': 0x9E, '!': 0xA2, '&': 0xA3, ',': 0xA4, '.': 0xA6, '/': 0xAC, "'": 0xA9 };
   const code = ch => ch >= '0' && ch <= '9' ? 1 + (ch.charCodeAt(0) - 48) : ch >= 'A' && ch <= 'Z' ? 0x0B + ch.charCodeAt(0) - 65 : ch >= 'a' && ch <= 'z' ? 0x26 + ch.charCodeAt(0) - 97 : CHARS[ch] ?? 0;
   const text = str => {
     const w = 8 * str.length, rgba = new Uint8ClampedArray(Math.max(1, w) * 16 * 4);

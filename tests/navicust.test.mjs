@@ -41,7 +41,8 @@ test('RUN: two touching parts of the same colour bug, a Cross part picks the for
   assert.equal(s.cross, 'HeatCross');
 });
 
-import { createBattle, step, confirmCustom, CHARGE_TIMES, hitPlayer } from '../src/battle/engine.mjs';
+import { createBattle, step, confirmCustom, CHARGE_TIMES, hitPlayer, shuffleHand } from '../src/battle/engine.mjs';
+import { setPanel } from '../src/battle/panels.mjs';
 test('battle uses the Customizer: HP+, Attack, Charge, Custom, SuperArmor, UnderShirt', () => {
   const navi = { hpPlus: 100, attack: 4, speed: 4, charge: 4, custom: 8, flags: new Set(['superArmor', 'underShirt']) };
   const s = createBattle({ seed: 2, navi });
@@ -57,4 +58,53 @@ test('battle uses the Customizer: HP+, Attack, Charge, Custom, SuperArmor, Under
   hitPlayer(s, 50);                            // UnderShirt: 10 HP → 1; SuperArmor: no flinch
   assert.equal(s.player.hp, 1);
   assert.notEqual(s.player.state, 'flinch');
+});
+
+const nav = (flags, extra = {}) => ({ hpPlus: 0, attack: 0, speed: 0, charge: 0, custom: 5, flags: new Set(flags), ...extra });
+const ready = s => { confirmCustom(s); for (const e of s.enemies) e.paralyzed = 1e6; s.player.invuln = 0; return s; };
+
+test('FstBarr: the barrier soaks the first 10 damage', () => {
+  const s = ready(createBattle({ seed: 3, navi: nav(['firstBarrier']) }));
+  hitPlayer(s, 4); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 6);
+  hitPlayer(s, 10); assert.equal(s.player.hp, 96);
+});
+
+test('B+Left: Shield blocks for 20 ticks, Reflect answers with 50, AntiDmg throws a star', () => {
+  for (const [ability, check] of [['Shield', s => assert.equal(s.player.hp, 100)], ['Reflect', s => assert.ok(s.enemies.some(e => e.maxHp - e.hp === 50) || s.enemies.every(e => e.hp >= 0))], ['AntiDmg', s => assert.equal(s.player.hp, 100)]]) {
+    const s = ready(createBattle({ seed: 3, navi: nav([], { bLeft: ability }) }));
+    for (const e of s.enemies) { e.hp = e.maxHp = 400; }
+    s.player.y = s.enemies[0].y;
+    for (let i = 0; i < 40; i++) step(s, { a: true }); // B held (the first press fires a shot), then Left
+    step(s, { a: true, dir: 'left' });
+    assert.equal(s.player.state, ability === 'AntiDmg' ? 'antidmg' : 'guard');
+    const hp0 = s.enemies[0].hp; s.attacker = s.enemies[0]; hitPlayer(s, 30); s.attacker = null;
+    check(s);
+    if (ability !== 'Shield') assert.equal(hp0 - s.enemies[0].hp, 50);
+    else assert.equal(hp0 - s.enemies[0].hp, 0);
+  }
+});
+
+test('NumbrOpn deals 10 chips; ChpShufl reshuffles once', () => {
+  const s = createBattle({ seed: 4, navi: nav(['numberOpen', 'chipShuffle']) });
+  assert.equal(s.hand.length, 10);
+  const before = s.hand.map(c => c.id).join();
+  assert.ok(shuffleHand(s)); assert.equal(s.hand.length, 10);
+  assert.ok(!shuffleHand(s));
+  assert.notEqual(s.hand.map(c => c.id).join(), before);
+});
+
+test('AirShoes walk onto holes; FlotShoe ignores poison', () => {
+  const s = ready(createBattle({ seed: 5, navi: nav(['airShoes', 'floatShoes']) }));
+  s.player.x = 1; s.player.y = 1; setPanel(s, 0, 1, 'broken'); setPanel(s, 1, 1, 'poison');
+  for (let i = 0; i < 60; i++) step(s, {});
+  assert.equal(s.player.hp, 100);
+  step(s, { dir: 'left' }); for (let i = 0; i < 30; i++) step(s, {});
+  assert.equal(s.player.x, 0);
+});
+
+test('AutoHeal: 10% back when the battle is won', () => {
+  const s = ready(createBattle({ seed: 6, navi: nav(['autoHeal']) }));
+  s.player.hp = 50; for (const e of s.enemies) e.hp = 0;
+  step(s, {});
+  assert.equal(s.player.hp, 60);
 });

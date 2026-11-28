@@ -413,6 +413,10 @@ export function render(g, s, bank) {
       const [an, at] = gap && p.animT >= 2 ? ['vulcanfire', (p.animT - 2) % gap] : [p.anim, p.animT];
       sprite(g, bank, 'megaman', an, at, ax, ay, placeholderNavi);
       for (const a of armParts(p)) sprite(g, bank, a.key, a.seq, a.t, ax + a.dx, ay - a.dz, () => {}, a.pal || 0);
+      // Navi Customizer abilities (app-drawn for now): FstBarr barrier, Shield / Reflect guard, AntiDmg stance
+      if (p.barrier > 0) { g.strokeStyle = 'rgba(140,220,255,.8)'; g.lineWidth = 1; g.beginPath(); g.ellipse(ax, ay - 16, 15, 20, 0, 0, 7); g.stroke(); }
+      if (p.state === 'guard') { g.fillStyle = p.guardReflect ? 'rgba(255,240,120,.55)' : 'rgba(160,200,255,.55)'; g.fillRect(ax + 10, ay - 34, 6, 30); g.strokeStyle = '#fff'; g.strokeRect(ax + 10.5, ay - 33.5, 5, 29); }
+      if (p.state === 'antidmg' && (s.tick >> 1) & 1) { g.strokeStyle = 'rgba(255,255,255,.7)'; g.beginPath(); g.ellipse(ax, ay - 16, 13, 18, 0, 0, 7); g.stroke(); }
       if (p.charge >= val('chargeDelay')) { // the charge aura (t4 0x8): charging from 10 held ticks, charged at full; palette 2, arm offset (2, 0)
         const full = p.charge >= (s.chargeTime ?? val('chargeTime'));
         sprite(g, bank, 'chargefx', full ? 'charged' : 'charging', p.holdT - (full ? (s.chargeTime ?? val('chargeTime')) : val('chargeDelay')), ax + 2, ay, () => {}, 2);
@@ -540,6 +544,11 @@ export function render(g, s, bank) {
           g.beginPath(); g.arc(ax + 10, ay - 12, 14, Math.PI * 0.6, Math.PI * 1.4); g.stroke();
         }
       }
+    }
+    if (f.kind === 'star' && f.t < 16) { // AntiDmg's star (app-drawn)
+      const [sx, sy] = anchor(f.x, f.y), r = 8 - f.t / 4; g.fillStyle = '#e8e8f0'; g.beginPath();
+      for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4 + f.t / 3, rr = k & 1 ? r / 3 : r; g.lineTo(sx + Math.cos(a) * rr, sy - 18 - (16 - f.t) * 2 + Math.sin(a) * rr); }
+      g.fill();
     }
     if (f.kind === 'guard' && f.t < 10) {
       const [ax, ay] = anchor(f.x, f.y);

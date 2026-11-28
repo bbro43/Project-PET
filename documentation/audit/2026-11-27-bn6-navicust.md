@@ -42,3 +42,16 @@ Type 1 ProcessingBug (stat 0x31 = 1); 2 EmotionBug (0x24 = 1); 3 stats 0x12 = 3,
 
 ## Screen (decoded on device, src/rom/navicust.mjs)
 Setup sub_81356F4 → sub_8135B94: palette list 0x8135C2C (resolved by sub_811FB84, PET theme 0), decompAndCopyData list 0x8135C64, BG palettes 4–11 from 0x201CF80; BG1 frame 0x201BE80 + board 0x201C380/0x201C780/0x201CB80 (17×17 at (1,2)); BG2 0x201D180 (12×9 at (17,11)); BG3 INFORMATION 0x813565C (10×6 at (18,13)). Mode 0x10 (byte_8001618). Board cells: per-cell palette entries (byte_813C4E8 + 0x34·Expand), colours byte_813C2EC (set 0 / set 1 brighter), Plus pattern byte_813C308, frame cells 0x5A91 empty / 0x3968 covered (sub_813C1C0). Sprites: cursor 0x20218F0, Move/Remove menu 0x20222F0, list bar 0x201DD70, banners 0x20226F0.
+
+## Descriptions and abilities (0.54.0)
+| Item | Location | Value |
+|---|---|---|
+| Descriptions | CompText873ECC8 (Gregar 0x73CC04), LZ77 text archive | entry n = program n; e.g. SuprArmr "Won't be / pushed!" |
+| Ability flags | sub_8014080 (clears them) | SuperArmor object flag 0x20000, FloatShoes 0x20, UnderShirt 0x40000, AirShoes 0x10 |
+| FstBarr | loc_80138D2 → sub_801A7CC, sub_80E0D98 | barrier at battle start |
+| B+Left | power attacks 0x3B (Shield) sub_801216E, 0x8B (Reflect) sub_8012586, 0x3D (AntiDmg) sub_80121BC | Shield / Reflect → family 0x2B (sub_80ED154): guard 0x14 ticks; Reflect (Unk_03 4) answers with sub_80C4FFE, damage 0x32. AntiDmg → family 0x5A (sub_80EFEAC): window Unk_10 0x1E, damage 0x32 |
+| ChpShufl | sub_802A5DA (stat 0x60), custom screen sub_80280E0 | a Shuffle option, once (battle modes 0, 5, 8, 0xA, 0xB) |
+| NumbrOpn | sub_802A5A0 (stat 0x61), sub_802A40C | 10 chips in the custom screen (not battle modes 1, 6, 7, 9, nor DustCross / DustBeast) |
+| AutoHeal | sub_8014040 (stat 0x36) | (MaxBaseHP + 9) / 10 HP, heal effect 6 |
+| SlipRunr | stat 0x35, read only by ow_player | overworld |
+| Navi base stats | byte_80210DD (16 bytes per Navi, init_8013B64) | HP/2, SuperArmor, FloatShoes, AirShoes, UnderShirt, FstBarr, Mega, Giga, BButton, BPwrAtk, BLeftAbility … (for playable Navis later) |

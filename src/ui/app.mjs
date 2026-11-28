@@ -1,4 +1,4 @@
-import { createBattle, step, pick, unpick, confirmCustom, addCustom, DEFAULT_FOLDER, CHIP_DATA, chipBehaviour, canPick, formation, PLAYABLE_FAMILIES, virusName, PLAYABLE_NAVIS, naviVariants, naviBattle } from '../battle/engine.mjs';
+import { createBattle, step, pick, unpick, confirmCustom, addCustom, DEFAULT_FOLDER, CHIP_DATA, chipBehaviour, canPick, formation, PLAYABLE_FAMILIES, virusName, PLAYABLE_NAVIS, naviVariants, naviBattle, shuffleHand } from '../battle/engine.mjs';
 import BN6 from '../../data/bn6-viruses.mjs';
 import { identify, extractRoms, sha1Hex } from '../rom/gba.mjs';
 import { saveRom, loadRom, listRoms } from '../rom/store.mjs';
@@ -188,7 +188,7 @@ function frame(now) {
   while (acc >= 1000 / 60) {
     acc -= 1000 / 60;
     const wasCustom = state.phase === 'custom';
-    if (wasCustom && romCustom()) { for (const k of ['up', 'down', 'left', 'right', 'a', 'b', 'r']) if (pressed.has(k)) customInput(k); pressed.clear(); }
+    if (wasCustom && romCustom()) { for (const k of ['up', 'down', 'left', 'right', 'a', 'b', 'r', 'l']) if (pressed.has(k)) customInput(k); pressed.clear(); }
     step(state, state.phase === 'custom' ? {} : inputForTick());
     if (!wasCustom && state.phase === 'custom') showCustom();
   }
@@ -275,6 +275,7 @@ function customInput(k) {
   if (k === 'a') { if (focus === 'ok') { focus = 0; confirmCustom(state); } else pick(state, focus); }
   else if (k === 'b') unpick(state);
   else if (k === 'r') { focus = 0; addCustom(state); }
+  else if (k === 'l') { if (shuffleHand(state)) focus = 0; } // ChpShufl: shuffle the chips once
   else if (focus === 'ok') { if (k === 'left') focus = Math.max(0, Math.min(n - 1, per - 1)); }
   else {
     const row = focus / per | 0, col = focus % per;

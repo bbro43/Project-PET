@@ -59,8 +59,10 @@ export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0,
     enemies: [], hazards: [], effects: [], nextId: 1, turns: {},
     folder: folder.map(([name, code], i) => ({ id: i, chip: CHIP_DATA[name]?.id ?? 0, name, code })),
     draw: [], hand: [], picked: [], queue: [], handBonus: 0, busterUp: 0,
-    navi: { attack: navi.attack || 0, speed: navi.speed || 0, charge: navi.charge || 0, custom: navi.custom ?? 5, superArmor: !!navi.flags?.has('superArmor'), underShirt: !!navi.flags?.has('underShirt') },
+    navi: { attack: navi.attack || 0, speed: navi.speed || 0, charge: navi.charge || 0, custom: navi.custom ?? 5, bLeft: navi.bLeft || null, body: navi.body || null,
+      ...Object.fromEntries(['superArmor', 'underShirt', 'firstBarrier', 'floatShoes', 'airShoes', 'chipShuffle', 'numberOpen', 'sneakRun', 'autoHeal'].map(f => [f, !!navi.flags?.has(f)])) },
   };
+  if (s.navi.firstBarrier) s.player.barrier = val('firstBarrierHp'); // FstBarr: "Start with Barrier" (loc_80138D2 → sub_80E0D98)
   s.chargeTime = CHARGE_TIMES[s.navi.charge];
   s.panels = createPanels(field, () => rng(s));
   s.draw = deal(s, s.folder, regular, tag);
@@ -107,7 +109,16 @@ function shuffle(s, list) {
   return list;
 }
 
-function pickSurvival(s) { return PLAYABLE_FAMILIES[Math.floor(rng(s) * PLAYABLE_FAMILIES.length)]; }
+// Endless survival stands in for the game's random encounters, so the encounter programs act here (the app's
+// reading): OilBody / Fish / Battery / Jungle ("Attracts … Viruses!") make half the picks that element, SneakRun
+// ("No weak enemies") keeps waves above the base versions.
+const FAMILY_ELEMENT = Object.fromEntries(PLAYABLE_FAMILIES.map(f => [f, createVirus(f, 0, 4, 1, 0).element]));
+const BODY_ELEMENT = { OilBody: 'fire', Fish: 'aqua', Battery: 'elec', Jungle: 'wood' };
+function pickSurvival(s) {
+  const want = BODY_ELEMENT[s.navi?.body], pool = want && rng(s) < 0.5 ? PLAYABLE_FAMILIES.filter(f => FAMILY_ELEMENT[f] === want) : PLAYABLE_FAMILIES;
+  const list = pool.length ? pool : PLAYABLE_FAMILIES;
+  return list[Math.floor(rng(s) * list.length)];
+}
 
 function spawn(s, list) {
   s.enemies = list.map(([family, variant], i) => {
@@ -121,7 +132,8 @@ function spawn(s, list) {
 }
 
 function refillHand(s) {
-  const size = Math.min(val('maxHand'), (s.navi?.custom ?? val('handSize')) + s.handBonus); // Custom level (Navi stat 0xA, 5 at start)
+  // Custom level (Navi stat 0xA, 5 at start); NumbrOpn: 10 chips (sub_802A40C → sub_802A5A0)
+  const size = s.navi?.numberOpen ? 10 : Math.min(val('maxHand'), (s.navi?.custom ?? val('handSize')) + s.handBonus);
   while (s.hand.length < size && s.draw.length) s.hand.push(s.draw.shift());
   s.handBonus = 0;
 }
@@ -137,6 +149,20 @@ export function canPick(s, index) {
 }
 export function pick(s, index) { if (s.phase === 'custom' && canPick(s, index)) s.picked.push(index); }
 export function unpick(s) { if (s.phase === 'custom') s.picked.pop(); }
+// ChpShufl ("CustmScr Shuffle chp once", sub_802A5DA): once per battle, the chips not picked go back and the
+// hand is dealt again.
+export function shuffleHand(s) {
+  if (s.phase !== 'custom' || !s.navi?.chipShuffle || s.shuffled) return false;
+  const keep = s.picked.map(i => s.hand[i]);
+  const back = s.hand.filter((_, i) => !s.picked.includes(i));
+  s.draw = shuffle(s, [...s.draw, ...back]);
+  s.hand = keep; s.picked = keep.map((_, i) => i);
+  const size = s.navi.numberOpen ? 10 : Math.min(val('maxHand'), s.navi.custom);
+  while (s.hand.length < size && s.draw.length) s.hand.push(s.draw.shift());
+  s.shuffled = true; s.events.push({ type: 'shuffle' });
+  return true;
+}
+
 export function confirmCustom(s) {
   if (s.phase !== 'custom') return;
   // Atk+10 style chips add their damage to the attack chip picked before them.
@@ -203,7 +229,24 @@ export function hitPlayer(s, damage, opts = {}) {
   const p = s.player;
   if (p.invuln > 0 || p.hp <= 0) return;
   const element = opts.element ?? s.attacker?.element;
-  const ph = panelHit(s, p.x, p.y, damage, element);
+  if (p.state === 'guard') { // Shield / Reflect (attack family 0x2B): the hit is blocked; Reflect answers with a 50-damage shot
+    s.events.push({ type: 'guard' }); s.effects.push({ kind: 'guard', x: p.x, y: p.y, t: 0 });
+    if (p.guardReflect && !p.reflected) { p.reflected = true; hitEnemy(s, rowTarget(s, p.x, p.y), 50, { fx: 'buster' }); } // sub_80C4FFE, damage 0x32
+    return;
+  }
+  if (p.state === 'antidmg') { // AntiDmg (family 0x5A): hit inside the window → no damage, a 50-damage star at the attacker
+    const t = s.attacker?.hp > 0 ? s.attacker : rowTarget(s, p.x, p.y) || s.enemies.find(e => e.hp > 0);
+    s.events.push({ type: 'antiDamage' }); s.effects.push({ kind: 'star', x: t?.x ?? p.x, y: t?.y ?? p.y, t: 0 });
+    if (t) hitEnemy(s, t, 50, { fx: 'buster' });
+    p.state = 'idle'; setAnim(p, 'idle'); p.invuln = val('invincibleTicks');
+    return;
+  }
+  if (p.barrier > 0) { // FstBarr barrier soaks damage first
+    const soak = Math.min(p.barrier, damage); p.barrier -= soak; damage -= soak;
+    s.effects.push({ kind: 'guard', x: p.x, y: p.y, t: 0 });
+    if (!damage) { s.events.push({ type: 'barrier' }); return; }
+  }
+  const ph = s.navi?.floatShoes ? { damage, freeze: 0 } : panelHit(s, p.x, p.y, damage, element); // FlotShoe: no panel effects
   damage = ph.damage;
   if (ph.freeze && !opts.paralyze) opts = { ...opts, paralyze: ph.freeze, frozen: true }; // aqua on ice: frozen solid (0x3007460)
   const before = p.hp;
@@ -223,6 +266,13 @@ export function hitPlayer(s, damage, opts = {}) {
 
 const setAnim = (a, anim) => { a.anim = anim; a.animT = 0; };
 const frontX = (e, y) => e.cells ? Math.min(...e.cells.filter(c => c[1] === y).map(c => c[0])) : e.x;
+// B+Left programs (sub_801216E / sub_8012586 / sub_80121BC → attack families 0x2B / 0x5A): Shield and Reflect guard for
+// 0x14 ticks (Unk_0c low byte, sub_80ED154), AntiDmg's window is 0x1E ticks (Unk_10, sub_80EFEAC); `cool` is the
+// Unk_05 value (0x28 / 0x46), read here as the wait before the next use (unverified).
+const B_LEFT = {
+  Shield: { state: 'guard', ticks: 20, cool: 40 }, Reflect: { state: 'guard', ticks: 20, cool: 40, reflect: true },
+  AntiDmg: { state: 'antidmg', ticks: 30, cool: 70 },
+};
 // Buster recovery: 5 ticks, then byte_80209CC[Speed][empty panels before the target, max 5] (0x80EB502).
 function busterWait(s, p) {
   const t = rowTarget(s, p.x, p.y), panels = Math.min(5, t ? frontX(t, p.y) - p.x - 1 : 5 - p.x);
@@ -333,10 +383,15 @@ function stepPlayer(s, input) {
     if (p.stateT >= val('flinchTicks')) { p.state = 'idle'; setAnim(p, 'idle'); }
     return;
   }
+  if (p.bLeftCool > 0) p.bLeftCool--;
+  if (p.state === 'guard' || p.state === 'antidmg') { // B+Left abilities run for their window
+    if (p.stateT >= p.abilityTicks) { p.state = 'idle'; setAnim(p, 'idle'); }
+    return;
+  }
   if (p.state === 'vanish') {
     if (p.stateT >= val('moveVanishTicks')) {
       [p.x, p.y] = p.dest; p.dest = null; p.state = 'appear'; p.stateT = 0; setAnim(p, 'appear');
-      if (panelType(s, p.x, p.y) === 'ice' && p.moveDir) p.slide = p.moveDir; // stepping onto ice: keep going
+      if (panelType(s, p.x, p.y) === 'ice' && p.moveDir && !s.navi?.floatShoes) p.slide = p.moveDir; // stepping onto ice: keep going (not with FlotShoe)
     }
     return;
   }
@@ -378,10 +433,21 @@ function stepPlayer(s, input) {
     p.busterWait = busterWait(s, p);
     return;
   }
+  // B+Left (BLeftAbility, power attacks 0x3B / 0x8B / 0x3D): with B held, Left uses the program instead of moving
+  const leftNow = input.dir === 'left' && p.prevDir !== 'left';
+  p.prevDir = input.dir;
+  if (s.navi.bLeft && input.a && leftNow && !(p.bLeftCool > 0)) {
+    const A = B_LEFT[s.navi.bLeft];
+    p.state = A.state; p.stateT = 0; p.abilityTicks = A.ticks; p.guardReflect = !!A.reflect; p.reflected = false; p.bLeftCool = A.ticks + A.cool;
+    p.holdT = 0; p.charge = 0; setAnim(p, 'idle');
+    s.events.push({ type: 'bLeft', ability: s.navi.bLeft });
+    return;
+  }
   const d = DIRS[input.dir];
   if (d) {
     const x = p.x + d[0], y = p.y + d[1];
-    if (x >= 0 && x <= 5 && y >= 0 && y < 3 && sideAt(s, x, y) === 'p' && !at(s, x, y) && standable(s, x, y)) {
+    const floor = standable(s, x, y) || (s.navi.airShoes && panelType(s, x, y) === 'broken'); // AirShoes: "Move ovr hole"
+    if (x >= 0 && x <= 5 && y >= 0 && y < 3 && sideAt(s, x, y) === 'p' && !at(s, x, y) && floor) {
       p.dest = [x, y]; p.moveDir = d; p.state = 'vanish'; p.stateT = 0; setAnim(p, 'vanish');
     }
   }
@@ -652,6 +718,13 @@ function endBattleEffects(s) {
   s.player.trapped = 0;
 }
 
+// AutoHeal ("HP recv after battle", sub_8014040): (max HP + 9) / 10 back, with the heal sparkle.
+function autoHeal(s) {
+  const p = s.player; if (p.hp <= 0) return;
+  const n = Math.floor((p.maxHp + 9) / 10); p.hp = Math.min(p.maxHp, p.hp + n);
+  s.events.push({ type: 'heal', amount: n }); s.effects.push({ kind: 'heal', x: p.x, y: p.y, t: 0 });
+}
+
 // ---------- main step ----------
 export function step(s, input = {}) {
   s.events = [];
@@ -664,7 +737,7 @@ export function step(s, input = {}) {
   s.phaseT++;
   if (s.phase === 'custom') return s;
   if (s.phase === 'wave') {
-    if (s.phaseT >= 90) { s.wave++; spawn(s, survivalWave(s.wave, k => pickSurvival(s, k))); openCustom(s); }
+    if (s.phaseT >= 90) { s.wave++; spawn(s, survivalWave(s.wave, k => pickSurvival(s, k)).map(([f, v]) => [f, s.navi?.sneakRun ? Math.max(1, v) : v])); openCustom(s); }
     return s;
   }
   if (s.banner) { if (++s.banner.t >= BANNER.start) s.banner = null; return s; } // battle frozen under the banner
@@ -688,6 +761,7 @@ export function step(s, input = {}) {
   s.effects = s.effects.filter(f => ++f.t < 24);
   if (s.player.hp <= 0) { s.phase = 'lose'; s.phaseT = 0; s.events.push({ type: 'lose' }); endBattleEffects(s); }
   else if (s.enemies.every(e => e.hp <= 0 || e.kind === 'coil')) {
+    if (s.navi?.autoHeal) autoHeal(s);
     if (s.mode === 'survival') { s.phase = 'wave'; s.phaseT = 0; s.begun = false; s.events.push({ type: 'waveClear', wave: s.wave }); }
     else { s.phase = 'win'; s.phaseT = 0; s.events.push({ type: 'win' }); endBattleEffects(s); }
   }
