@@ -475,7 +475,7 @@ export function render(g, s, bank) {
         g.drawImage(c, ax - 48, ay - 80); g.restore();
       }
       // Navi Customizer abilities: the game's barrier (t4 0x7) and guard (t3 0x2B) sprites; app-drawn without a ROM
-      if (p.barrier > 0 && bank?.get('barrierfx')) { g.save(); g.globalAlpha = 0.5; sprite(g, bank, 'barrierfx', 'barrier', s.tick, ax, ay - 16, () => {}); g.restore(); } // see-through (blend level not traced)
+      if (p.barrier > 0 && bank?.get('barrierfx')) { g.save(); g.globalAlpha = 0.5; sprite(g, bank, 'barrierfx', 'barrier', s.tick, ax, ay - 2, () => {}); g.restore(); } // on MegaMan's X / Y / Z, Y16 − 2 (sub_80E0B8C); see-through (blend level not traced)
       else if (p.barrier > 0) { g.strokeStyle = 'rgba(140,220,255,.8)'; g.lineWidth = 1; g.beginPath(); g.ellipse(ax, ay - 16, 15, 20, 0, 0, 7); g.stroke(); }
       if (p.state === 'guard' && bank?.get('guardfx')) sprite(g, bank, 'guardfx', p.guardReflect ? (p.guardHitT > 0 ? 'reflectHit' : 'reflect') : (p.guardHitT > 0 ? 'shieldHit' : 'shield'), p.stateT, ax + 16, ay - 16, () => {});
       else if (p.state === 'guard') { g.fillStyle = p.guardReflect ? 'rgba(255,240,120,.55)' : 'rgba(160,200,255,.55)'; g.fillRect(ax + 10, ay - 34, 6, 30); g.strokeStyle = '#fff'; g.strokeRect(ax + 10.5, ay - 33.5, 5, 29); }
@@ -769,6 +769,9 @@ export function render(g, s, bank) {
   if (ts) {
     const dim = 16, a = Math.min(1, ts.t / dim) * 0.5;
     g.fillStyle = `rgba(0,0,24,${a})`; g.fillRect(0, 0, 240, 160);
+    const sp = ts.special;
+    if (sp?.cells.length && ts.t >= ts.start && ts.t < ts.start + sp.def.hold && ((ts.t - ts.start) >> 2) & 1) // panel chips: the panels blink (object_setPanelTypeBlink, every 4 frames)
+      for (const [x, y] of sp.cells) { const [ax, ay] = anchor(x, y); g.fillStyle = sp.def.type === 'holy' ? 'rgba(255,240,160,.55)' : 'rgba(255,255,255,.45)'; g.fillRect(ax - 20, ay - 14, 40, 24); }
     if (ts.t >= dim) { g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(0, 18, 96, 14); g.font = '10px monospace'; text(g, ts.name, 6, 29, '#fff'); g.font = '8px monospace'; }
     for (const b of ts.beams) {
       const [bx, by] = anchor(b.x, b.y), z = Math.round(b.z * 256);

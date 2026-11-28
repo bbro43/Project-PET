@@ -240,6 +240,7 @@ function placedBombBurst(s, o) {
     else if (sideAt(s, s.player.x, s.player.y) === 'p') hitPlayer(s, o.damage, {});
   };
   if (o.family === 'BlackBomb') wide(e => hitEnemy(s, e, o.damage, { element: 'fire', chip: true }));
+  else if (o.family === 'TimeBomb') wide(e => hitEnemy(s, e, o.damage, { element: o.element, chip: true }));
   else if (o.family === 'FlashBomb') { s.effects.push({ kind: 'flash', t: 0 }); wide(e => hitEnemy(s, e, o.damage, { element: o.element, paralyze: val('chipParalyzeTicks'), chip: true })); }
   else for (const [dx, dy] of REGIONS[0x10]) { // Boiler / BugBomb: the 8 panels around it
     const e = at(s, o.x + dx, o.y + dy); if (!e || e.owner === 'player') continue;
@@ -256,8 +257,17 @@ function hitPlacedBomb(s, o, damage, extra) {
 }
 function stepPlacedBomb(o, api) {
   const s = api.s; o.animT++; o.stateT++; if (o.flash) o.flash--;
+  if (o.music) { // the instrument box (t3 0x78): ready 0x1E frames, play, rest, again
+    const c = o.cycle++ % (30 + o.play + o.rest), playing = c >= 30 && c < 30 + o.play;
+    o.anim = playing ? 'play' : 'idle';
+    if (playing && (c - 30) % 3 === 0) {
+      const foes = s.enemies.filter(e => e.hp > 0 && e.owner !== 'player' && e.kind !== 'coil');
+      if (o.music === 'fanfare') s.player.invuln = Math.max(s.player.invuln, 4);                     // object_setInvulnerableTime(4)
+      else if (o.music === 'timpani') for (const e of foes) e.paralyzed = Math.max(e.paralyzed || 0, 4); // status 0x43: held still
+    }
+  }
   if (--o.life > 0) return;
-  if (o.family === 'BlackBomb' || o.family === 'Cube') { o.hp = 0; s.effects.push({ kind: 'puff', x: o.x, y: o.y, t: 0 }); } // left alone: it just goes away
+  if (o.family === 'BlackBomb' || o.family === 'Cube' || o.family === 'MusicBox') { o.hp = 0; s.effects.push({ kind: 'puff', x: o.x, y: o.y, t: 0 }); } // left alone: it just goes away
   else placedBombBurst(s, o);
 }
 function hitEnemy(s, e, damage, extra = {}) {
@@ -310,10 +320,9 @@ export function hitPlayer(s, damage, opts = {}) {
     p.barrier = 0; p.wrapT = 0; if (element === 'elec') p.barrierWrap = 0;
     s.effects.push({ kind: 'guard', x: p.x, y: p.y, t: 0 }); s.events.push({ type: 'barrier' }); return;
   }
-  if (p.barrier > 0) { // barrier (FstBarr, Barrier chips) soaks damage first
-    const soak = Math.min(p.barrier, damage); p.barrier -= soak; damage -= soak;
-    s.effects.push({ kind: 'guard', x: p.x, y: p.y, t: 0 });
-    if (!damage) { s.events.push({ type: 'barrier' }); return; }
+  if (p.barrier > 0) { // barrier (FstBarr, Barrier chips): the hit loses its HP, and the whole hit is stopped even when it breaks
+    p.barrier = Math.max(0, p.barrier - damage);     // (sub_801A802: the hit's damage is cleared at loc_801A96E either way)
+    s.effects.push({ kind: 'guard', x: p.x, y: p.y, t: 0 }); s.events.push({ type: 'barrier' }); return;
   }
   if (p.bubble > 0) { if (element === 'elec') damage *= 2; p.bubble = 0; s.events.push({ type: 'bubblePop' }); } // Bubbled: popped by the hit; Elec doubles
   const ph = s.navi?.floatShoes ? { damage, freeze: 0 } : panelHit(s, p.x, p.y, damage, element); // FlotShoe: no panel effects
@@ -430,10 +439,7 @@ function useChip(s, chip) {
     if (def.slashFx) s.effects.push({ kind: 'slash', x: p.x, y: p.y, t: 0, area: def.slashFx, flip: true }); // the game's slash, swinging right
   }
   else if (def.kind === 'dragon') { const col = s.enemies.some(e => e.hp > 0 && e.owner !== 'player' && e.x > p.x) ? nearestEnemyColumn(s, p.x) : p.x + 1; s.hazards.push({ kind: 'dragon', owner: 'player', col, t: -2, pal: def.pal, damage, element, last: null }); }
-  else if (def.kind === 'barrier') { p.barrier = def.hp; p.barrierMin = def.min || 0; p.barrierTime = def.time || 0; p.barrierWrap = def.wrap || 0; p.wrapT = 0; }
-  else if (def.kind === 'invis') { p.invis = def.ticks; }
-  else if (def.kind === 'panels') { const cells = def.where === 'self' ? [[p.x, p.y]] : [0, 1, 2, 3, 4, 5].flatMap(x => [0, 1, 2].map(y => [x, y])).filter(([x, y]) => sideAt(s, x, y) === 'p'); s.hazards.push({ kind: 'panelset', cells, type: def.type, at: s.tick + def.blink }); }
-  else if (def.kind === 'place' && def.ahead) { const x = p.x + 1; if (x <= 5 && standable(s, x, p.y) && !at(s, x, p.y)) s.enemies.push({ id: s.nextId++, kind: 'coil', family: def.obj, name: def.obj, owner: 'player', sprite: def.sprite, palette: 0, flip: true, x, y: p.y, drawX: x, drawY: p.y, hp: def.hp, maxHp: def.hp, noHp: true, anim: def.seq, animT: 0, state: 'idle', stateT: 0, flash: 0, discharge: 0, life: def.life, damage: 0, element }); }
+  else if (def.freeze) startSpecial(s, chip.name, def, damage, element); // family 0x15: time stops, the name shows, then the effect
   else if (def.kind === 'place') { const r = def.release || 0; s.hazards.push({ kind: 'bomb', owner: 'player', x: p.x, y: p.y, tx: p.x + 3, land: s.tick + r + def.flight, start: s.tick + r, damage, element, place: def, sprite: def.sprite }); }
   else if (def.kind === 'throw') { const r = def.release || 0; s.hazards.push({ kind: 'bomb', owner: 'player', x: p.x, y: p.y, tx: p.x + def.range, land: s.tick + r + def.flight, start: s.tick + r, damage, paralyze, element, region: def.region, hits: def.hits, seed: def.seed }); } // the ball leaves the hand on frame 9 (0x80EB69A)
   else if (def.kind === 'heal') { p.hp = Math.min(p.maxHp, p.hp + def.heal); s.events.push({ type: 'heal', amount: def.heal }); s.effects.push({ kind: 'heal', x: p.x, y: p.y, t: 0 }); } // effect object 6 (0x800E2FC): sprite 0x0C/0x12
@@ -544,6 +550,32 @@ function stepDying(s) {
 }
 
 // ---------- area stealing (AreaGrab 0x80E0754, beam t3 0xF 0x80C6414) ----------
+// Special chips (family 0x15 → t4 objects): object_timefreezeBegin, object_dimScreen, object_drawChipName, the chip's own step
+// (`hold` frames), object_undimScreen, object_timefreezeEnd. The dim and name lengths are the AreaGrab estimates (GRAB).
+function startSpecial(s, name, def, damage, element) {
+  const p = s.player, start = GRAB.dim.value + GRAB.name.value;
+  let cells = def.kind !== 'panels' ? [] : def.where === 'self' ? [[p.x, p.y]] : [0, 1, 2, 3, 4, 5].flatMap(x => [0, 1, 2].map(y => [x, y])).filter(([x, y]) => sideAt(s, x, y) === 'p');
+  let hold = def.hold || 0, order = null;
+  if (def.kind === 'geddon') { // every solid panel but MegaMan's (reserved), shuffled (ShuffleByteList_PrimaryRNG), one every 8 frames
+    order = [0, 1, 2, 3, 4, 5].flatMap(x => [0, 1, 2].map(y => [x, y])).filter(([x, y]) => standable(s, x, y) && !(x === p.x && y === p.y));
+    for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rng(s) * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+    hold = 8 * order.length + 8;
+  }
+  s.timestop = { name, t: 0, start, special: { def, damage, element, cells, order }, end: start + hold + GRAB.dim.value, beams: [], cells: [] };
+}
+function applySpecial(s, sp) {
+  const p = s.player, def = sp.def;
+  if (def.kind === 'barrier') { p.barrier = def.hp; p.barrierMin = def.min || 0; p.barrierTime = def.time || 0; p.barrierWrap = def.wrap || 0; p.wrapT = 0; }
+  else if (def.kind === 'invis') { p.invis = def.ticks; }
+  else if (def.kind === 'panels') for (const [x, y] of sp.cells) setPanel(s, x, y, def.type);
+  else if (def.kind === 'gauge') s.gaugeMod = { rate: def.rate, t: def.ticks };
+  else if (def.kind === 'place' && (def.ahead || def.inRow)) {
+    let x = p.x + 1;
+    if (def.inRow) while (x <= 5 && !(standable(s, x, p.y) && sideAt(s, x, p.y) === 'e' && !at(s, x, p.y))) x++; // sub_80E3264: the first free enemy panel ahead
+    if (x <= 5 && standable(s, x, p.y) && !at(s, x, p.y)) s.enemies.push({ id: s.nextId++, kind: 'coil', family: def.obj, name: def.obj, owner: 'player', sprite: def.sprite, palette: 0, flip: true, x, y: p.y, drawX: x, drawY: p.y, hp: def.hp, maxHp: def.hp, noHp: true, anim: def.seq, animT: 0, state: 'idle', stateT: 0, flash: 0, discharge: 0, life: def.life, damage: sp.damage, element: sp.element, music: def.music, play: def.play, rest: def.rest, cycle: 0 });
+  }
+  else if (def.apply) def.apply(s, sp);
+}
 function startGrab(s, def, damage, element) {
   const p = s.player;
   let cells = [];
@@ -558,6 +590,15 @@ function startGrab(s, def, damage, element) {
 }
 function stepTimestop(s) {
   const ts = s.timestop, t = ++ts.t, fall = GRAB.beamFall.value;
+  if (ts.special) { // a special chip: its step runs inside the freeze (panel chips: blink, then set at the end of `hold`)
+    const sp = ts.special;
+    if (sp.def.kind === 'panels') { if (t === ts.start + sp.def.hold) applySpecial(s, sp); }
+    else if (sp.def.kind === 'geddon') { const k = (t - ts.start) / 8 - 1; if (Number.isInteger(k) && k >= 0 && sp.order[k]) { const [x, y] = sp.order[k]; breakPanel(s, x, y); s.effects.push({ kind: 'puff', x, y, t: 0 }); } }
+    else if (t === ts.start) applySpecial(s, sp);
+    s.effects = s.effects.filter(f => ++f.t < 24);
+    if (t >= ts.end) s.timestop = null;
+    return;
+  }
   if (t === ts.start) ts.beams = ts.cells.map(([x, y]) => ({ x, y, z: 1 }));
   if (t === ts.start + fall) for (const b of ts.beams) {
     const e = at(s, b.x, b.y), mm = s.player.x === b.x && s.player.y === b.y;
@@ -1095,11 +1136,6 @@ function stepHazards(s) {
       if (y >= 0 && y <= 2 && x >= 0 && x <= 5 && key !== h.last) { h.last = key; const e = at(s, x, y); if (e) hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
       return true;
     }
-    if (h.kind === 'panelset') { // panel chips (t4 0x1F): the panels blink, then change
-      if (s.tick < h.at) return true;
-      for (const [x, y] of h.cells) if (panelType(s, x, y) !== 'broken' || h.type === 'normal') setPanel(s, x, y, h.type);
-      return false;
-    }
     if (h.kind === 'log') { // RollingLog (t3 0x66): lands, then rolls; both its rows hit at once and the log breaks
       if (s.tick < h.land) return true;
       const x = Math.round(h.fx);
@@ -1192,7 +1228,8 @@ export function step(s, input = {}) {
   if (s.timestop) { stepTimestop(s); return s; } // time freeze: nothing else moves, the gauge waits
   s.tick++;
   stepArea(s);
-  s.gauge = Math.min(val('customGaugeTicks'), s.gauge + 1);
+  const gm = s.gaugeMod; if (gm && --gm.t <= 0) s.gaugeMod = null; // SloGauge / FstGauge: 0x10 / 0x40 a frame instead of 0x20
+  s.gauge = Math.min(val('customGaugeTicks'), s.gauge + (gm ? gm.rate / 0x20 : 1));
   if (input.l && s.gauge >= val('customGaugeTicks') && s.player.state === 'idle') { openCustom(s); return s; }
   stepPlayer(s, input);
   const api = virusApi(s);

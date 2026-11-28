@@ -222,11 +222,25 @@ test('Dragons: down the nearest enemy column, one column back, and up it', () =>
 });
 
 test('special chips: barriers, Invisibl, panel chips, cubes', () => {
-  let s = after('Barr100', 5); s.player.invuln = 0; hitPlayer(s, 60); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 40);
-  s = after('LifeAur', 5); s.player.invuln = 0; hitPlayer(s, 150); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 1);
-  s = after('BblWrap', 5); s.player.invuln = 0; hitPlayer(s, 80); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 0);
-  for (let i = 0; i < 245; i++) step(s, {}); assert.equal(s.player.barrier, 1);
-  s = after('Invisibl', 5); assert.ok(s.player.invis > 300);
-  s = after('Snctuary', 70); assert.equal(panelType(s, 0, 0), 'holy'); assert.equal(panelType(s, 2, 2), 'holy');
-  s = after('RockCube', 5, s => { s.enemies = []; }); assert.ok(s.enemies.some(e => e.family === 'Cube' && e.x === 2 && e.hp === 200));
+  let s = after('Barr100', 70); s.player.invuln = 0; hitPlayer(s, 60); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 40);
+  s.player.invuln = 0; hitPlayer(s, 60); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 0); // the breaking hit is stopped too
+  s = after('LifeAur', 70); s.player.invuln = 0; hitPlayer(s, 150); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 1);
+  s = after('BblWrap', 70); s.player.invuln = 0; hitPlayer(s, 80); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 0);
+  for (let i = 0; i < 320; i++) step(s, {}); assert.equal(s.player.barrier, 1);
+  s = after('Invisibl', 110); assert.ok(s.player.invis > 300 && !s.timestop);
+  s = after('Snctuary', 140); assert.equal(panelType(s, 0, 0), 'holy'); assert.equal(panelType(s, 2, 2), 'holy');
+  s = after('RockCube', 70); assert.ok(s.enemies.some(e => e.family === 'Cube' && e.x === 2 && e.hp === 200));
+});
+
+test('batch 11: gauge chips, time bombs, instruments, Geddon', () => {
+  let s = after('FstGauge', 150); s.gauge = 0; step(s, {}); assert.equal(s.gauge, 2);
+  s = after('SloGauge', 150); s.gauge = 0; step(s, {}); assert.equal(s.gauge, 0.5);
+  s = after('TimeBom1', 60, s => { s.enemies = s.enemies.filter(e => e.x !== 3 || e.y !== 1); }); // first free enemy panel in the row: (3, 1)
+  const bomb = s.enemies.find(e => e.family === 'TimeBomb'); assert.ok(bomb && bomb.x === 3);
+  for (let i = 0; i < 260; i++) step(s, {});
+  assert.equal(bomb.hp, 0); assert.equal(hurt(s).length, 8);
+  s = after('Timpani', 120); for (let i = 0; i < 60; i++) step(s, {});
+  assert.ok(s.enemies.filter(e => e.owner !== 'player').every(e => e.paralyzed > 0));
+  s = after('Geddon', 260);
+  assert.ok([0, 1, 2, 3, 4, 5].flatMap(x => [0, 1, 2].map(y => [x, y])).filter(([x, y]) => !(x === 1 && y === 1)).every(([x, y]) => panelType(s, x, y) === 'broken' || s.enemies.some(e => e.x === x && e.y === y)));
 });

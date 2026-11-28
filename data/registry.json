@@ -4671,6 +4671,64 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "timebombfx": {
+   "label": "TimeBom (t3 0x4B sub_80CD91E): sprite 0x0C/0x23; byte_80CD8AC[kind] animations: TimeBom 0 appear / 1 ticking, TimeBom+ 2 / 3",
+   "sources": {
+    "bn6f": {
+     "offset": "31EA40",
+     "compression": "none",
+     "bytes": 4164,
+     "sha256": "8de39f38a2ee9db4e449729961a967b0a86be19b905edef8f6b8bd85929b4bff",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "31DFB8",
+     "compression": "none",
+     "bytes": 4164,
+     "sha256": "8de39f38a2ee9db4e449729961a967b0a86be19b905edef8f6b8bd85929b4bff",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    },
+    "plus": {
+     "seq": 3,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "musicboxfx": {
+   "label": "Fanfare / Discord / Timpani / Silence box (t3 0x78 sub_80D40A8): sprite 4/0x0A, animation 0 appear, 3 ready, 4 playing",
+   "sources": {
+    "bn6f": {
+     "offset": "24B254",
+     "compression": "none",
+     "bytes": 8168,
+     "sha256": "2d0c6905787a9cb50f33b038ba3a8bce3c85ed7f17d8de94d43ad21e9fc8371c",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "24B254",
+     "compression": "none",
+     "bytes": 8168,
+     "sha256": "2d0c6905787a9cb50f33b038ba3a8bce3c85ed7f17d8de94d43ad21e9fc8371c",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 3,
+     "confidence": "rom-verified"
+    },
+    "play": {
+     "seq": 4,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

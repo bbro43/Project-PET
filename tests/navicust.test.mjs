@@ -63,10 +63,11 @@ test('battle uses the Customizer: HP+, Attack, Charge, Custom, SuperArmor, Under
 const nav = (flags, extra = {}) => ({ hpPlus: 0, attack: 0, speed: 0, charge: 0, custom: 5, flags: new Set(flags), ...extra });
 const ready = s => { confirmCustom(s); for (const e of s.enemies) e.paralyzed = 1e6; s.player.invuln = 0; return s; };
 
-test('FstBarr: the barrier soaks the first 10 damage', () => {
+test('FstBarr: the 10 HP barrier stops whole hits until it breaks (sub_801A802 clears the breaking hit too)', () => {
   const s = ready(createBattle({ seed: 3, navi: nav(['firstBarrier']) }));
   hitPlayer(s, 4); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 6);
-  hitPlayer(s, 10); assert.equal(s.player.hp, 96);
+  hitPlayer(s, 10); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 0);
+  s.player.invuln = 0; hitPlayer(s, 10); assert.equal(s.player.hp, 90);
 });
 
 test('B+Left: Shield blocks for 20 ticks, Reflect answers with 50, AntiDmg throws a star', () => {

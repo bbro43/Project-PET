@@ -328,24 +328,48 @@ export const CHIP_BEHAVIOUR = {
   // Barriers (sub 4 → t4 0x2F): sub_801A7CC(params[0]) sets the barrier type; byte_8020B2C[type] = HP, the least damage that
   // touches it, and a timer: Barrier 1 → 10 HP, Barr100 5 → 100, Barr200 7 → 200, BblWrap 8 → 1 HP that grows back 0xF0
   // frames after it pops (an Elec hit pops it for good), LifeAur 9 → hits under 200 do nothing, a bigger one breaks it, 3000
-  // frames (sub_801A802).
-  Barrier: { kind: 'barrier', hp: 10, anim: 'idle', lock: 20, confidence: 'rom-verified' },
-  Barr100: { kind: 'barrier', hp: 100, anim: 'idle', lock: 20, confidence: 'rom-verified' },
-  Barr200: { kind: 'barrier', hp: 200, anim: 'idle', lock: 20, confidence: 'rom-verified' },
-  BblWrap: { kind: 'barrier', hp: 1, wrap: 240, anim: 'idle', lock: 20, confidence: 'rom-verified' },
-  LifeAur: { kind: 'barrier', hp: 1, min: 200, time: 3000, anim: 'idle', lock: 20, confidence: 'rom-verified' },
-  // Invisibl (sub 1 → t4 0x5D, sub_8010474): the flashing-invisible timer = params[0] | params[1] << 8 = 360 frames.
-  Invisibl: { kind: 'invis', ticks: 360, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // frames (sub_801A802). A barrier stops the whole hit that reaches it, even one that breaks it (the hit's damage is cleared
+  // at loc_801A96E). The chip waits 0x3C frames inside the freeze (sub_80E3AFC).
+  Barrier: { kind: 'barrier', freeze: true, hold: 60, hp: 10, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  Barr100: { kind: 'barrier', freeze: true, hold: 60, hp: 100, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  Barr200: { kind: 'barrier', freeze: true, hold: 60, hp: 200, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  BblWrap: { kind: 'barrier', freeze: true, hold: 60, hp: 1, wrap: 240, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  LifeAur: { kind: 'barrier', freeze: true, hold: 60, hp: 1, min: 200, time: 3000, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // Invisibl (sub 1 → t4 0x5D, sub_8010474): the flashing-invisible timer = params[0] | params[1] << 8 = 360 frames; 0x1E in the freeze.
+  Invisibl: { kind: 'invis', freeze: true, hold: 30, ticks: 360, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   // Panel chips (sub 5 → t4 0x20 → t4 0x1F, byte_80E272C[params[0]], 0x14 bytes): panel type, which panels, blinking for
   // 0x40 frames, then set. PnlRetrn 0: type 2 (normal) on every panel of MegaMan's side; HolyPanl 4: type 5 (holy) under
   // MegaMan; Snctuary 5: holy on every panel of MegaMan's side (sub_80E29F8 / sub_80E2A9A).
-  PnlRetrn: { kind: 'panels', type: 'normal', where: 'side', blink: 64, anim: 'idle', lock: 20, confidence: 'rom-verified' },
-  HolyPanl: { kind: 'panels', type: 'holy', where: 'self', blink: 64, anim: 'idle', lock: 20, confidence: 'rom-verified' },
-  Snctuary: { kind: 'panels', type: 'holy', where: 'side', blink: 64, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  PnlRetrn: { kind: 'panels', freeze: true, hold: 64, type: 'normal', where: 'side', anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  HolyPanl: { kind: 'panels', freeze: true, hold: 64, type: 'holy', where: 'self', anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  Snctuary: { kind: 'panels', freeze: true, hold: 64, type: 'holy', where: 'side', anim: 'idle', lock: 20, confidence: 'rom-verified' },
   // Cubes (sub 6 → t4 0x37 → t3 0x59): on the panel ahead; byte_80CF934[params[0]]: RockCube 1 (animation 1, HP 0x64 · 2 = 200),
   // IceCube 3 (animation 2, HP 200, Aqua); 6000 frames.
-  RockCube: { kind: 'place', obj: 'Cube', sprite: 'cubefx', seq: 'rock', hp: 200, life: 6000, ahead: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
-  IceCube: { kind: 'place', obj: 'Cube', sprite: 'cubefx', seq: 'ice', hp: 200, life: 6000, ahead: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  RockCube: { kind: 'place', freeze: true, hold: 60, obj: 'Cube', sprite: 'cubefx', seq: 'rock', hp: 200, life: 6000, ahead: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  IceCube: { kind: 'place', freeze: true, hold: 60, obj: 'Cube', sprite: 'cubefx', seq: 'ice', hp: 200, life: 6000, ahead: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // Gauge chips (sub 25 → t4 0x1C, sub_80E23E8): the gauge fills at 0x10 (SloGauge) or 0x40 (FstGauge) a frame instead of
+  // 0x20 (sub_801DF8C) for 0x1E0 frames on the user's side (the opponent's for 0x438 only in link battles); 0x46 in the freeze.
+  SloGauge: { kind: 'gauge', freeze: true, hold: 70, rate: 0x10, ticks: 480, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'against the CPU only MegaMan\'s own gauge changes' },
+  FstGauge: { kind: 'gauge', freeze: true, hold: 70, rate: 0x40, ticks: 480, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // Time bombs (sub 10 → t4 0x27 → t3 0x4B, sub_80E3290): on the first panel ahead in MegaMan's row that is solid, on the enemy
+  // side and free (sub_80E3264); byte_80CD8AC[params[0]]: HP 50 (TimeBom) / 200 (TimeBom+); it counts 3, 2, 1 (0x3C frames each)
+  // and 0x1E more, then a hit area 0x82 / 0x81 by side (byte_80CDD30) with the chip's damage; destroyed first, it does nothing.
+  TimeBom1: { kind: 'place', obj: 'TimeBomb', sprite: 'timebombfx', seq: 'idle', hp: 50, life: 210, freeze: true, hold: 30, inRow: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  TimeBom2: { kind: 'place', obj: 'TimeBomb', sprite: 'timebombfx', seq: 'idle', hp: 50, life: 210, freeze: true, hold: 30, inRow: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  TimeBom3: { kind: 'place', obj: 'TimeBomb', sprite: 'timebombfx', seq: 'idle', hp: 50, life: 210, freeze: true, hold: 30, inRow: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  'TimeBom+': { kind: 'place', obj: 'TimeBomb', sprite: 'timebombfx', seq: 'plus', hp: 200, life: 210, freeze: true, hold: 30, inRow: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // Instruments (sub 9 → t4 0x4A → t3 0x78): a box on the panel ahead (solid, free), 60 HP, 0x960 frames; byte_80D4078[kind]
+  // [play / 2, every, animation, sound]: it gets ready for 0x1E frames, plays for 2·play frames applying its effect every 3
+  // frames, rests dword_80D42C8[kind] frames, and again. Fanfare 0x55: MegaMan's side invincible (object_setInvulnerableTime 4);
+  // Discord 0x37: area 0x85 / 0x84 (the enemies' panels) status 0x23; Timpani 0x3C: area 0x83 status 0x43, the screen shakes;
+  // Silence 0x78: area 0x80 status 0x33. Rests 0xAA / 0x3C / 0xAA / 0x1E.
+  Fanfare: { kind: 'place', obj: 'MusicBox', sprite: 'musicboxfx', seq: 'idle', hp: 60, life: 2400, ahead: true, freeze: true, hold: 60, music: 'fanfare', play: 170, rest: 170, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  Discord: { kind: 'place', obj: 'MusicBox', sprite: 'musicboxfx', seq: 'idle', hp: 60, life: 2400, ahead: true, freeze: true, hold: 60, music: 'discord', play: 110, rest: 60, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'status 0x23 (confusion) only acts on Navis, and the CPU Navis here have no confusion yet' },
+  Timpani: { kind: 'place', obj: 'MusicBox', sprite: 'musicboxfx', seq: 'idle', hp: 60, life: 2400, ahead: true, freeze: true, hold: 60, music: 'timpani', play: 120, rest: 170, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'status 0x43 read as a hold-still' },
+  Silence: { kind: 'place', obj: 'MusicBox', sprite: 'musicboxfx', seq: 'idle', hp: 60, life: 2400, ahead: true, freeze: true, hold: 60, music: 'silence', play: 240, rest: 30, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'status 0x33 stops chip use; the CPU enemies here use no chips' },
+  // Geddon (sub 3 → t4 0x1D → t4 0x1E, byte_80E2588[params[0]]): every solid panel, in a shuffled order, one every 8 frames,
+  // inside the freeze; params[0] 1 → object_breakPanel (0x800CAE8). MegaMan's panel is reserved meanwhile.
+  Geddon: { kind: 'geddon', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },
