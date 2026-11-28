@@ -22,7 +22,9 @@ export function createVirus(family, variant, x, y, id) {
 }
 
 const setAnim = (e, anim) => { e.anim = anim; e.animT = 0; };
-const go = (e, state, anim) => { e.state = state; e.stateT = 0; if (anim) setAnim(e, anim); };
+// Counter window (object_setDefaultCounterTime, 16 frames): opened when an attack state starts (the app's reading).
+const NOT_ATTACK = new Set(['idle', 'vanish', 'appear', 'wait', 'after', 'hop', 'run', 'slide', 'return', 'recover', 'step', 'swim', 'fly', 'under', 'surface', 'rise', 'dive', 'move', 'warp', 'dashalign']);
+const go = (e, state, anim) => { e.state = state; e.stateT = 0; if (anim) setAnim(e, anim); if (!NOT_ATTACK.has(state) && state !== e.prevGo) e.counterT = 16; e.prevGo = state; };
 
 // api: { s, at(x,y), hitPlayerAt(x,y,damage,element), spawnWave(e,x,y,stepTicks), turnFree(e), takeTurn(e), endTurn(e) }
 const BEHAVIOUR = {
@@ -470,7 +472,7 @@ const BEHAVIOUR = {
       case 'release':
         if ((e.stateT - 16) % P.gap.value === 0 && e.stateT >= 16 && e.left > 0) {
           e.left--; setAnim(e, 'shoot');
-          s.hazards.push({ kind: 'bolt', x: e.x - 1, fx: e.x - 1, y: e.y, dx: -pv(P.speed, v) / 40, damage: pv(P.damage, v), sprite: 'starfish', seq: 'bubble', owner: e.id });
+          s.hazards.push({ kind: 'bolt', x: e.x - 1, fx: e.x - 1, y: e.y, dx: -pv(P.speed, v) / 40, damage: pv(P.damage, v), sprite: 'starfish', seq: 'bubble', owner: e.id, bubble: true }); // traps MegaMan (BUBBLE.sources, unverified)
         }
         if (e.left === 0 && e.stateT >= 16 + P.gap.value * P.count.value) { e.think = P.after.value; go(e, 'idle', 'idle'); }
         return;

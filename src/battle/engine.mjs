@@ -1,7 +1,7 @@
 // Deterministic fixed-tick Battle Network battle simulation (BN6 ruleset).
 // No rendering, DOM or timing here: the client feeds one input object per tick.
 // Input: { dir: 'up'|'down'|'left'|'right'|null, a: held bool, b: pressed bool, l: pressed bool }
-import { val, CHIP_BEHAVIOUR, WEAKNESS, PANELS, GRAB, BUGS } from '../../data/rules.mjs';
+import { val, CHIP_BEHAVIOUR, WEAKNESS, PANELS, GRAB, BUGS, EMOTION, BUBBLE } from '../../data/rules.mjs';
 import CHIPDATA from '../../data/bn6-chips.mjs';
 import { createVirus, stepVirus, virusName, PLAYABLE_FAMILIES } from './viruses.mjs';
 import { createNavi, stepNavi, stepCoil, naviVariants, PLAYABLE_NAVIS } from './navis.mjs';
@@ -62,12 +62,13 @@ export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0,
     navi: { attack: navi.attack || 0, speed: navi.speed || 0, charge: navi.charge || 0, custom: navi.custom ?? 5, bLeft: navi.bLeft || null, body: navi.body || null,
       ...Object.fromEntries(['superArmor', 'underShirt', 'firstBarrier', 'floatShoes', 'airShoes', 'chipShuffle', 'numberOpen', 'sneakRun', 'autoHeal'].map(f => [f, !!navi.flags?.has(f)])) },
   };
+  s.emotion = { mood: 0x80, anger: 0, tired: 0, held: 0, pending: false, bugT: 0 }; // base MegaMan starts Normal
   s.bugs = (navi.bugs || []).slice(0, 16); // NaviCust bug levels by type (0 = none); BugStop already zeroed them
   if (bug(s, 9)) s.hpBug = { level: bug(s, 9), t: 0 }; // HP bug: stat 0x18 starts at the level
   const startBug = bug(s, 0xB) ? 0 : bug(s, 0xC) ? 1 : -1; // colour bugs: a random status at the start (sub_8013E58)
   if (startBug >= 0) {
     const kind = BUGS.startStatus.value[Math.floor(rng(s) * 4)], T = BUGS.startStatusFrames.value[startBug], p = s.player;
-    if (kind === 'invisible') p.invis = T; else if (kind === 'invulnerable') p.invuln = T; else if (kind === 'blind') p.blind = T; else p.bubble = T;
+    if (kind === 'invisible') p.invis = T; else if (kind === 'invulnerable') p.invuln = T; else if (kind === 'blind') p.blind = T; else p.confused = T;
     s.startBug = kind;
   }
   if (s.navi.firstBarrier) s.player.barrier = val('firstBarrierHp'); // FstBarr: "Start with Barrier" (loc_80138D2 → sub_80E0D98)
@@ -227,6 +228,10 @@ function hitEnemy(s, e, damage, extra = {}) {
   if (!e.cells) damage = panelHit(s, e.x, e.y, damage, extra.element).damage;
   e.hp = Math.max(e.sturdy ? 1 : 0, e.hp - damage);
   e.flash = 4;
+  if (extra.chip && e.counterT > 0) { // counter hit: Full Synchro (sub_801A200)
+    e.counterT = 0; setMood(s, 0xFF);
+    s.events.push({ type: 'counter', target: e.id }); s.effects.push({ kind: 'counter', x: e.x, y: e.y, t: 0 });
+  }
   if (extra.paralyze && e.hp > 0 && e.kind !== 'coil') { e.paralyzed = extra.paralyze; s.events.push({ type: 'paralyze', target: e.id }); }
   s.effects.push({ kind: 'hit', x: e.x, y: e.y, t: 0, damage, fx: extra.fx, jx: (s.tick * 7) % 15 - 7, jy: (s.tick * 11) % 15 - 7 }); // jitter from the frame count so the battle RNG is untouched // hit effect: t4 0x4 near the target (0x801A0D8, ±7 px)
   s.events.push({ type: 'hit', target: e.id, damage });
@@ -263,11 +268,17 @@ export function hitPlayer(s, damage, opts = {}) {
     s.effects.push({ kind: 'guard', x: p.x, y: p.y, t: 0 });
     if (!damage) { s.events.push({ type: 'barrier' }); return; }
   }
+  if (p.bubble > 0) { if (element === 'elec') damage *= 2; p.bubble = 0; s.events.push({ type: 'bubblePop' }); } // Bubbled: popped by the hit; Elec doubles
   const ph = s.navi?.floatShoes ? { damage, freeze: 0 } : panelHit(s, p.x, p.y, damage, element); // FlotShoe: no panel effects
   damage = ph.damage;
   if (ph.freeze && !opts.paralyze) opts = { ...opts, paralyze: ph.freeze, frozen: true }; // aqua on ice: frozen solid (0x3007460)
   const before = p.hp;
   p.hp = Math.max(0, p.hp - damage);
+  if (s.emotion && damage > 0) {
+    if (s.emotion.mood) s.emotion.mood = Math.max(1, s.emotion.mood - damage); // a hit lowers the mood: Full Synchro ends (sub_8015C12)
+    if (damage >= EMOTION.angryAfter.value.bigHit) s.emotion.pending = true; // a huge hit makes MegaMan angry (sub_80142DC)
+  }
+  if (opts.bubble && p.hp > 0) { p.bubble = BUBBLE.frames.value; p.state = 'idle'; setAnim(p, 'idle'); p.dest = null; s.events.push({ type: 'playerHit', damage, bubble: true }); return; }
   if (s.hpBug && damage > 0) s.hpBug.level = Math.min(7, s.hpBug.level + 1); // HP bug drains faster after each hit (sub_8013F96)
   if (p.hp === 0 && before > 1 && s.navi?.underShirt) p.hp = 1; // UnderShirt: a hit from above 1 HP leaves 1 HP
   if (opts.paralyze) { // paralysis: no flinch and no flashing; MegaMan just freezes (DarkMech waits for this)
@@ -287,6 +298,32 @@ function busterBugRoll(s) {
   const [ones, twos] = BUGS.busterTable.value[bug(s, 7)], r = Math.floor(rng(s) * 16);
   return r < ones ? 1 : r < ones + twos ? 2 : 0;
 }
+// ---------- emotions (base MegaMan) ----------
+// Emotion code as possiblyGetBattleEmotion_8015B64 reads it: Anger timer → Angry, AIData 0x32 → Tired, mood 0xFF → Full Synchro.
+export function emotionOf(s) {
+  const E = s.emotion;
+  if (!E) return 'normal';
+  return E.anger > 0 ? 'angry' : E.tired > 0 ? 'tired' : E.mood === 0xFF ? 'synchro' : 'normal';
+}
+function setMood(s, m) { if (s.emotion && !(s.emotion.tired > 0)) s.emotion.mood = m; } // sub_8015BEC: not while Tired
+function resetEmotion(s) { Object.assign(s.emotion, { mood: 0x80, anger: 0, pending: false }); } // sub_80143A6
+function stepEmotion(s) {
+  const E = s.emotion, p = s.player;
+  if (!E || s.phase !== 'battle') return;
+  E.held = p.paralyzed > 0 || p.bubble > 0 ? E.held + 1 : 0; // frames held by a status (flag 0xC00, AIData 0x4C)
+  if (!(E.anger > 0) && E.held >= EMOTION.angryAfter.value.paralyzed) E.pending = true;
+  if (E.anger > 0) { if (--E.anger <= 0) resetEmotion(s); } // Angry for 600 frames (sub_8014326)
+  else if (E.pending) { E.pending = false; if (!(E.tired > 0)) { E.anger = EMOTION.angryFrames.value; E.mood = 0x80; } }
+  if (bug(s, 2) && ++E.bugT >= EMOTION.bugEvery.value) { // emotion bug: every 60 frames a new emotion (sub_8013DA0)
+    E.bugT = 0;
+    const cur = { normal: 0, tired: 1, angry: 2, synchro: 3 }[emotionOf(s)];
+    resetEmotion(s); E.tired = 0;
+    const pool = EMOTION.bugTable.value.map(v => v === cur ? (cur === 0 ? 1 : 0) : v);
+    const next = pool[Math.floor(rng(s) * pool.length)];
+    if (next === 1) E.tired = 0xFFFF; else if (next === 2) E.pending = true; else E.mood = next === 3 ? 0xFF : 0x99;
+  }
+}
+
 const setAnim = (a, anim) => { a.anim = anim; a.animT = 0; };
 const frontX = (e, y) => e.cells ? Math.min(...e.cells.filter(c => c[1] === y).map(c => c[0])) : e.x;
 // B+Left programs (sub_801216E / sub_8012586 / sub_80121BC → attack families 0x2B / 0x5A): Shield and Reflect guard for
@@ -311,11 +348,17 @@ function useChip(s, chip) {
     p.state = 'chip'; p.stateT = 0; p.chip = { ...chip, lock: def.lock }; setAnim(p, 'idle');
     s.effects.push({ kind: 'capsule', x: p.x, y: p.y, t: 0, life: 16 }); return;
   }
-  const damage = data.damage + (chip.bonus || 0), element = data.element === 'none' ? undefined : data.element;
+  let damage = data.damage + (chip.bonus || 0);
+  const mood = emotionOf(s);
+  if ((data.flags & 2) && damage > 0 && (mood === 'synchro' || mood === 'angry')) { // Full Synchro / Angry: double damage, then it's used up (sub_8012A38)
+    damage *= 2; s.events.push({ type: 'emotionBoost', emotion: mood });
+    if (mood === 'synchro') s.emotion.mood = 0x80; else resetEmotion(s);
+  }
+  const element = data.element === 'none' ? undefined : data.element;
   const paralyze = chip.status === 'paralyze' ? val('chipParalyzeTicks') : 0;
   p.state = 'chip'; p.stateT = 0; p.chip = { ...chip, lock: def.lock }; setAnim(p, def.anim);
-  if (def.kind === 'shot') hitEnemy(s, rowTarget(s, p.x, p.y), damage, { push: def.push, element, fx: def.fx, paralyze });
-  else if (def.kind === 'slash') for (const [dx, dy] of def.area) hitEnemy(s, at(s, p.x + dx, p.y + dy), damage, { element, paralyze });
+  if (def.kind === 'shot') hitEnemy(s, rowTarget(s, p.x, p.y), damage, { push: def.push, element, fx: def.fx, paralyze, chip: true });
+  else if (def.kind === 'slash') for (const [dx, dy] of def.area) hitEnemy(s, at(s, p.x + dx, p.y + dy), damage, { element, paralyze, chip: true });
   else if (def.kind === 'throw') { const r = def.release || 0; s.hazards.push({ kind: 'bomb', owner: 'player', x: p.x, y: p.y, tx: p.x + def.range, land: s.tick + r + def.flight, start: s.tick + r, damage, paralyze }); } // the ball leaves the hand on frame 9 (0x80EB69A)
   else if (def.kind === 'heal') { p.hp = Math.min(p.maxHp, p.hp + def.heal); s.events.push({ type: 'heal', amount: def.heal }); s.effects.push({ kind: 'heal', x: p.x, y: p.y, t: 0 }); } // effect object 6 (0x800E2FC): sprite 0x0C/0x12
   else if (def.kind === 'vulcan') for (let k = 0; k < def.hits; k++) s.hazards.push({ kind: 'pvulcan', owner: 'player', y: p.y, from: p.x, at: s.tick + (def.lead || 0) + k * def.gap, damage, element, paralyze });
@@ -392,7 +435,15 @@ function stepPlayer(s, input) {
     const N = BUGS.hpDrainFrames.value[s.hpBug.level];
     if (N && ++s.hpBug.t >= N) { s.hpBug.t = 0; p.hp--; }
   }
-  if (p.bubble > 0) { p.bubble--; p.prevA = !!input.a; p.holdT = 0; p.charge = 0; return; } // bubble (colour bug): can't act
+  if (p.confused > 0) p.confused--;
+  stepEmotion(s);
+  if (p.bubble > 0) { // Bubbled: can't act until it wears off or a hit lands; mashing shortens it
+    const keys = (input.a ? 'a' : '') + (input.b ? 'b' : '') + (input.dir || '');
+    if (keys && keys !== p.trapKeys) p.bubble--;
+    p.trapKeys = keys; p.bubble--; p.prevA = !!input.a; p.holdT = 0; p.charge = 0;
+    if (p.bubble <= 0) { p.bubble = 0; s.events.push({ type: 'bubblePop' }); }
+    return;
+  }
   const pressedA = input.a && !p.prevA, releasedA = !input.a && p.prevA;
   p.prevA = !!input.a;
 
@@ -477,7 +528,7 @@ function stepPlayer(s, input) {
     s.events.push({ type: 'bLeft', ability: s.navi.bLeft });
     return;
   }
-  const d = DIRS[input.dir];
+  const d0 = DIRS[input.dir], d = d0 && p.confused > 0 ? [-d0[0], -d0[1]] : d0; // Confused: the D-pad is reversed
   if (d) {
     const ok = (x, y) => x >= 0 && x <= 5 && y >= 0 && y < 3 && sideAt(s, x, y) === 'p' && !at(s, x, y)
       && (standable(s, x, y) || (s.navi.airShoes && panelType(s, x, y) === 'broken')); // AirShoes: "Move ovr hole"
@@ -664,7 +715,7 @@ function stepHazards(s) {
       if (!s.enemies.some(e => e.id === h.owner && e.hp > 0)) return false;
       h.fx += h.dx; h.x = Math.round(h.fx);
       if (h.until && s.tick >= h.until) return false;
-      if (h.x === p.x && h.y === p.y && p.state !== 'vanish' && !h.hit) { h.hit = true; hitPlayer(s, h.damage); if (!h.keep) return false; }
+      if (h.x === p.x && h.y === p.y && p.state !== 'vanish' && !h.hit) { h.hit = true; hitPlayer(s, h.damage, { bubble: !!h.bubble }); if (!h.keep) return false; }
       return h.fx > -1.5;
     }
     if (h.kind === 'elecball') { // DarkMech (object type3 0xC0): along the row to MegaMan's column, then up or down it
@@ -784,7 +835,7 @@ export function step(s, input = {}) {
   if (input.l && s.gauge >= val('customGaugeTicks') && s.player.state === 'idle') { openCustom(s); return s; }
   stepPlayer(s, input);
   const api = virusApi(s);
-  for (const e of [...s.enemies]) if (e.hp > 0) { if (e.paralyzed > 0) { e.paralyzed--; continue; } s.attacker = e; (e.kind === 'navi' ? stepNavi : e.kind === 'coil' ? stepCoil : stepVirus)(e, api); }
+  for (const e of [...s.enemies]) if (e.hp > 0) { if (e.counterT > 0) e.counterT--; if (e.paralyzed > 0) { e.paralyzed--; continue; } s.attacker = e; (e.kind === 'navi' ? stepNavi : e.kind === 'coil' ? stepCoil : stepVirus)(e, api); }
   s.attacker = null;
   s.enemies = s.enemies.filter(e => e.hp > 0 || e.kind !== 'coil');
   stepHazards(s);

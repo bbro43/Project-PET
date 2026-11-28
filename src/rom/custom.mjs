@@ -81,9 +81,20 @@ export function decodeCustom(rom, src) {
   };
   const hpBox = () => layout(words(hex(H.box), 12), 6, 2, readPalette(rom, hex(H.palette)));
   // HP digits: the 8×16 digit tiles (dword_86E411C) with their background colour (index 8) left clear over the box.
+  // Emotion window (sub_801CB38 / sub_801CDEC): OBJ tile 0x3B4, palette 12. A 32×16 face (8 tiles from the table at
+  // *emotion.faces, entry = face) at (0, 18) and a 16×16 piece (4 tiles from *emotion.side) at (32, 18); palette
+  // *emotion.palettes + 32 × face. The pointers are read from the code's literal pool, which is the same in both versions.
+  const E = H?.emotion, u32 = o => (u16(rom, o) | (u16(rom, o + 2) << 16)) >>> 0, ptr = o => u32(o) - 0x8000000;
+  const emotion = face => {
+    const rgba = new Uint8ClampedArray(48 * 16 * 4), pal = readPalette(rom, ptr(hex(E.palettes)) + 32 * face);
+    const tiles = ptr(ptr(hex(E.faces)) + 4 * face), side = ptr(hex(E.side));
+    for (let i = 0; i < 8; i++) blit(rom, rgba, 48, tiles + 32 * i, (i % 4) * 8, (i >> 2) * 8, pal);
+    for (let i = 0; i < 4; i++) blit(rom, rgba, 48, side + 32 * i, 32 + (i % 2) * 8, (i >> 1) * 8, pal);
+    return { rgba, width: 48, height: 16 };
+  };
   const hpDigit = d => { const pal = pals[0].slice(); pal[8] = null; return stack(hex(src.digits) + 0x40 * d, 1, 2, pal, true); };
   return {
-    hud: H ? { gauge, hpBox, hpDigit } : null,
+    hud: H ? { gauge, hpBox, hpDigit, emotion: E ? emotion : null, emotionY: E?.y ?? 18 } : null,
     text: src.text ? text : null,
     frame, column, glyph: src.font ? glyph : null,
     code: (k, cls = 0) => stack(hex(src.codes) + 0x40 * k, 2, 1, pals[cls]),          // 16×8 strip, k = 0..25 A–Z, 26 *, 27 empty
@@ -110,6 +121,7 @@ export function buildCustom(rom, src) {
     gauge: d.hud ? (v, state) => get(`G${v >> 7}.${state}`, () => d.hud.gauge(v, state)) : null,
     hpBox: d.hud ? () => get('hp', () => d.hud.hpBox()) : null,
     hpDigit: d.hud ? n => get('h' + n, () => d.hud.hpDigit(n)) : null,
+    emotion: d.hud?.emotion ? face => get('e' + face, () => d.hud.emotion(face)) : null,
     code: (k, cls) => get(`c${k}.${cls}`, () => d.code(k, cls)),
     letter: (k, cls) => get(`l${k}.${cls}`, () => d.letter(k, cls)),
     digit: (n, cls) => get(`d${n}.${cls}`, () => d.digit(n, cls)),

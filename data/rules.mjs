@@ -33,6 +33,30 @@ export const RULES = {
 export const val = key => RULES[key].value;
 
 // Navi Customizer bugs in battle (bug table byte_813CC18 → Navi stats; levels 1–3 = min(bug count, 3); BugStop clears all).
+// Emotions (base MegaMan). Mood = Navi stat 0x0E (0x80 normal, 0xFF Full Synchro); possiblyGetBattleEmotion_8015B64:
+// Anger timer → Angry, AIData 0x32 → Tired, mood 0xFF → Full Synchro, else Normal. Window face byte_801E6F4.
+export const EMOTION = {
+  synchro: v('a counter hit (hitting an enemy during its counter window) gives Full Synchro: mood 0xFF', 'rom-verified', 'sub_801A200: collision flag 0x8000 on the hit → sub_8015BEC(attacker, 0xFF), base form or 0xB/0xC only'),
+  counterWindow: v(16, 'rom-verified', 'object_setDefaultCounterTime: 0x10 frames, set by enemies as an attack starts'),
+  counterStates: v('every enemy state that is not idle / moving / waiting opens the window', 'unverified', 'each AI sets its own counter time at its own moment; the app opens it when an attack state starts'),
+  counterByChip: v('only chips counter (not the buster)', 'recalled', 'not traced'),
+  hitLowersMood: v('each hit lowers the mood by its damage (at least 1 is left), so a hit ends Full Synchro', 'recalled', 'sub_8015C12 with collision 0x8E (read as the damage)'),
+  boost: v('a chip with flag byte 9 bit 2 does double damage under Full Synchro or Angry; Full Synchro then drops to Normal (mood 0x80), Angry ends', 'rom-verified', 'sub_8012A38 marks the damage 0x8000 (r6 = 1 Full Synchro, 2 Angry); 0x8012866 sets mood 0x80 / calls sub_80143A6'),
+  angryAfter: v({ paralyzed: 120, bigHit: 300 }, 'rom-verified', 'sub_80142DC (base MegaMan only): ≥ 0x78 frames held by status (flag 0xC00) or collision 0x80 / 2 ≥ 0x96 (read as the hit\'s damage ≥ 300, recalled) → Angry'),
+  angryFrames: v(600, 'rom-verified', 'sub_8014326: Anger = 0x96 << 2'),
+  tired: v('Tired: no Full Synchro or Angry while it lasts', 'rom-verified', 'sub_801445C blocks sub_8015BEC and sub_80143CE'),
+  bugEvery: v(60, 'rom-verified', 'emotion bug (type 2, stat 0x24) sub_8013DA0: every 0x3C frames, base form, Beast Out counter (stat 0x21) above 0'),
+  bugTable: v([0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3], 'rom-verified', 'byte_8013E44: entries equal to the current emotion become Normal (or Tired from Normal); 0 Normal (mood 0x99), 1 Tired, 2 Angry, 3 Full Synchro (mood 0xFF) via dword_8013E54'),
+  beastCounter: v('the app has no Beast Out yet, so the counter is taken as above 0', 'unverified', 'stat 0x21 BeastOutCounter'),
+  faces: v({ normal: 0, angry: 1, tired: 2, synchro: 3 }, 'rom-verified', 'byte_801E6F4 = [0, 2, 3, 1, 5, 4] by emotion code'),
+};
+
+// Bubbled (N1GP wiki, Status effects): stuck until it wears off or an attack lands; Elec does double; mashing shortens it.
+export const BUBBLE = {
+  frames: v(150, 'recalled', 'N1GP wiki; the timer (CollisionData 0x2C, clears OBJECT_FLAGS_BUBBLED 0x80000000) is rom-verified, its start value is not traced'),
+  sources: v('StarFish bubbles', 'unverified', 'its bubble object sets hit modifier 3 (0x80CBBDE); that 3 means Bubble is not traced'),
+};
+
 export const BUGS = {
   processing: v('every move slides MegaMan as far as he can go in the pressed direction', 'rom-verified', 'type 1 → stat 0x31; sub_80103A8 passes mode 3 to the move (sub_80116AE) → sub_800FA20 walks panels in that direction until one is invalid (sub_800D120)'),
   panelChance: v([0, 2, 3, 4], 'rom-verified', 'type 3 → stat 0x13 = 2/3/4: when MegaMan leaves a panel, (rnd & 7) ≤ stat − 1 cracks it (sub_8013CC4, stat 0x12 = 3 → object_crackPanel)'),
@@ -41,10 +65,10 @@ export const BUGS = {
   busterTable: v([[0, 0], [6, 1], [10, 2], [13, 3]], 'rom-verified', 'type 7 → stats 0x14 / 0x15 (sub_813CDB4/C0/CC); a charge shot rolls one of 16 slots (sub_8013D5E): 1 → attack 0x33, 2 → attack 0x16, else the normal charge shot'),
   busterEffect: v('slot 1: the charge shot misfires (no shot); slot 2: a weaker shot of (Attack + 1) × 10', 'unverified', 'attacks 0x33 (sub_801208A) and 0x16 (sub_8011D38) are not decoded; the app treats 1 as a misfire and 2 as the (Attack + 1) × 10 shot it already uses'),
   hpDrainFrames: v([0, 40, 35, 30, 25, 20, 15, 10], 'rom-verified', 'type 9 → stat 0x18 += level, stat 0x16 = 3; byte_80102A4[stat 0x18]: 1 HP lost every N frames, never below 1 (sub_8010230); each hit raises stat 0x18 by 1 up to 7 (sub_8013F96)'),
-  startStatus: v(['invisible', 'invulnerable', 'blind', 'bubble'], 'rom-verified', 'types B (5 colours) / C (6+): stat 0x1A = 9 / 10 → one of four at random (sub_8013E58): sub_8010474 flashing invisibility, object_setInvulnerableTime, BlindTimer + flag2 0x20, CollisionData 0x1E (bubble timer, t4 0x3C bubble sprite)'),
+  startStatus: v(['invisible', 'invulnerable', 'blind', 'confused'], 'rom-verified', 'types B (5 colours) / C (6+): stat 0x1A = 9 / 10 → one of four at random (sub_8013E58): sub_8010474 flashing invisibility, object_setInvulnerableTime, BlindTimer + flag2 0x20, CollisionData 0x1E (the confusion timer: its countdown clears OBJECT_FLAGS_CONFUSED 0x8000, sub_800E730)'),
   startStatusFrames: v([300, 600], 'rom-verified', '0x12C for type B, 0x258 for type C (off_80141BC / off_80141C0)'),
-  startStatusEffect: v('invisible: attacks pass through; blind: enemies are hidden; bubble: MegaMan can\'t move or attack', 'recalled', 'what blind and the bubble timer do to the player is not traced; the app uses these readings'),
-  noEffect: v('type 2 (emotion), 5 and 6 (encounters), 8 (VS-only helpers): no battle effect in the app', 'rom-verified', 'type 2 → stat 0x24 (emotion), 5 → 0x28 and 6 → 0x26 (asm29 encounters), 8 → stat 0xD = 0xFF (Rush/Beat/Tango, sub_8010660); type A (stat 0x62) is used by no program'),
+  startStatusEffect: v('invisible: attacks pass through, MegaMan flashes; blind: enemies and the obstacles they own are hidden; confused: the D-pad is reversed', 'recalled', 'N1GP wiki, Bugs (BN6) / Status effects; the code that applies blind and confusion to the player is not traced'),
+  noEffect: v('type 2 (emotion), 5 and 6 (encounters), 8 (VS-only helpers): no battle effect in the app', 'rom-verified', '5 → 0x28 and 6 → 0x26 (asm29 encounters), 8 → stat 0xD = 0xFF (Rush/Beat/Tango, sub_8010660); type A (stat 0x62) is used by no program'),
 };
 
 // Chips: names, codes, damage, element, class and MB come from the ROM (data/bn6-chips.mjs).

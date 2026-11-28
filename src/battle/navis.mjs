@@ -32,7 +32,9 @@ function cybeast(P, variant, drawX) {
 }
 
 const setAnim = (e, anim) => { e.anim = anim; e.animT = 0; };
-const go = (e, state, anim) => { e.state = state; e.stateT = 0; if (anim) setAnim(e, anim); };
+// Counter window (object_setDefaultCounterTime, 16 frames): opened when an attack state starts (the app's reading).
+const NOT_ATTACK = new Set(['idle', 'vanish', 'appear', 'wait', 'after', 'hop', 'run', 'slide', 'return', 'recover', 'step', 'swim', 'fly', 'under', 'surface', 'rise', 'dive', 'move', 'warp', 'dashalign']);
+const go = (e, state, anim) => { e.state = state; e.stateT = 0; if (anim) setAnim(e, anim); if (!NOT_ATTACK.has(state) && state !== e.prevGo) e.counterT = 16; e.prevGo = state; };
 const rnd16 = api => Math.floor(api.rng() * 16);
 const pick = (list, api) => list.length ? list[Math.floor(api.rng() * list.length)] : null;
 

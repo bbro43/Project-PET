@@ -4,7 +4,8 @@
 // Panel geometry and sprite anchors are approximations pending an on-screen trace.
 import { frameAt } from '../rom/bank.mjs';
 import { val } from '../../data/rules.mjs';
-import { chipBehaviour, CHIP_DATA, DELETE, BANNER } from '../battle/engine.mjs';
+import { chipBehaviour, CHIP_DATA, DELETE, BANNER, emotionOf } from '../battle/engine.mjs';
+import { EMOTION } from '../../data/rules.mjs';
 
 // Deleted enemies: drawn into a scratch canvas, then pixelated (mosaic) and faded like the game.
 let scratch, small;
@@ -128,6 +129,7 @@ function armParts(p) {
 
 export function render(g, s, bank) {
   g.imageSmoothingEnabled = false;
+  if (s.player.blind > 0) s = { ...s, hazards: s.hazards.filter(h => h.owner === 'player') }; // Blind: enemies' obstacles and shots are hidden too
   const shake = s.effects.find(f => f.kind === 'shake' && f.t < 20);
   g.setTransform(1, 0, 0, 1, 0, shake ? ((shake.t >> 1) & 1 ? 2 : -2) : 0);
   const bg = g.createLinearGradient(0, 0, 0, FIELD_Y);
@@ -413,6 +415,13 @@ export function render(g, s, bank) {
       const [an, at] = gap && p.animT >= 2 ? ['vulcanfire', (p.animT - 2) % gap] : [p.anim, p.animT];
       sprite(g, bank, 'megaman', an, at, ax, ay, placeholderNavi);
       for (const a of armParts(p)) sprite(g, bank, a.key, a.seq, a.t, ax + a.dx, ay - a.dz, () => {}, a.pal || 0);
+      const mood = emotionOf(s); // Angry: red tint (colour shader 0xF, sub_80143E4); Full Synchro: flashing (sub_8016CA4); app-drawn tints
+      if (mood === 'angry' || (mood === 'synchro' && (s.tick >> 2) & 1)) {
+        g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = mood === 'angry' ? 0.35 : 0.45;
+        const c = document.createElement('canvas'); c.width = c.height = 96; const cg = c.getContext('2d');
+        sprite(cg, bank, 'megaman', an, at, 48, 80, () => {}); cg.globalCompositeOperation = 'source-in'; cg.fillStyle = mood === 'angry' ? '#ff3020' : '#80c8ff'; cg.fillRect(0, 0, 96, 96);
+        g.drawImage(c, ax - 48, ay - 80); g.restore();
+      }
       // Navi Customizer abilities: the game's barrier (t4 0x7) and guard (t3 0x2B) sprites; app-drawn without a ROM
       if (p.barrier > 0 && bank?.get('barrierfx')) { g.save(); g.globalAlpha = 0.5; sprite(g, bank, 'barrierfx', 'barrier', s.tick, ax, ay - 16, () => {}); g.restore(); } // see-through (blend level not traced)
       else if (p.barrier > 0) { g.strokeStyle = 'rgba(140,220,255,.8)'; g.lineWidth = 1; g.beginPath(); g.ellipse(ax, ay - 16, 15, 20, 0, 0, 7); g.stroke(); }
@@ -548,6 +557,10 @@ export function render(g, s, bank) {
         }
       }
     }
+    if (f.kind === 'counter' && f.t < 20) { // counter hit: a pink ring (app-drawn; the game's ring object is not decoded)
+      const [cx, cy] = anchor(f.x, f.y); g.strokeStyle = `rgba(255,120,200,${1 - f.t / 20})`; g.lineWidth = 2;
+      g.beginPath(); g.arc(cx, cy - 16, 6 + f.t, 0, 7); g.stroke();
+    }
     if (f.kind === 'star' && f.t < 16) { // AntiDmg's star (app-drawn)
       const [sx, sy] = anchor(f.x, f.y), r = 8 - f.t / 4; g.fillStyle = '#e8e8f0'; g.beginPath();
       for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4 + f.t / 3, rr = k & 1 ? r / 3 : r; g.lineTo(sx + Math.cos(a) * rr, sy - 18 - (16 - f.t) * 2 + Math.sin(a) * rr); }
@@ -651,6 +664,8 @@ export function render(g, s, bank) {
   if (bank?.custom) { // HP box (byte_801EDFC) and HP in the game's white 8×16 digits (dword_86E411C)
     if (bank.custom.hpBox) g.drawImage(bank.custom.hpBox(), 0, 0);
     else { g.fillStyle = '#e8f0f8'; g.fillRect(2, 1, 42, 18); g.fillStyle = '#304068'; g.fillRect(3, 2, 40, 16); }
+    const face = EMOTION.faces.value[emotionOf(s)]; // emotion window (sub_801CDEC): 48×16 at (0, 18)
+    if (bank.custom.emotion && s.emotion) g.drawImage(bank.custom.emotion(face), 0, 18);
     const hp = String(Math.max(0, p.hp));
     for (let k = 0; k < hp.length; k++) g.drawImage((bank.custom.hpDigit || bank.custom.digit)(+hp[k], 0), 41 - 8 * (hp.length - k), 0);
   } else {

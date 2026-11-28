@@ -4663,7 +4663,16 @@
      "palette": "6E1C78",
      "statePalettes": "6E1CD8",
      "gauge": "1ED6C",
-     "box": "1EDFC"
+     "box": "1EDFC",
+     "emotion": {
+      "faces": "1CD04",
+      "side": "1CD64",
+      "palettes": "1CD74",
+      "faceOf": "1E6F4",
+      "y": 18,
+      "confidence": "rom-verified",
+      "note": "literal-pool addresses (same code in both versions): face tile table off_801CD08, right-hand piece dword_872D914 (Gregar 0x872B850), palettes dword_872F114 (Gregar 0x872D050); OAM from sub_801CDEC: 32×16 at (0, 18) + 16×16 at (32, 18), tile 0x3B4, palette 12; face by emotion byte_801E6F4 = [0, 2, 3, 1, 5, 4] (Normal, Tired, Full Synchro, Angry, …)"
+     }
     }
    },
    "bn6g": {
@@ -4756,7 +4765,16 @@
      "palette": "6DFBFC",
      "statePalettes": "6DFC5C",
      "gauge": "1ED6C",
-     "box": "1EDFC"
+     "box": "1EDFC",
+     "emotion": {
+      "faces": "1CD04",
+      "side": "1CD64",
+      "palettes": "1CD74",
+      "faceOf": "1E6F4",
+      "y": 18,
+      "confidence": "rom-verified",
+      "note": "literal-pool addresses (same code in both versions): face tile table off_801CD08, right-hand piece dword_872D914 (Gregar 0x872B850), palettes dword_872F114 (Gregar 0x872D050); OAM from sub_801CDEC: 32×16 at (0, 18) + 16×16 at (32, 18), tile 0x3B4, palette 12; face by emotion byte_801E6F4 = [0, 2, 3, 1, 5, 4] (Normal, Tired, Full Synchro, Angry, …)"
+     }
     }
    }
   }

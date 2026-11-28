@@ -70,7 +70,7 @@ Level = min(bug count, 3) (sub_813BF0C); the routine for level 0 is empty. BugSt
 | 8 | 0xD = 0xFF | turns off Rush / Beat / Tango (sub_8010660) | no effect (those are VS only) |
 | 9 HP | 0x18 += level, 0x16 = 3 | every byte_80102A4[0x18] frames (0, 40, 35, 30, 25, 20, 15, 10) MegaMan loses 1 HP, never below 1 (sub_8010230); each hit raises 0x18 by 1, max 7 (sub_8013F1E → sub_8013F96) | rom-verified |
 | 0xA | 0x62 = 3/2/1 | no program has bug type 0xA | — |
-| 0xB / 0xC colours | 0x1A = 9 / 10 | at battle start one of four at random (sub_8013E58), 0x12C (B) or 0x258 (C) frames: flashing invisibility (sub_8010474), invulnerability (object_setInvulnerableTime), blind (BlindTimer, flag2 0x20), bubble (CollisionData 0x1E; sub_800E730 puts the object in action 7 and spawns t4 0x3C) | rom-verified; what blind and the bubble timer do to MegaMan is recalled (enemies hidden / can't act) |
+| 0xB / 0xC colours | 0x1A = 9 / 10 | at battle start one of four at random (sub_8013E58), 0x12C (B) or 0x258 (C) frames: flashing invisibility (sub_8010474), invulnerability (object_setInvulnerableTime), blind (BlindTimer, flag2 0x20), confusion (CollisionData 0x1E: its countdown clears OBJECT_FLAGS_CONFUSED 0x8000; 0.55.0 misread it as the bubble) | rom-verified; what blind and confusion do to MegaMan is from the N1GP wiki (enemies and their obstacles hidden / D-pad reversed) |
 
 ## SuperArmor and pushing (0.55.0)
 The ROM's text for SuperArmor is "Won't be pushed!". WindBox / VacuumFan gusts no longer move MegaMan when it's installed. The code path that skips the push was not traced (the push itself is in the hit routine sub_80178D4 → sub_800E45E).
@@ -82,3 +82,21 @@ The ROM's text for SuperArmor is "Won't be pushed!". WindBox / VacuumFan gusts n
 | Shield / Reflect | t3 0x2B (sub_80C97E0; Unk_0c 0x214 / 0x114 → param 2 / 1) | 0x0C/0x1B, byte_80C9664: Shield animations 4/5, Reflect 2/3, palette 0 | palette entries 9–15 are 0x03E0 fillers; drawn transparent. Reflect's body uses them, so it shows only in part |
 | Bubble | t4 0x3C (sub_80E4A6E) | 0x0C/0x20, animation 2 | entries 5–15 are fillers; drawn transparent |
 | AntiDmg star | family 0x5A spawns t1 0x5 (byte_80B8BD4 entry 3 = 0x0C/0x00) | that sprite is a sword slash, so the star is still app-drawn | not resolved |
+
+## Emotions (0.56.0)
+| Item | Location | Value |
+|---|---|---|
+| Emotion code | possiblyGetBattleEmotion_8015B64 | Anger timer → 3 Angry; AIData 0x32 → 1 Tired; mood (stat 0x0E) 0xFF → 2 Full Synchro; else 0 Normal (5 = mood 0 / AIData 0x36, Beast Out related, not used) |
+| Window | sub_801CB38 / sub_801CDEC | face = byte_801E6F4[code] = [0, 2, 3, 1, 5, 4]; 8 tiles from off_801CD08[face] + 4 from dword_872D914 (Gregar 0x872B850) at OBJ tile 0x3B4; palette dword_872F114 (Gregar 0x872D050) + 32·face → OBJ palette 12; OAM 32×16 at (0, 18) and 16×16 at (32, 18) |
+| Full Synchro | sub_801A200 | counter hit (collision 0x90 & 0x8000) → mood 0xFF; base form (or transformation 0xB / 0xC) |
+| Counter window | object_setDefaultCounterTime | 0x10 frames; set by each AI as its attack starts. The app opens it when an enemy enters a non-moving state (its reading) |
+| Mood loss | sub_801A200 → sub_8015C12 | each hit lowers the mood by collision 0x8E (read as the damage), at least 1 left |
+| Boost | sub_8012A38, 0x8012866 | chip flag byte 9 bit 2: damage marked 0x8000 (double) under Full Synchro (then mood 0x80) or Angry (then sub_80143A6) |
+| Angry | sub_80142DC, sub_8014326 | base MegaMan: ≥ 0x78 frames under flag 0xC00, or collision 0x80 / 2 ≥ 0x96 → Anger 600 frames, red colour shader 0xF (sub_80143E4) |
+| Tired | sub_801445C | blocks mood changes and anger |
+| Emotion bug | sub_8013DA0 | every 0x3C frames when stat 0x24, stat 0x21 (Beast Out counter) ≠ 0 and not transformed: reset, then byte_8013E44 with the current emotion's entries swapped (0 → 1 from Normal, else → 0); 1 Tired (0x32 = 0xFFFF), 2 Angry, 0 / 3 mood 0x99 / 0xFF (dword_8013E54). Matches the N1GP wiki's table |
+
+Not done: the counter ring and the Full Synchro flash are app-drawn; the counter's other effects (stun) aren't in; Beast Out is not in the app, so the emotion bug treats its counter as above 0.
+
+## Bubbled (0.56.0)
+OBJECT_FLAGS_BUBBLED 0x80000000, timer CollisionData 0x2C (sub_800E730), sprite t4 0x3C. 150 frames, popped by a hit, Elec ×2, mashing shortens it (N1GP wiki). StarFish's bubbles apply it in the app; their hit modifier 3 (0x80CBBDE) meaning Bubble is not traced.
