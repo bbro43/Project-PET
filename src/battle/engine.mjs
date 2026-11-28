@@ -40,7 +40,7 @@ export function survivalWave(n, pickFamily = i => PLAYABLE_FAMILIES[i % PLAYABLE
   return Array.from({ length: count }, (_, i) => [pickFamily(n + i), variant]);
 }
 
-export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0, 1), seed = 1, folder = DEFAULT_FOLDER, regular = null, field = 'normal', intro = false } = {}) {
+export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0, 1), seed = 1, folder = DEFAULT_FOLDER, regular = null, tag = null, field = 'normal', intro = false } = {}) {
   const s = {
     intro, banner: null,
     tick: 0, seed: seed >>> 0, mode, wave: 1, deleted: 0,
@@ -55,7 +55,7 @@ export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0,
     draw: [], hand: [], picked: [], queue: [], handBonus: 0, busterUp: 0,
   };
   s.panels = createPanels(field, () => rng(s));
-  s.draw = deal(s, s.folder, regular);
+  s.draw = deal(s, s.folder, regular, tag);
   spawn(s, mode === 'survival' ? survivalWave(1, k => pickSurvival(s, k)) : enemies);
   refillHand(s);
   return s;
@@ -63,16 +63,31 @@ export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0,
 
 // Battle folder order (sub_800A350 / sub_800A570): the Regular chip is swapped to the front and left out of the
 // shuffle, so it is always in the first hand; GigaChips are shuffled apart and each inserted at index
-// 10 + rnd % (count − 12) of the main list, so they never come in the first hand.
-export function deal(s, folder, regular = null) {
+// 10 + rnd % (count − 12) of the main list, so they never come in the first hand. Tag chips (sub_800A318):
+// swapped to slots 28 / 29 and left out of the shuffle, then moved as a pair to k, k + 1 with k = 1 + rnd % 19.
+export function deal(s, folder, regular = null, tag = null) {
   const list = folder.slice();
-  if (regular != null && list[regular]) [list[0], list[regular]] = [list[regular], list[0]];
+  let tg = tag?.length === 2 ? tag.slice() : null;
+  if (regular != null && list[regular]) {
+    [list[0], list[regular]] = [list[regular], list[0]];
+    if (tg) tg = tg.map(i => i === 0 ? regular : i); // keep pointing at the same chips
+  }
+  if (tg && list.length >= 4) { // the game's two swaps into the last two slots
+    const L = list.length - 2, [a, b] = tg;
+    if (b === L) { [list[L + 1], list[a]] = [list[a], list[L + 1]]; }
+    else { [list[L], list[a]] = [list[a], list[L]]; const bb = b === L ? a : b; [list[L + 1], list[bb]] = [list[bb], list[L + 1]]; }
+  } else tg = null;
   const giga = c => CHIP_DATA[c.name]?.class === 'giga';
-  const main = list.filter((c, i) => !giga(c) || (regular != null && i === 0)), gigas = list.filter((c, i) => giga(c) && !(regular != null && i === 0));
-  const fixed = regular != null && list[regular] ? 1 : 0;
-  const tail = shuffle(s, main.slice(fixed));
-  const out = [...main.slice(0, fixed), ...tail];
+  const n = list.length, lead = regular != null && list[0] ? 1 : 0, trail = tg ? 2 : 0;
+  const isFixed = i => i < lead || i >= n - trail;
+  const main = list.filter((c, i) => isFixed(i) || !giga(c)), gigas = list.filter((c, i) => !isFixed(i) && giga(c));
+  const middle = shuffle(s, main.slice(lead, main.length - trail));
+  const out = [...main.slice(0, lead), ...middle, ...main.slice(main.length - trail)];
   for (const g of shuffle(s, gigas)) out.splice(10 + Math.floor(rng(s) * 0x7fffffff) % Math.max(1, out.length - 12), 0, g);
+  if (tg) {
+    const k = 1 + Math.floor(rng(s) * 0x7fffffff) % 19, e = out.length - 2;
+    [out[e], out[k]] = [out[k], out[e]]; [out[e + 1], out[k + 1]] = [out[k + 1], out[e + 1]];
+  }
   return out;
 }
 

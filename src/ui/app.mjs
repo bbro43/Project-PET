@@ -4,7 +4,7 @@ import { identify, extractRoms, sha1Hex } from '../rom/gba.mjs';
 import { saveRom, loadRom, listRoms } from '../rom/store.mjs';
 import { buildBank, pickSources, SOURCE_ORDER } from '../rom/bank.mjs';
 import { render, preview } from './render.mjs';
-import { createFolderUI, loadFolders, equippedFolder, equippedRegular } from './folder.mjs';
+import { createFolderUI, loadFolders, equippedFolder, equippedRegular, equippedTag } from './folder.mjs';
 
 const $ = s => document.querySelector(s);
 const release = self.PROJECT_PET_RELEASE;
@@ -128,7 +128,7 @@ function start() {
   const mode = $('#mode').value;
   const enemies = mode === 'navi' ? naviBattle($('#cpu-navi').value, +$('#cpu-variant').value)
     : formation($('#family').value, +$('#variant').value, +$('#count').value);
-  state = createBattle({ mode: mode === 'navi' ? 'virus' : mode, enemies, field: $('#field').value, seed: (Date.now() & 0x7fffffff), intro: true, folder: equippedFolder(folders), regular: equippedRegular(folders) });
+  state = createBattle({ mode: mode === 'navi' ? 'virus' : mode, enemies, field: $('#field').value, seed: (Date.now() & 0x7fffffff), intro: true, folder: equippedFolder(folders), regular: equippedRegular(folders), tag: equippedTag(folders) });
   $('#menu').hidden = true; $('#battle').hidden = false;
   showCustom();
   last = performance.now(); acc = 0;
@@ -144,7 +144,7 @@ function openFolder() {
   cancelAnimationFrame(raf); raf = requestAnimationFrame(folderFrame);
 }
 function folderFrame() {
-  for (const k of ['up', 'down', 'left', 'right', 'a', 'b', 'l', 'r', 'select']) if (pressed.has(k)) folderUI.input(k);
+  for (const k of ['up', 'down', 'left', 'right', 'a', 'b', 'l', 'r', 'select', 'start']) if (pressed.has(k)) folderUI.input(k);
   pressed.clear();
   folderUI.draw(screen);
   raf = requestAnimationFrame(folderFrame);
@@ -321,7 +321,7 @@ for (const b of document.querySelectorAll('[data-k]')) {
   for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) b.addEventListener(ev, () => lift(k));
   b.addEventListener('contextmenu', e => e.preventDefault());
 }
-const KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', x: 'a', X: 'a', z: 'b', Z: 'b', c: 'select', C: 'select', Shift: 'select', a: 'l', A: 'l', s: 'r', S: 'r' };
+const KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', x: 'a', X: 'a', z: 'b', Z: 'b', c: 'select', C: 'select', Shift: 'select', Enter: 'start', a: 'l', A: 'l', s: 'r', S: 'r' };
 addEventListener('keydown', e => {
   if (folderOpen && KEYS[e.key]) { e.preventDefault(); press(KEYS[e.key]); return; } // repeats scroll the lists
   if (!state || !KEYS[e.key]) return;

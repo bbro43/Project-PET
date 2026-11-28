@@ -41,12 +41,16 @@ def chips(b):
         o = TABLE + i * SIZE
         r = b[o:o + SIZE]
         codes = [CODES[c] for c in r[0:4] if c != 0xFF]
+        power = struct.unpack_from('<H', r, 0x1A)[0]
+        # Power ≥ 1001 is a code (sub_8010C76): 11 tiers at 0x20E54 + 22·(power − 1001), picked by a saved
+        # battle-time record (unk_20018C0) against the thresholds at 0x10CB8; tier 0 = no record.
+        tiers = list(struct.unpack_from('<11H', b, 0x20E54 + 22 * (power - 1001))) if 1001 <= power <= 1018 else None
         out.append({
             'id': i, 'name': nm[i] if i < len(nm) else '', 'codes': codes,
             'element': ELEMENTS[r[4]] if r[4] < 5 else r[4], 'icon': CHIP_ELEMENTS[r[6]] if r[6] < len(CHIP_ELEMENTS) else r[6],
             'class': CLASSES[r[7]] if r[7] < 4 else r[7], 'mb': r[8], 'rarity': r[5],
             'damage': struct.unpack_from('<H', r, 0x1A)[0], 'flags': r[9], 'family': r[0xB], 'subfamily': r[0xC],
-            'params': list(r[0x10:0x14]), 'lockout': r[0x14], 'library': r[0x15], 'darkChip': r[0x1F] if r[0x1F] != 0xFF else None,
+            'params': list(r[0x10:0x14]), 'abc': struct.unpack_from('<H', r, 0x18)[0], 'order': struct.unpack_from('<H', r, 0x1C)[0], 'lockout': r[0x14], 'library': r[0x15], 'darkChip': r[0x1F] if r[0x1F] != 0xFF else None, 'tiers': tiers,
         })
     return out
 

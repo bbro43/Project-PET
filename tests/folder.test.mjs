@@ -55,3 +55,36 @@ test('Regular chip is always drawn first; GigaChips never in the first hand', ()
   const b = createBattle({ seed: 5, regular: 6 });
   assert.equal(b.hand[0].id, 6);
 });
+
+import { sortChips, SORTS } from '../src/ui/folder.mjs';
+test('sorting follows the game keys (ties by chip then code)', () => {
+  const f = [['Vulcan1', 'D'], ['Cannon', 'B'], ['AirShot', '*'], ['Cannon', 'A'], ['MiniBomb', 'L']];
+  assert.equal(SORTS.length, 7);
+  assert.deepEqual(sortChips(f, 0).map(c => c.join()), ['Cannon,A', 'Cannon,B', 'AirShot,*', 'Vulcan1,D', 'MiniBomb,L']); // ID order
+  assert.deepEqual(sortChips(f, 1).map(c => c[0]), ['AirShot', 'Cannon', 'Cannon', 'MiniBomb', 'Vulcan1']);              // ABCDE
+  assert.deepEqual(sortChips(f, 2).map(c => c[1]), ['A', 'B', 'D', 'L', '*']);                                             // Code
+  assert.deepEqual(sortChips(f, 3, true).map(c => c[0]), ['MiniBomb', 'Cannon', 'Cannon', 'AirShot', 'Vulcan1']);       // Attack, high first
+  assert.deepEqual(sortChips(f, 5, true).map(c => c[0]).slice(0, 1), ['Cannon']); // there are no duplicates of chip+code, so ties → chip order
+});
+
+import { setTag, TAG_MEMORY } from '../src/ui/folder.mjs';
+test('Tag chips: two chips totalling at most 60 MB, never the Regular', () => {
+  assert.equal(TAG_MEMORY, 60);
+  const f = { chips: [['Cannon', 'A'], ['AirShot', '*'], ['Vulcan1', 'D'], ['HiCannon', 'L'], ['M-Cannon', 'M']], reg: 1, tag: null };
+  assert.match(setTag(f, 1).msg, /Regular/);
+  let r = setTag(f, 0); assert.equal(r.pending, 0);
+  r = setTag(f, 2, r.pending); assert.deepEqual(f.tag, [0, 2]);
+  assert.match(setRegular(f, 0), /Tag/);
+  setTag(f, 2); assert.equal(f.tag, null); // Tag again clears the pair
+});
+
+test('Tagged chips come adjacent, after the first slot', () => {
+  const folder = Array.from({ length: 30 }, (_, i) => ({ id: i, name: 'Cannon', code: 'A' }));
+  for (let seed = 1; seed < 60; seed++) {
+    const out = deal({ seed }, folder, 4, [7, 20]);
+    assert.equal(out.length, 30); assert.equal(out[0].id, 4);
+    const a = out.findIndex(c => c.id === 7);
+    assert.ok(a >= 1 && a <= 19); assert.equal(out[a + 1].id, 20);
+    assert.equal(new Set(out.map(c => c.id)).size, 30);
+  }
+});

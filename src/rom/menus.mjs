@@ -75,6 +75,15 @@ function objTiles(m, t, n, pal) {
   }
   return { rgba, width: 8 * n, height: 8 };
 }
+// A w×h-tile OBJ (1D mapping: tile t + row·w + col) in OBJ palette `pal`.
+function objBlock(m, t, w, h, pal) {
+  const W = 8 * w, rgba = new Uint8ClampedArray(W * 8 * h * 4);
+  for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) {
+    const one = objTiles(m, t + r * w + c, 1, pal);
+    for (let y = 0; y < 8; y++) rgba.set(one.rgba.subarray(y * 32, y * 32 + 32), ((r * 8 + y) * W + c * 8) * 4);
+  }
+  return { rgba, width: W, height: 8 * h };
+}
 // Chip descriptions (TextScriptChipDescriptions0 for ids 0–255, TextScriptChipDesc1 for 256+; pointers at 0x8027D50):
 // a table of u16 offsets, then one script per chip: control codes, the text in the game charmap (0xE9 = new line), 0xE7 ends it.
 const CHARMAP = { 0x98: '-', 0x9A: '=', 0x9B: ':', 0x9C: '%', 0x9D: '?', 0x9E: '+', 0xA2: '!', 0xA3: '&', 0xA4: ',', 0xA6: '.', 0xAC: '/', 0x25: '*' };
@@ -110,7 +119,14 @@ export function decodeMenus(rom, src) {
     // Regular memory number (sub_812053C, tile 0x160 palette 8): digits 0x161–0x16A, "MB" 0x16C–0x16D
     regDigits: Array.from({ length: 10 }, (_, d) => objTiles(fe, 0x161 + d, 1, 8)),
     regMB: objTiles(fe, 0x16C, 2, 8),
-    regFrame: sprite(fe.ram.get(0x203526C), 0)[0], // REG frame (seq 0; seq 1 is TAG), drawn round the Regular chip's row
+    // cursor (byte_81331F4: tiles 0x240 / 0x244 / 0x248, palette 12, 16×16, 6 frames each) and the page arrow
+    // (byte_81331EC: tiles 0x250 / 0x24F / 0x24E, 8×8; flipped on the Pack side), both drawn by sub_811FAF4
+    countBox: sprite(fe.ram.get(0x2034B6C), 0)[2], // the 30/30 box (object type 0xD, sub_8117BE8): last frame of its opening, at (212,12)
+    scrollThumb: objBlock(fe, 0x24C, 1, 2, 12),    // list scroll thumb (sub_8134558: tile 0xC24C, 8×16)
+    cursor: [0x240, 0x244, 0x248].map(t => objBlock(fe, t, 2, 2, 12)),
+    pageArrow: [0x250, 0x24F, 0x24E].map(t => objBlock(fe, t, 1, 1, 12)),
+    regFrame: sprite(fe.ram.get(0x203526C), 0)[0],
+    tagFrame: sprite(fe.ram.get(0x203526C), 1)[0], // REG frame (seq 0; seq 1 is TAG), drawn round the Regular chip's row
     smallDigits: Array.from({ length: 10 }, (_, d) => tiles(fe, 0x6800 + 32 * (16 + d), 1, 9, 13)),
     mbLabel: tiles(fe, 0x6800 + 32 * 26, 2, 9, 13),
     describe: src.descriptions ? id => describe(rom, src.descriptions, id) : null,
@@ -123,7 +139,10 @@ export function buildMenus(rom, src) {
   return {
     chipFolder: canvas(d.chipFolder), folderEdit: canvas(d.folderEdit), folderPanel: canvas(d.folderPanel), sortMenu: canvas(d.sortMenu),
     card: { image: canvas(d.card), originX: d.card.originX, originY: d.card.originY },
+    countBox: { image: canvas(d.countBox), originX: d.countBox.originX, originY: d.countBox.originY }, scrollThumb: canvas(d.scrollThumb),
+    cursor: d.cursor.map(canvas), pageArrow: d.pageArrow.map(canvas),
     regDigits: d.regDigits.map(canvas), regMB: canvas(d.regMB),
+    tagFrame: { image: canvas(d.tagFrame), originX: d.tagFrame.originX, originY: d.tagFrame.originY },
     regFrame: { image: canvas(d.regFrame), originX: d.regFrame.originX, originY: d.regFrame.originY },
     smallDigits: d.smallDigits.map(canvas), mbLabel: canvas(d.mbLabel),
     describe: d.describe ? (cache => id => cache.get(id) ?? (cache.set(id, d.describe(id)), cache.get(id)))(new Map()) : null,
