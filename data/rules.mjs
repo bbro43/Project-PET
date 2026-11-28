@@ -131,6 +131,12 @@ const SWORD_FX = { 1: 'sword', 4: 'wide', 2: 'long', 6: 'long', 0x11: 'both', 0x
 const sword = (sub, extra = {}) => ({ kind: 'slash', region: SWORD_AREA[sub], area: REGIONS[SWORD_AREA[sub]].map(([dx, dy]) => [dx + 1, dy]),
   slashFx: SWORD_FX[SWORD_AREA[sub]], anim: 'slash', lock: 24, confidence: 'rom-verified', note: `area ${SWORD_AREA[sub]} from byte_80EBA18[${sub}]; lock 24 recalled`, ...extra });
 
+// Chip lockout (rom-verified): `lock` is how long the chip's own action keeps MegaMan busy (its attack family's code). When the
+// action ends, sub_801171C copies the chip's LockoutFrames (ChipData +0x14, via AIAttackVars +0x05, sub_80126F6) into
+// AIData ChipLockoutTimer; sub_80107D4 counts it down outside time freezes and sub_800A772 refuses another chip until it
+// is 0. Moving and the buster are not blocked. Nonzero in BN6: seeds / Lance 10; FireHit, Boomer, GolmHit, JustcOne,
+// FullCust, BusterUp, plus chips, arms, SyncTrgr, FlmHook, CornFsta, ParaShl, DestPuls, StreamHd 20; TimeBom, Recov 30;
+// AirHocky 50.
 export const CHIP_BEHAVIOUR = {
   Cannon:   { kind: 'shot', fx: 'explosion', anim: 'cannon', lock: 30, confidence: 'recalled' },
   HiCannon: { kind: 'shot', fx: 'explosion', anim: 'cannon', lock: 30, confidence: 'recalled' },
@@ -458,11 +464,11 @@ export const CHIP_BEHAVIOUR = {
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },
-  BusterUp: { kind: 'busterup', anim: 'idle', lock: 20, confidence: 'recalled', note: 'lockout 20 from the ROM' },
+  BusterUp: { kind: 'busterup', anim: 'idle', lock: 1, confidence: 'recalled', note: 'the 20-frame chip lockout (ChipData +0x14) follows; the action itself is not decoded' },
   AreaGrab: { kind: 'grab', column: true, anim: 'idle', lock: 1, confidence: 'rom-verified', note: 't4 0x3 0x80E0754: time freeze, a beam (t3 0xF 0x80C6414) on each panel of the first column ahead that is not all MegaMan\'s (0x800D58C)' },
   PanlGrab: { kind: 'grab', column: false, anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'same chip action with param 0: one beam on the edge panel of MegaMan\'s row (object_getEdgePanelMatchingRow)' },
-  'Atk+10': { kind: 'plus', anim: 'idle', lock: 20, confidence: 'recalled', note: 'added to the attack chip picked before it; used alone it only pops (0x8010488)' },
-  WhiCapsl: { kind: 'plus', adds: 'paralyze', anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'description "Add an effect: Paralyze" (TextScriptChipDescriptions0 #184); used alone: smoke puff t4 0x14 (sprite 0x14/0x02 animation 1) rising 2 px a frame from 48 px up, sound 0x90 (0x8010488 / 0x80E1CF8)' },
+  'Atk+10': { kind: 'plus', anim: 'idle', lock: 1, confidence: 'recalled', note: 'added to the attack chip picked before it; used alone it only pops (0x8010488)' },
+  WhiCapsl: { kind: 'plus', adds: 'paralyze', anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'description "Add an effect: Paralyze" (TextScriptChipDescriptions0 #184); used alone: smoke puff t4 0x14 (sprite 0x14/0x02 animation 1) rising 2 px a frame from 48 px up, sound 0x90 (0x8010488 / 0x80E1CF8)' },
 };
 
 // Area stealing (AreaGrab / PanlGrab).

@@ -354,3 +354,12 @@ test('GrabRvng: takes back stolen panels and strikes every enemy once per panel;
   for (let i = 0; i < 20 + 60; i++) step(s, {});
   assert.ok(hurt(s).every(h => h[2] >= 10 && h[2] <= 11)); assert.equal(hurt(s).length, 9);
 });
+
+test('chip lockout: LockoutFrames from the chip data block the next chip after the action ends', () => {
+  const s = after('Recov10', 0); s.queue.push({ id: 2, name: 'Recov10', code: 'A' });
+  while (s.player.state === 'chip') step(s, {});
+  assert.equal(s.player.chipLockout, 30);
+  step(s, { b: true }); assert.equal(s.queue.length, 1); // refused
+  for (let i = 0; i < 30; i++) step(s, {});
+  step(s, { b: true }); assert.equal(s.queue.length, 0);
+});

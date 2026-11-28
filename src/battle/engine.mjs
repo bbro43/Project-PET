@@ -807,6 +807,7 @@ function stepPlayer(s, input) {
   p.animT++; p.stateT++;
   if (p.invuln > 0) p.invuln--;
   if (p.invis > 0) p.invis--;
+  if (p.chipLockout > 0) p.chipLockout--; // sub_80107D4 (not during a time freeze)
   if (p.barrierTime > 0 && --p.barrierTime === 0) p.barrier = 0;        // LifeAur runs out (Unk_1a_1b)
   if (p.barrierWrap && p.barrier === 0 && ++p.wrapT >= p.barrierWrap) p.barrier = 1; // BblWrap grows back (sub_801A802)
   if (p.blind > 0) p.blind--;
@@ -875,6 +876,7 @@ function stepPlayer(s, input) {
   if (input.a) { p.holdT++; p.charge = Math.min(s.chargeTime, p.charge + 1); }
   if (p.state === 'appear' && p.stateT >= val('moveAppearTicks')) { p.state = 'idle'; setAnim(p, 'idle'); }
   if ((p.state === 'buster' && p.stateT >= (p.busterWait ?? val('busterCooldown'))) || (p.state === 'chip' && p.stateT >= p.chip.lock)) {
+    if (p.state === 'chip') p.chipLockout = CHIP_DATA[p.chip.name]?.lockout || 0; // sub_801171C: ChipData LockoutFrames → AIData ChipLockoutTimer when the chip's attack ends
     p.state = 'idle'; p.chip = null; setAnim(p, 'idle');
     if (p.home) { [p.x, p.y] = p.home; p.home = null; } // StepSwrd: back to where he stood
   }
@@ -891,7 +893,7 @@ function stepPlayer(s, input) {
       return;
     }
   }
-  if (input.b && s.queue.length) { useChip(s, s.queue.shift()); return; }
+  if (input.b && s.queue.length && !(p.chipLockout > 0)) { useChip(s, s.queue.shift()); return; } // sub_800A772: no chip while ChipLockoutTimer runs
   if (pressedA) {
     p.state = 'buster'; p.stateT = 0; setAnim(p, 'buster');
     const roll = busterBugRoll(s); // buster bug: a normal shot may misfire (family 0x33) or come out charged (0x16)
