@@ -228,8 +228,9 @@ export function render(g, s, bank) {
     const [ax, ay] = anchor(h.fx, h.fy);
     sprite(g, bank, 'thunderfx', 'ball', h.t, ax, ay - 12, (g, x, y) => { g.fillStyle = '#ffe060'; g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); }, 0, false);
   }
-  for (const h of s.hazards) if (h.kind === 'widewave') { // WideShot wave (sprite 0x10/0x37): forming, then travelling
+  for (const h of s.hazards) if (h.kind === 'widewave' && s.tick >= h.start) { // WideShot wave (sprite 0x10/0x37): forming, then travelling; AntiSwrd's wave (0x0C/0x14)
     const [ax, ay] = anchor(h.fx, h.y), t = s.tick - h.start;
+    if (h.sprite) { sprite(g, bank, h.sprite, 'wave', t, ax, ay - 16, (g, x, y) => { g.strokeStyle = '#e0f0ff'; g.lineWidth = 3; g.beginPath(); g.arc(x - 10, y, 30, -1, 1); g.stroke(); }, 0, false); continue; }
     sprite(g, bank, 'widefx', t < 9 ? 'form' : 'wave', t < 9 ? t : t - 9, ax, ay - 16, (g, x, y) => { g.fillStyle = 'rgba(120,190,255,.8)'; g.beginPath(); g.ellipse(x, y, 8, 40, 0, 0, 7); g.fill(); }, 0, false);
   }
   for (const h of s.hazards) if (h.kind === 'pulse') { // ElecPulse (sprite 0x10/0x40)

@@ -1444,7 +1444,7 @@ function colonel(e, api) {
       if (e.stateT === 1) e.highlight = [cells];
       if (e.stateT === mark) {
         e.highlight = null; setAnim(e, 'slash'); s.effects.push({ kind: 'shake', t: 0 });
-        api.hitPlayerCells(cells, follow ? pv(P.divideFollowDamage, v) : pv(P.divideDamage, v));
+        api.hitPlayerCells(cells, follow ? pv(P.divideFollowDamage, v) : pv(P.divideDamage, v), { sword: true });
         for (const [x, y] of cells) s.effects.push({ kind: 'spark', x, y, t: 0 });
       }
       if (e.stateT >= mark + 16) {
@@ -1615,7 +1615,7 @@ function protoman(e, api) {
     case 'swing':
       if (e.stateT === P.hitTick.value) {
         const cells = AREAS[e.plan.area].map(([dx, dy]) => [e.x + dx, e.y + dy]);
-        api.hitPlayerCells(cells, e.plan.damage);
+        api.hitPlayerCells(cells, e.plan.damage, { sword: true });
         s.effects.push({ kind: 'slash', area: e.plan.area, x: e.x, y: e.y, t: 0 });
       }
       if (e.stateT >= P.recoverTicks.value) {

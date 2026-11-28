@@ -370,6 +370,22 @@ export const CHIP_BEHAVIOUR = {
   // Geddon (sub 3 → t4 0x1D → t4 0x1E, byte_80E2588[params[0]]): every solid panel, in a shuffled order, one every 8 frames,
   // inside the freeze; params[0] 1 → object_breakPanel (0x800CAE8). MegaMan's panel is reserved meanwhile.
   Geddon: { kind: 'geddon', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // Traps (sub 20 → t4 0x2A, sub_80E3504): in the freeze the chip is stored as MegaMan's side's trap (sub_802CE8A,
+  // unk_2036720: chip, damage) and hidden; one trap a side, a new one replaces it. hiveBlockHappensHere_802CEF4 checks every
+  // hit on MegaMan: AntiDmg (0xBB) and BodyGrd (0x157) spring on a hit of 10 or more, AntiSwrd (0xBC) on a sword hit
+  // (collision flag 0x2000, not 0x20000); the hit is cleared. Responses (sub_801056A): AntiDmg → attack 0x47 (sub_80EE92C:
+  // MegaMan hides, a shuriken sub_80DD91A at the target of sub_8016004, 0x1E frames), AntiSwrd → 0x48 (sub_80EEA78:
+  // invincible, 3 sword waves t3 0x58, area 4, 8 px a frame, one every 0x16 frames), BodyGrd → 0x4B (sub_80EED74: hides;
+  // t4 0x6E fires 10 shurikens, one every 0x14 frames). ElemTrap (0xC5 → t3 0x4D, sub_80CE034): an all-panel catcher;
+  // the first Fire / Aqua / Elec / Wood attack that touches it makes t4 0x2B hit every panel with an enemy on it with that
+  // element and the chip's damage (sub_80E362C). AntiNavi / AntiRecv answer the opponent's Navi / recovery chips; the CPU
+  // enemies here use no chips, so they never spring.
+  AntiDmg: { kind: 'trap', freeze: true, hold: 60, trap: 'damage', anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  BodyGrd: { kind: 'trap', freeze: true, hold: 60, trap: 'bodyguard', anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'which enemy each shuriken picks (sub_80E8326) is taken as the next one in turn' },
+  AntiSwrd: { kind: 'trap', freeze: true, hold: 60, trap: 'sword', anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'which enemy attacks carry the sword flag is the app\'s reading: Swordy, ProtoMan\'s slashes, Colonel\'s Screen Divide' },
+  ElemTrap: { kind: 'trap', freeze: true, hold: 60, trap: 'element', anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'sprung by elemental attacks that hit MegaMan (in the game, any that touch a panel)' },
+  AntiNavi: { kind: 'trap', freeze: true, hold: 60, trap: 'navi', anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  AntiRecv: { kind: 'trap', freeze: true, hold: 60, trap: 'recovery', anim: 'idle', lock: 20, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

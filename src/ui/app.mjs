@@ -1,4 +1,4 @@
-import { createBattle, step, pick, unpick, confirmCustom, addCustom, DEFAULT_FOLDER, CHIP_DATA, chipBehaviour, canPick, formation, PLAYABLE_FAMILIES, virusName, PLAYABLE_NAVIS, naviVariants, naviBattle, shuffleHand } from '../battle/engine.mjs';
+import { createBattle, step, pick, unpick, confirmCustom, addCustom, DEFAULT_FOLDER, CHIP_DATA, chipBehaviour, canPick, formation, PLAYABLE_FAMILIES, virusName, PLAYABLE_NAVIS, naviVariants, naviBattle, shuffleHand, DELETE, BANNER } from '../battle/engine.mjs';
 import BN6 from '../../data/bn6-viruses.mjs';
 import { identify, extractRoms, sha1Hex } from '../rom/gba.mjs';
 import { saveRom, loadRom, listRoms } from '../rom/store.mjs';
@@ -197,6 +197,9 @@ function frame(now) {
     step(state, state.phase === 'custom' ? {} : inputForTick());
     if (!wasCustom && state.phase === 'custom') showCustom();
   }
+  // Owner: 3 seconds after YOU WIN! (it shows once the deletions and ENEMY DELETED! are done) or "MegaMan deleted...", back to the menu.
+  const shown = state.phase === 'win' ? DELETE.hold + DELETE.fade + BANNER.deleted : state.phase === 'lose' ? 0 : null;
+  if (shown !== null && state.phaseT >= shown + 180) { quit(); return; }
   render(screen, state, bank);
   if (state.phase === 'custom' && romCustom()) drawCustom(screen);
   raf = requestAnimationFrame(frame);

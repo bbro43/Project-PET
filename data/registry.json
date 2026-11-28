@@ -4729,6 +4729,31 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "swordwavefx": {
+   "label": "AntiSwrd's counter wave (t3 0x58 sub_80CF810): sprite 0x0C/0x14, animation 0",
+   "sources": {
+    "bn6f": {
+     "offset": "30F144",
+     "compression": "none",
+     "bytes": 8516,
+     "sha256": "48a69529e125fde4f490dda8b9e481bee35c3c3ddb9d07e12bbd9c15c3cc31f2",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "30E6BC",
+     "compression": "none",
+     "bytes": 8516,
+     "sha256": "48a69529e125fde4f490dda8b9e481bee35c3c3ddb9d07e12bbd9c15c3cc31f2",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "wave": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

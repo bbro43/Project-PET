@@ -244,3 +244,19 @@ test('batch 11: gauge chips, time bombs, instruments, Geddon', () => {
   s = after('Geddon', 260);
   assert.ok([0, 1, 2, 3, 4, 5].flatMap(x => [0, 1, 2].map(y => [x, y])).filter(([x, y]) => !(x === 1 && y === 1)).every(([x, y]) => panelType(s, x, y) === 'broken' || s.enemies.some(e => e.x === x && e.y === y)));
 });
+
+test('traps: AntiDmg, BodyGrd, AntiSwrd and ElemTrap spring on the right hits', () => {
+  let s = after('AntiDmg', 140); s.player.invuln = 0;
+  hitPlayer(s, 5); assert.equal(s.player.hp, 95); assert.ok(s.trap); // under 10: no
+  s.player.invuln = 0; s.attacker = s.enemies.find(e => e.x === 5 && e.y === 0); hitPlayer(s, 40);
+  assert.equal(s.player.hp, 95); assert.equal(s.trap, null);
+  for (let i = 0; i < 10; i++) step(s, {});
+  assert.deepEqual(hurt(s), [[5, 0, 100]]);
+  s = after('BodyGrd', 140); s.player.invuln = 0; hitPlayer(s, 40); for (let i = 0; i < 260; i++) step(s, {});
+  assert.equal(hurt(s).reduce((n, h) => n + h[2], 0), 1000); // 10 shurikens of 100
+  s = after('AntiSwrd', 140); s.player.invuln = 0; hitPlayer(s, 40); assert.equal(s.player.hp, 60); // not a sword: no
+  s.player.invuln = 0; hitPlayer(s, 40, { sword: true }); assert.equal(s.player.hp, 60); for (let i = 0; i < 120; i++) step(s, {});
+  assert.deepEqual(hurt(s).map(h => h[2]), Array(9).fill(300)); // three waves over the 3×3 enemy block
+  s = after('ElemTrap', 140); s.player.invuln = 0; hitPlayer(s, 20, { element: 'fire' });
+  assert.equal(s.player.hp, 80); assert.equal(hurt(s).length, 9); assert.ok(hurt(s).every(h => h[2] >= 240));
+});

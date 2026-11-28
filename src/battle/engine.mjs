@@ -315,6 +315,7 @@ export function hitPlayer(s, damage, opts = {}) {
     p.state = 'idle'; setAnim(p, 'idle'); p.invuln = val('invincibleTicks');
     return;
   }
+  if (s.trap && springTrap(s, damage, element, opts)) return; // AntiDmg / BodyGrd / AntiSwrd: the hit is cleared
   if (p.barrier > 0 && p.barrierMin && damage < p.barrierMin) { s.effects.push({ kind: 'guard', x: p.x, y: p.y, t: 0 }); s.events.push({ type: 'barrier' }); return; } // LifeAur: too small to touch it
   if (p.barrier > 0 && p.barrierWrap) { // BblWrap: pops, blocking the hit; grows back unless Elec popped it
     p.barrier = 0; p.wrapT = 0; if (element === 'elec') p.barrierWrap = 0;
@@ -569,12 +570,35 @@ function applySpecial(s, sp) {
   else if (def.kind === 'invis') { p.invis = def.ticks; }
   else if (def.kind === 'panels') for (const [x, y] of sp.cells) setPanel(s, x, y, def.type);
   else if (def.kind === 'gauge') s.gaugeMod = { rate: def.rate, t: def.ticks };
+  else if (def.kind === 'trap') s.trap = { kind: def.trap, damage: sp.damage, name: s.timestop?.name };
   else if (def.kind === 'place' && (def.ahead || def.inRow)) {
     let x = p.x + 1;
     if (def.inRow) while (x <= 5 && !(standable(s, x, p.y) && sideAt(s, x, p.y) === 'e' && !at(s, x, p.y))) x++; // sub_80E3264: the first free enemy panel ahead
     if (x <= 5 && standable(s, x, p.y) && !at(s, x, p.y)) s.enemies.push({ id: s.nextId++, kind: 'coil', family: def.obj, name: def.obj, owner: 'player', sprite: def.sprite, palette: 0, flip: true, x, y: p.y, drawX: x, drawY: p.y, hp: def.hp, maxHp: def.hp, noHp: true, anim: def.seq, animT: 0, state: 'idle', stateT: 0, flash: 0, discharge: 0, life: def.life, damage: sp.damage, element: sp.element, music: def.music, play: def.play, rest: def.rest, cycle: 0 });
   }
   else if (def.apply) def.apply(s, sp);
+}
+// Traps (hiveBlockHappensHere_802CEF4): returns true when the hit is cleared.
+function springTrap(s, damage, element, opts) {
+  const tr = s.trap, p = s.player;
+  const foes = () => s.enemies.filter(e => e.hp > 0 && e.owner !== 'player' && e.kind !== 'coil');
+  if ((tr.kind === 'damage' || tr.kind === 'bodyguard') && damage >= 10) {
+    s.trap = null; s.events.push({ type: 'trap', chip: tr.name });
+    s.effects.push({ kind: 'puff', x: p.x, y: p.y, t: 0 }); p.invuln = Math.max(p.invuln, 40); // MegaMan hides (effect 2, the log)
+    if (tr.kind === 'damage') { const t = s.attacker?.hp > 0 && s.attacker.owner !== 'player' ? s.attacker : foes()[0]; s.hazards.push({ kind: 'shuriken', owner: 'player', at: s.tick + 3, targets: t ? [t.id] : [], every: 0, damage: tr.damage }); }
+    else s.hazards.push({ kind: 'shuriken', owner: 'player', at: s.tick + 3 + 20, cycle: 0, left: 10, every: 20, damage: tr.damage }); // t4 0x6E: 10 shurikens, 0x14 apart
+    return true;
+  }
+  if (tr.kind === 'sword' && opts.sword) {
+    s.trap = null; s.events.push({ type: 'trap', chip: tr.name }); p.invuln = Math.max(p.invuln, 3 * 22 + 10);
+    for (let k = 0; k < 3; k++) s.hazards.push({ kind: 'widewave', owner: 'player', fx: p.x + 1, x: p.x + 1, y: p.y, speed: 8 / 40, damage: tr.damage, element: 'none', start: s.tick + 12 + 22 * k, hit: [], sprite: 'swordwavefx' });
+    return true;
+  }
+  if (tr.kind === 'element' && ['fire', 'aqua', 'elec', 'wood'].includes(element)) { // not cleared: the trap answers in kind
+    s.trap = null; s.events.push({ type: 'trap', chip: tr.name });
+    for (const e of foes()) { hitEnemy(s, e, tr.damage, { element, chip: true }); s.effects.push({ kind: 'blast', x: e.x, y: e.y, t: 0 }); }
+  }
+  return false;
 }
 function startGrab(s, def, damage, element) {
   const p = s.player;
@@ -1054,6 +1078,7 @@ function stepHazards(s) {
       return s.tick - h.start < h.hold;
     }
     if (h.kind === 'widewave') { // WideShot (t3 0x3B): its column, rows y−1..y+1, hits each enemy once
+      if (s.tick < h.start) return true;
       if (h.x > 5) return false;
       for (const dy of [-1, 0, 1]) { const e = at(s, h.x, h.y + dy); if (e && !h.hit.includes(e.id)) { h.hit.push(e.id); hitEnemy(s, e, h.damage, { element: h.element, chip: true }); } }
       h.fx += h.speed; h.x = Math.round(h.fx);
@@ -1135,6 +1160,14 @@ function stepHazards(s) {
       const x = Math.round(at_.x), y = Math.round(at_.y), key = x + ',' + y;
       if (y >= 0 && y <= 2 && x >= 0 && x <= 5 && key !== h.last) { h.last = key; const e = at(s, x, y); if (e) hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
       return true;
+    }
+    if (h.kind === 'shuriken') { // AntiDmg's / BodyGrd's shurikens (sub_80DD91A / sub_80D006E): straight onto an enemy
+      if (s.tick < h.at) return true;
+      const foes = s.enemies.filter(e => e.hp > 0 && e.owner !== 'player' && e.kind !== 'coil');
+      const t = h.targets ? foes.find(e => h.targets.includes(e.id)) : foes[h.cycle++ % Math.max(1, foes.length)];
+      if (t) { hitEnemy(s, t, h.damage, { fx: 'buster', chip: true }); s.effects.push({ kind: 'star', x: t.x, y: t.y, t: 0 }); }
+      if (!h.every || --h.left <= 0 || !foes.length) return false;
+      h.at = s.tick + h.every; return true;
     }
     if (h.kind === 'log') { // RollingLog (t3 0x66): lands, then rolls; both its rows hit at once and the log breaks
       if (s.tick < h.land) return true;

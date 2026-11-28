@@ -115,7 +115,7 @@ const BEHAVIOUR = {
         if (e.stateT >= P.slashWarn.value) { e.highlight = null; go(e, 'slash', 'slash'); }
         return;
       case 'slash':
-        if (e.stateT === 3) { api.hitPlayerAt(front(), e.y, pv(P.slashDamage, v)); s.effects.push({ kind: 'slash', area: 'sword', x: e.x, y: e.y, t: 0, flip: e.faceBack }); }
+        if (e.stateT === 3) { api.hitPlayerAt(front(), e.y, pv(P.slashDamage, v), { sword: true }); s.effects.push({ kind: 'slash', area: 'sword', x: e.x, y: e.y, t: 0, flip: e.faceBack }); }
         if (e.stateT >= 12 + pv(P.slashAfter, v)) {
           const [hx, hy] = e.home; if (!api.at(hx, hy)) { e.x = hx; e.y = hy; }
           e.faceBack = false; setAnim(e, 'idle'); api.endTurn(e); e.think = pv(P.moveWait, v); go(e, 'idle', null);
