@@ -33,8 +33,19 @@ export function decodeCustom(rom, src) {
     for (let k = 0; k < tw * th; k++) { const x = colMajor ? (k / th | 0) : k % tw, y = colMajor ? k % th : (k / tw | 0); blit(rom, rgba, w, off + 32 * k, x * 8, y * 8, pal); }
     return { rgba, width: w, height: th * 8 };
   };
+  // Selected-chip column (the game draws it on another layer): frame side tiles down both edges,
+  // a 16×16 box per chip between them. 32 × (16·count).
+  function column(cls = 0) {
+    const [, , n] = src.layout.column, h = 16 * n, rgba = new Uint8ClampedArray(32 * h * 4), box = readPalette(rom, hex(src.boxPalette));
+    for (let k = 0; k < n; k++) for (let r = 0; r < 2; r++) {
+      const t = tiles + 32 * src.sideTiles[r], y = 16 * k + 8 * r;
+      blit(rom, rgba, 32, t, 0, y, pals[cls]); blit(rom, rgba, 32, t, 24, y, pals[cls], 1);
+      for (let c = 0; c < 2; c++) blit(rom, rgba, 32, hex(src.boxTiles) + 32 * (2 * r + c), 8 + 8 * c, y, box);
+    }
+    return { rgba, width: 32, height: h };
+  }
   return {
-    frame,
+    frame, column,
     code: (k, cls = 0) => stack(hex(src.codes) + 0x40 * k, 2, 1, pals[cls]),          // 16×8 strip, k = 0..25 A–Z, 26 *, 27 empty
     letter: (k, cls = 0) => stack(hex(src.letters) + 0x40 * k, 1, 2, pals[cls], true), // 8×16 code letter under the picture
     digit: (d, cls = 0) => stack(hex(src.digits) + 0x40 * d, 1, 2, pals[cls], true),   // 8×16
@@ -53,6 +64,7 @@ export function buildCustom(rom, src) {
   return {
     layout: d.layout,
     frame: cls => get('f' + cls, () => d.frame(cls)),
+    column: cls => get('k' + cls, () => d.column(cls)),
     code: (k, cls) => get(`c${k}.${cls}`, () => d.code(k, cls)),
     letter: (k, cls) => get(`l${k}.${cls}`, () => d.letter(k, cls)),
     digit: (n, cls) => get(`d${n}.${cls}`, () => d.digit(n, cls)),

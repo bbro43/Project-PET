@@ -202,10 +202,11 @@ function drawCustom(g) {
   const cls = Math.min(3, CLASS[d?.class] ?? 0);
   g.save(); g.imageSmoothingEnabled = false; g.setTransform(1, 0, 0, 1, 0, 0);
   g.fillStyle = '#e8f0f8'; g.fillRect(0, 0, 120, 160);
-  g.fillStyle = '#282828'; g.fillRect(7, 8, 74, 80); g.fillRect(93, 23, 22, 82);
+  g.fillStyle = '#282828'; g.fillRect(7, 8, 74, 80);
   const box = (x, y) => { g.fillStyle = '#98a8b8'; g.fillRect(x, y, 16, 16); g.fillStyle = '#585868'; g.fillRect(x + 1, y + 1, 14, 14); g.fillStyle = '#282828'; g.fillRect(x + 2, y + 2, 12, 12); };
   for (let i = 0; i < Math.min(S.count, state.hand.length); i++) box(...slotXY(i));
   g.drawImage(cu.frame(cls), 0, 0);
+  g.drawImage(cu.column(cls), L.column[0], L.column[1]);
   if (d) {
     const pic = bank.chips.picture(d.id); if (pic) g.drawImage(pic, L.picture[0], L.picture[1]);
     g.font = 'bold 11px "Courier New", monospace'; g.textBaseline = 'top'; g.textAlign = 'left';

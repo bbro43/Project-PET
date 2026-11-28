@@ -4045,8 +4045,8 @@
   }
  },
  "customscreen": {
-  "label": "Custom screen: frame tiles (tile 0 at tiles), tilemap byte_86E625C (byte_86E64B4 with CrossSelect), palettes byte_86E587C (4, by chip class), code strips dword_86E591C, damage digits dword_86E411C, element icons dword_86E3598 + colour sets byte_86E3B18, code letters dword_86E2E98 (8×16, at tile (2,9))",
-  "note": "Layout from the tile rects in byte_8027B2C (0x80268AC): name 8×2 tiles at (2,1), picture 7×6 at (2,3), element 2×2 at (3,9), damage 3×2 at (6,9), 10 slots (icon 2×2 + code 2×1) from (1,13) every 2 tiles across and 3 down, selected column 2×10 at (12,3). Frame pixel-checked against the owner's screenshot (0 differing pixels outside the layers the game draws later).",
+  "label": "Custom screen: frame tiles (tile 0 at tiles), tilemap byte_86E625C (byte_86E64B4 with CrossSelect), palettes byte_86E587C (4, by chip class), code strips dword_86E591C, damage digits dword_86E411C, element icons dword_86E3598 + colour sets byte_86E3B18, code letters dword_86E2E98 (8×16, at tile (2,9)); selected-chip column: side tiles 0x88/0x89 of the frame tiles (h-flipped on the right), 16×16 boxes dword_86E601C with palette 0x872CFF4 (Gregar 0x872AF30)",
+  "note": "Layout from the tile rects in byte_8027B2C (0x80268AC): name 8×2 tiles at (2,1), picture 7×6 at (2,3), element 2×2 at (3,9), damage 3×2 at (6,9), 10 slots (icon 2×2 + code 2×1) from (1,13) every 2 tiles across and 3 down, selected column 2×10 at (12,3). Frame pixel-checked against the owner's screenshot (0 differing pixels outside the layers the game draws later). Column pixel-checked against the owner's custom-screen sheet; the box palette was found by its colours (one match in the ROM), not traced to code.",
   "sources": {
    "bn6f": {
     "tiles": "6E1D18",
@@ -4108,10 +4108,21 @@
      "code": [
       16,
       72
+     ],
+     "column": [
+      88,
+      24,
+      5
      ]
     },
     "confidence": "rom-verified",
-    "letters": "6E2E98"
+    "letters": "6E2E98",
+    "boxTiles": "6E601C",
+    "boxPalette": "72CFF4",
+    "sideTiles": [
+     136,
+     137
+    ]
    },
    "bn6g": {
     "tiles": "6DFC9C",
@@ -4173,10 +4184,21 @@
      "code": [
       16,
       72
+     ],
+     "column": [
+      88,
+      24,
+      5
      ]
     },
     "confidence": "rom-verified",
-    "letters": "6E0E1C"
+    "letters": "6E0E1C",
+    "boxTiles": "6E3FA0",
+    "boxPalette": "72AF30",
+    "sideTiles": [
+     136,
+     137
+    ]
    }
   }
  }
