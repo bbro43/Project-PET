@@ -336,7 +336,8 @@ function stepPlayer(s, input) {
     p.slide = null;
   }
   // Charge accumulates while A is held in any non-flinch state.
-  if (input.a) { p.holdT++; if (p.holdT > val('chargeDelay')) p.charge = Math.min(val('chargeTime'), p.charge + 1); }
+  // Charge counts every held tick (sub_8012EBC): the aura shows from chargeDelay, full at chargeTime.
+  if (input.a) { p.holdT++; p.charge = Math.min(val('chargeTime'), p.charge + 1); }
   if (p.state === 'appear' && p.stateT >= val('moveAppearTicks')) { p.state = 'idle'; setAnim(p, 'idle'); }
   if ((p.state === 'buster' && p.stateT >= val('busterCooldown')) || (p.state === 'chip' && p.stateT >= p.chip.lock)) {
     p.state = 'idle'; p.chip = null; setAnim(p, 'idle');

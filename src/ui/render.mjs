@@ -413,6 +413,10 @@ export function render(g, s, bank) {
       const [an, at] = gap && p.animT >= 2 ? ['vulcanfire', (p.animT - 2) % gap] : [p.anim, p.animT];
       sprite(g, bank, 'megaman', an, at, ax, ay, placeholderNavi);
       for (const a of armParts(p)) sprite(g, bank, a.key, a.seq, a.t, ax + a.dx, ay - a.dz, () => {}, a.pal || 0);
+      if (p.charge >= val('chargeDelay')) { // the charge aura (t4 0x8): charging from 10 held ticks, charged at full; palette 2, arm offset (2, 0)
+        const full = p.charge >= val('chargeTime');
+        sprite(g, bank, 'chargefx', full ? 'charged' : 'charging', p.holdT - val(full ? 'chargeTime' : 'chargeDelay'), ax + 2, ay, () => {}, 2);
+      }
       if (p.frozen && p.paralyzed > 0) { g.fillStyle = 'rgba(180,230,255,.55)'; g.fillRect(ax - 12, ay - 34, 24, 34); } // frozen on ice
       else if (p.paralyzed > 0 && (s.tick >> 1) & 1) { // paralysis: flicker bright
         g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.6;
@@ -653,7 +657,7 @@ export function render(g, s, bank) {
     g.fillRect(57, 5, 126 * s.gauge / val('customGaugeTicks'), 6);
     text(g, full ? 'CUSTOM  L/R' : 'CUSTOM', 120, 22, '#cfe4ff', 'center');
   }
-  if (p.charge > 0) {
+  if (p.charge > 0 && !bank?.get('chargefx')) { // no ROM: a plain charge bar
     g.fillStyle = p.charge >= val('chargeTime') ? ((s.tick >> 2) & 1 ? '#ff60c0' : '#60ffff') : '#3aa0ff';
     const [ax, ay] = anchor(p.x, p.y);
     g.fillRect(ax - 12, ay + 3, 24 * p.charge / val('chargeTime'), 2);

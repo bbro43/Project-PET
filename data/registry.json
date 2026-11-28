@@ -3988,6 +3988,35 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "chargefx": {
+   "label": "Buster charge aura (t4 0x8, chargeShotChargeObject_80E0DF0): sprite 0x14/0x08 for the B charge (0x14/0x15 for the other button), palette 2 (effect table 0x80E0398 entry 8), animation = charge state",
+   "sources": {
+    "bn6f": {
+     "offset": "3A9190",
+     "compression": "none",
+     "bytes": 12312,
+     "sha256": "440c28a74c886fc23be07171ff401ad2d804cbfe14e8434dbcccc77f858528a0",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3A8708",
+     "compression": "none",
+     "bytes": 12312,
+     "sha256": "440c28a74c886fc23be07171ff401ad2d804cbfe14e8434dbcccc77f858528a0",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "charging": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    },
+    "charged": {
+     "seq": 2,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {
