@@ -120,6 +120,23 @@ export const CHIP_BEHAVIOUR = {
   // Panel shots (family 0x22, sub_80EC960): the area dword_80ECA08[subfamily] = 1 / 2 / 4 is lifted and shot.
   DublShot: { kind: 'crack', region: 2, anim: 'crack', lock: 24, speed: 0.25, confidence: 'rom-verified', note: 'area 2 (front panel + the next); speed and lock as CrakShot (recalled)' },
   TrplShot: { kind: 'crack', region: 4, anim: 'crack', lock: 24, speed: 0.25, confidence: 'rom-verified', note: 'area 4 (the front column)' },
+  // Burners (family 0x27 → t3 0x4): params [life, spread (| 0x80 wide), crack, anim]. A flame on the panel in front lasts `life`
+  // frames; after 4 frames it lights the next panel ahead (spread times); wide also lights above / below that next panel
+  // (sub_80C552A → sub_80C5590); with crack the panel cracks when the flame ends (sub_80C53E4).
+  FireBrn1: { kind: 'burner', life: 30, spread: 2, wide: false, crack: true, anim: 'idle', lock: 30, confidence: 'rom-verified', note: 'params 30, 2, 1; lock recalled' },
+  FireBrn2: { kind: 'burner', life: 30, spread: 2, wide: false, crack: true, anim: 'idle', lock: 30, confidence: 'rom-verified' },
+  FireBrn3: { kind: 'burner', life: 30, spread: 2, wide: false, crack: true, anim: 'idle', lock: 30, confidence: 'rom-verified' },
+  WideBrn1: { kind: 'burner', life: 60, spread: 2, wide: true, crack: true, anim: 'idle', lock: 60, confidence: 'rom-verified', note: 'params 60, 0x82, 1' },
+  WideBrn2: { kind: 'burner', life: 60, spread: 2, wide: true, crack: true, anim: 'idle', lock: 60, confidence: 'rom-verified' },
+  WideBrn3: { kind: 'burner', life: 60, spread: 2, wide: true, crack: true, anim: 'idle', lock: 60, confidence: 'rom-verified' },
+  // Wave arms (family 0x31, sub_80ED668): at frame 2 a shockwave (t3 0x16, kind params[0] = 12–15: 6 frames a panel, byte_80C6B00)
+  // from the panel ahead; PwrWave (subfamily 1) adds one in the rows above and below.
+  WaveArm1: { kind: 'wavearm', rows: [0], step: 6, anim: 'idle', lock: 16, confidence: 'rom-verified', note: 'attack ends after 0x0F frames (lock 16)' },
+  WaveArm2: { kind: 'wavearm', rows: [0], step: 6, anim: 'idle', lock: 16, confidence: 'rom-verified' },
+  WaveArm3: { kind: 'wavearm', rows: [0], step: 6, anim: 'idle', lock: 16, confidence: 'rom-verified' },
+  PwrWave1: { kind: 'wavearm', rows: [-1, 0, 1], step: 6, anim: 'idle', lock: 16, confidence: 'rom-verified' },
+  PwrWave2: { kind: 'wavearm', rows: [-1, 0, 1], step: 6, anim: 'idle', lock: 16, confidence: 'rom-verified' },
+  PwrWave3: { kind: 'wavearm', rows: [-1, 0, 1], step: 6, anim: 'idle', lock: 16, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

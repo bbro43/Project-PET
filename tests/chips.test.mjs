@@ -65,3 +65,16 @@ test('panel shots: DublShot lifts 2 panels in the row, TrplShot the front column
   const t = after('TrplShot', 2, s => { s.enemies = []; });
   assert.deepEqual([0, 1, 2].map(y => panelType(t, 2, y)), ['broken', 'broken', 'broken']);
 });
+
+test('burners: FireBrn lights 3 panels ahead, WideBrn widens after the first; panels crack after', () => {
+  const f = after('FireBrn1', 40);
+  assert.deepEqual(hurt(f).map(([x, y]) => [x, y]), [[3, 1], [4, 1]]); // flames on (2,1), (3,1), (4,1)
+  const w = after('WideBrn1', 70);
+  assert.deepEqual(hurt(w).map(([x, y]) => [x, y]), [[3, 0], [3, 1], [3, 2], [4, 0], [4, 1], [4, 2]]);
+  assert.equal(panelType(f, 2, 1), 'cracked');
+});
+
+test('wave arms: a shockwave down the row; PwrWave in three rows', () => {
+  assert.deepEqual(hurt(after('WaveArm1', 60)).map(([x, y]) => [x, y]), [[3, 1], [4, 1], [5, 1]]);
+  assert.equal(hurt(after('PwrWave1', 60)).length, 9);
+});

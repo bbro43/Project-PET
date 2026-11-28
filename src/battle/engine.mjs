@@ -380,6 +380,11 @@ function useChip(s, chip) {
   else if (def.kind === 'heal') { p.hp = Math.min(p.maxHp, p.hp + def.heal); s.events.push({ type: 'heal', amount: def.heal }); s.effects.push({ kind: 'heal', x: p.x, y: p.y, t: 0 }); } // effect object 6 (0x800E2FC): sprite 0x0C/0x12
   else if (def.kind === 'vulcan') for (let k = 0; k < def.hits; k++) s.hazards.push({ kind: 'pvulcan', owner: 'player', y: p.y, from: p.x, at: s.tick + (def.lead || 0) + k * def.gap, damage, element, paralyze });
   else if (def.kind === 'grab') startGrab(s, def, damage, element);
+  else if (def.kind === 'wavearm') for (const dy of def.rows) { // WaveArm / PwrWave (family 0x31): shockwaves (t3 0x16) from the panel ahead
+    const x = p.x + 1, y = p.y + dy;
+    if (y >= 0 && y < 3 && x <= 5) s.hazards.push({ kind: 'wave', fromPlayer: true, owner: 'player', x, y, dir: 1, step: def.step, next: s.tick + def.step, damage, start: s.tick, hit: [], anim: 'medium' }); // byte_80C6B00 kinds 12–15: animation 1
+  }
+  else if (def.kind === 'burner') s.hazards.push({ kind: 'flame', owner: 'player', x: p.x + 1, y: p.y, born: s.tick, life: def.life, spread: def.spread, wide: def.wide, crack: def.crack, damage, element, hit: [] });
   else if (def.kind === 'busterup') { s.busterUp++; s.events.push({ type: 'busterUp', level: 1 + s.busterUp }); }
   else if (def.kind === 'crack') for (const [dx, dy] of REGIONS[def.region || 1]) { // the panels of the area are lifted and sent down their rows
     const x = p.x + 1 + dx, y = p.y + dy;
@@ -585,7 +590,7 @@ function virusApi(s) {
 }
 
 function stepHazards(s) {
-  const p = s.player;
+  const p = s.player, spawned = []; // hazards started this frame are added after the pass
   s.hazards = s.hazards.filter(h => {
     s.attacker = h.owner !== undefined ? s.enemies.find(e => e.id === h.owner) : null;
     if (h.kind === 'pvulcan') { // Vulcan: one shot per gap; each also hits the panel behind its target
@@ -613,9 +618,10 @@ function stepHazards(s) {
       // Broken panels (flags 0x14000) lack it, so the wave dies at a hole; cracked panels (0x10050) carry it.
       const solid = () => h.big || standable(s, h.x, h.y);
       if (!solid()) { if (s.turns[h.family] === h.owner) delete s.turns[h.family]; return false; }
-      if (p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
+      if (h.fromPlayer) { const e = at(s, h.x, h.y); if (e && !h.hit.includes(e.id)) { h.hit.push(e.id); hitEnemy(s, e, h.damage, { chip: true }); } }
+      else if (p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
       if (s.tick >= h.next) { h.x += h.dir; h.next = s.tick + h.step; }
-      const alive = h.x >= 0 && solid();
+      const alive = h.x >= 0 && h.x <= 5 && solid();
       if (!alive && s.turns[h.family] === h.owner) delete s.turns[h.family];
       return alive;
     }
@@ -833,6 +839,18 @@ function stepHazards(s) {
       }
       return false;
     }
+    if (h.kind === 'flame') { // a burner flame (t3 0x4): hits whoever stands in it once, spreads ahead after 4 frames
+      if (h.x < 0 || h.x > 5 || h.y < 0 || h.y > 2 || !standable(s, h.x, h.y)) return false;
+      const e = at(s, h.x, h.y);
+      if (e && !h.hit.includes(e.id)) { h.hit.push(e.id); hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
+      const age = s.tick - h.born;
+      if (age === 4 && h.spread > 0) {
+        const rows = h.wide ? [h.y - 1, h.y, h.y + 1] : [h.y];
+        for (const y of rows) spawned.push({ ...h, x: h.x + 1, y, born: s.tick, spread: h.spread - 1, wide: false, hit: [] });
+      }
+      if (age >= h.life) { if (h.crack) crackPanel(s, h.x, h.y); return false; }
+      return true;
+    }
     if (h.kind === 'multihit') {
       if (s.tick < h.next) return true;
       hitEnemy(s, at(s, h.x, h.y), h.damage, { chip: true }); s.effects.push({ kind: 'blast', x: h.x, y: h.y, t: 0 });
@@ -841,6 +859,7 @@ function stepHazards(s) {
     }
     return false;
   });
+  if (spawned.length) s.hazards.push(...spawned);
 }
 
 // Battle over: stop lingering attacks so nothing stays frozen on screen.

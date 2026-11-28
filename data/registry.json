@@ -4135,6 +4135,31 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "burnerfx": {
+   "label": "Burner flame (t3 0x4, sub_80C53FA): sprite 0x0C/0x0E, animation byte_80C54DC[Param4] = 0, palette 0",
+   "sources": {
+    "bn6f": {
+     "offset": "308700",
+     "compression": "none",
+     "bytes": 2348,
+     "sha256": "826c640a138930d4ca11f926ec7df86a685eeb8b6c4524f4394efe5958bb8ab9",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "307C78",
+     "compression": "none",
+     "bytes": 2348,
+     "sha256": "826c640a138930d4ca11f926ec7df86a685eeb8b6c4524f4394efe5958bb8ab9",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "flame": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

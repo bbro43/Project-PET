@@ -196,6 +196,10 @@ export function render(g, s, bank) {
 
   // ChargeMan's train cars (drawn facing left like ChargeMan)
   const car = bank?.get('traincar');
+  for (const h of s.hazards) if (h.kind === 'flame') { // burner flame (t3 0x4, sprite 0x0C/0x0E)
+    const [ax, ay] = anchor(h.x, h.y);
+    sprite(g, bank, 'burnerfx', 'flame', s.tick - h.born, ax, ay - 12, (g, x, y) => { g.fillStyle = 'rgba(255,140,40,.8)'; g.beginPath(); g.ellipse(x, y, 14, 9, 0, 0, 7); g.fill(); });
+  }
   for (const h of s.hazards) if (h.kind === 'car') {
     const [ax, ay] = anchor(h.fx, h.y);
     if (car) { const f = frameAt(car[h.type] || car.coal, s.tick); g.save(); g.translate(Math.round(ax), 0); g.scale(-1, 1); g.drawImage(f.image, -f.originX, Math.round(ay - f.originY)); g.restore(); }
@@ -396,7 +400,7 @@ export function render(g, s, bank) {
     if (h.kind === 'wave') {
       const [ax, ay] = anchor(h.x, h.y);
       if (wave) {
-        const speed = h.step >= 20 ? 'slow' : h.step >= 10 ? 'medium' : 'fast'; // type3 0x16 animation 0 / 1 / 2 (22 / 16-11 / 6 frames per panel)
+        const speed = h.anim || (h.step >= 20 ? 'slow' : h.step >= 10 ? 'medium' : 'fast'); // type3 0x16 animation 0 / 1 / 2 (22 / 16-11 / 6 frames per panel)
         sprite(g, bank, 'shockwave', speed, s.tick - h.start, ax, ay, () => {}, 0, !h.fromPlayer); // travels toward MegaMan
         continue;
       }
