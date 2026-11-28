@@ -119,7 +119,7 @@ const ARMS = {
   throw: [{ key: 'throwball', seq: 'hand', until: 9 }],
   slash: [{ key: 'swordarm', seq: 'arm' }],
 };
-const CANNON_PAL = { Cannon: 0, HiCannon: 1, 'M-Cannon': 2 };
+const CANNON_PAL = { Cannon: 0, HiCannon: 1, 'M-Cannon': 2, GigaCan1: 0, GigaCan2: 1, GigaCan3: 2 }; // byte_80EBD2C
 function armParts(p) {
   const list = (p.state === 'buster' || p.state === 'chip') && ARMS[p.anim];
   if (!list) return [];

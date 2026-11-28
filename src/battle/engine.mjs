@@ -1,7 +1,7 @@
 // Deterministic fixed-tick Battle Network battle simulation (BN6 ruleset).
 // No rendering, DOM or timing here: the client feeds one input object per tick.
 // Input: { dir: 'up'|'down'|'left'|'right'|null, a: held bool, b: pressed bool, l: pressed bool }
-import { val, CHIP_BEHAVIOUR, WEAKNESS, PANELS, GRAB, BUGS, EMOTION, BUBBLE } from '../../data/rules.mjs';
+import { val, CHIP_BEHAVIOUR, WEAKNESS, PANELS, GRAB, BUGS, EMOTION, BUBBLE, REGIONS } from '../../data/rules.mjs';
 import CHIPDATA from '../../data/bn6-chips.mjs';
 import { createVirus, stepVirus, virusName, PLAYABLE_FAMILIES } from './viruses.mjs';
 import { createNavi, stepNavi, stepCoil, naviVariants, PLAYABLE_NAVIS } from './navis.mjs';
@@ -357,8 +357,25 @@ function useChip(s, chip) {
   const element = data.element === 'none' ? undefined : data.element;
   const paralyze = chip.status === 'paralyze' ? val('chipParalyzeTicks') : 0;
   p.state = 'chip'; p.stateT = 0; p.chip = { ...chip, lock: def.lock }; setAnim(p, def.anim);
-  if (def.kind === 'shot') hitEnemy(s, rowTarget(s, p.x, p.y), damage, { push: def.push, element, fx: def.fx, paralyze, chip: true });
-  else if (def.kind === 'slash') for (const [dx, dy] of def.area) hitEnemy(s, at(s, p.x + dx, p.y + dy), damage, { element, paralyze, chip: true });
+  if (def.kind === 'shot') {
+    const target = rowTarget(s, p.x, p.y);
+    if (target && def.impact) for (const [dx, dy] of REGIONS[def.impact]) { // the impact area around the target panel
+      const e = at(s, target.x + dx, target.y + dy);
+      if (e && e !== target) hitEnemy(s, e, damage, { element, fx: def.fx, chip: true });
+      if (target.y + dy >= 0 && target.y + dy < 3) s.effects.push({ kind: 'hit', x: target.x + dx, y: target.y + dy, t: 0, fx: def.fx, damage: 0, jx: 0, jy: 0 });
+    }
+    hitEnemy(s, target, damage, { push: def.push, element, fx: def.fx, paralyze, chip: true });
+  }
+  else if (def.kind === 'slash') {
+    const home = [p.x, p.y];
+    if (def.step) { // StepSwrd: step forward first (as far as `step` free panels), slash, then back
+      let k = 0; while (k < def.step && p.x + k + 1 <= 5 && !at(s, p.x + k + 1, p.y) && standable(s, p.x + k + 1, p.y)) k++;
+      p.x += k; p.home = home;
+    }
+    if (def.damageFromLostHp) damage = Math.min(999, p.maxHp - p.hp); // Muramasa
+    for (const [dx, dy] of def.area) hitEnemy(s, at(s, p.x + dx, p.y + dy), damage, { element, paralyze, chip: true });
+    if (def.slashFx) s.effects.push({ kind: 'slash', x: p.x, y: p.y, t: 0, area: def.slashFx, flip: true }); // the game's slash, swinging right
+  }
   else if (def.kind === 'throw') { const r = def.release || 0; s.hazards.push({ kind: 'bomb', owner: 'player', x: p.x, y: p.y, tx: p.x + def.range, land: s.tick + r + def.flight, start: s.tick + r, damage, paralyze }); } // the ball leaves the hand on frame 9 (0x80EB69A)
   else if (def.kind === 'heal') { p.hp = Math.min(p.maxHp, p.hp + def.heal); s.events.push({ type: 'heal', amount: def.heal }); s.effects.push({ kind: 'heal', x: p.x, y: p.y, t: 0 }); } // effect object 6 (0x800E2FC): sprite 0x0C/0x12
   else if (def.kind === 'vulcan') for (let k = 0; k < def.hits; k++) s.hazards.push({ kind: 'pvulcan', owner: 'player', y: p.y, from: p.x, at: s.tick + (def.lead || 0) + k * def.gap, damage, element, paralyze });
@@ -496,6 +513,7 @@ function stepPlayer(s, input) {
   if (p.state === 'appear' && p.stateT >= val('moveAppearTicks')) { p.state = 'idle'; setAnim(p, 'idle'); }
   if ((p.state === 'buster' && p.stateT >= (p.busterWait ?? val('busterCooldown'))) || (p.state === 'chip' && p.stateT >= p.chip.lock)) {
     p.state = 'idle'; p.chip = null; setAnim(p, 'idle');
+    if (p.home) { [p.x, p.y] = p.home; p.home = null; } // StepSwrd: back to where he stood
   }
   if (p.state !== 'idle') { if (releasedA) { p.holdT = 0; p.charge = 0; } return; }
 

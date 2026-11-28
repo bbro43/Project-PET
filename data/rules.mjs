@@ -74,6 +74,21 @@ export const BUGS = {
 // Chips: names, codes, damage, element, class and MB come from the ROM (data/bn6-chips.mjs).
 // CHIP_BEHAVIOUR says what each chip does in battle; chips not listed here can be picked but do nothing yet.
 // Families share a behaviour; the number in a Recov name is its heal.
+// The game's hit areas (PanelOffsetListsPointerTable 0x8019B78, read from the ROM): (dx, dy) from the panel in front of
+// the attacker. Chip actions pass the area number as the collision region's Param1 (CollisionData Region).
+export const REGIONS = [[], [[0, 0]], [[0, 0], [1, 0]], [[1, 0]], [[0, 0], [0, -1], [0, 1]], [[0, -1], [0, 1]], [[0, 0], [1, 0], [2, 0]],
+  [[0, 0], [1, 0], [2, 0], [3, 0]], [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]], [[0, 0], [0, -1], [0, 1], [1, 0], [-1, 0]],
+  [[0, -1], [0, 1], [1, 0], [-1, 0]], [[0, 0], [1, -1], [-1, 1], [1, 1], [-1, -1]], [[1, -1], [-1, 1], [1, 1], [-1, -1]],
+  [[0, 0], [1, -1], [1, 1]], [[1, -1], [1, 1]], [[0, 0], [0, -1], [0, 1], [1, 0], [-1, 0], [1, -1], [-1, 1], [1, 1], [-1, -1]],
+  [[0, -1], [0, 1], [1, 0], [-1, 0], [1, -1], [-1, 1], [1, 1], [-1, -1]], [[0, 0], [0, -1], [0, 1], [1, 0], [1, -1], [1, 1]],
+  [[0, 0], [1, -1], [-1, 1]], [[0, 0], [-1, -1], [1, 1]]];
+// Swords (chip family 0x13, sub_80EB776): byte_80EBA18[subfamily] byte 0 is the hit area; the swing hits at frame 12 (Unk_10 0x0C).
+// Slash sprite: the game's sword effect, the sequence closest to the area (the per-element blades byte_80EBAD8 are not split out yet).
+const SWORD_AREA = [1, 4, 2, 4, 2, 0x11, 0x11, 0x11, 2, 6, 0xB, 0x11, 4, 4, 4, 4];
+const SWORD_FX = { 1: 'sword', 4: 'wide', 2: 'long', 6: 'long', 0x11: 'both', 0xB: 'both' };
+const sword = (sub, extra = {}) => ({ kind: 'slash', region: SWORD_AREA[sub], area: REGIONS[SWORD_AREA[sub]].map(([dx, dy]) => [dx + 1, dy]),
+  slashFx: SWORD_FX[SWORD_AREA[sub]], anim: 'slash', lock: 24, confidence: 'rom-verified', note: `area ${SWORD_AREA[sub]} from byte_80EBA18[${sub}]; lock 24 recalled`, ...extra });
+
 export const CHIP_BEHAVIOUR = {
   Cannon:   { kind: 'shot', fx: 'explosion', anim: 'cannon', lock: 30, confidence: 'recalled' },
   HiCannon: { kind: 'shot', fx: 'explosion', anim: 'cannon', lock: 30, confidence: 'recalled' },
@@ -82,9 +97,15 @@ export const CHIP_BEHAVIOUR = {
   Vulcan1:  { kind: 'vulcan', hits: 3, gap: 11, lead: 2, anim: 'vulcan', lock: 35, confidence: 'rom-verified', note: '0x80EBF6E: a shot every 11 frames, count from dword_80EBFEC (3/4/5/10); t3 0x12 hitscan, region 2 (target + the panel behind); lock = lead + (hits − 1) × 11 + 11' },
   Vulcan2:  { kind: 'vulcan', hits: 4, gap: 11, lead: 2, anim: 'vulcan', lock: 46, confidence: 'rom-verified' },
   Vulcan3:  { kind: 'vulcan', hits: 5, gap: 11, lead: 2, anim: 'vulcan', lock: 57, confidence: 'rom-verified' },
-  Sword:    { kind: 'slash', area: [[1, 0]], anim: 'slash', lock: 24, confidence: 'recalled' },
-  WideSwrd: { kind: 'slash', area: [[1, -1], [1, 0], [1, 1]], anim: 'slash', lock: 24, confidence: 'recalled' },
-  LongSwrd: { kind: 'slash', area: [[1, 0], [2, 0]], anim: 'slash', lock: 24, confidence: 'recalled' },
+  Sword: sword(0), WideSwrd: sword(1), LongSwrd: sword(2), WideBlde: sword(3), LongBlde: sword(4), LifeSrd: sword(5), DrkSword: sword(6),
+  FireSwrd: sword(12), AquaSwrd: sword(13), ElecSwrd: sword(14), BambSwrd: sword(15), FtrSword: sword(9), CrosSwrd: sword(10), DblDream: sword(11),
+  StepSwrd: sword(1, { step: 2, note: 'area 4 from byte_80EBA18[1]; params[0] = 1: steps 2 panels forward first (sub_80EB79C), back after (recalled)' }),
+  Muramasa: sword(8, { damageFromLostHp: true, note: 'area 2; damage = HP MegaMan has lost, at most 999 (recalled)' }),
+  // GigaCannons (family 0x14, sub 4–6): the Cannon / HiCannon / M-Cannon arm (byte_80EBD2C) and impact area 0xC, the four
+  // diagonal panels around the target (byte_80EBD34 → sub_80C4FFE).
+  GigaCan1: { kind: 'shot', fx: 'explosion', anim: 'cannon', lock: 30, impact: 0xC, confidence: 'rom-verified', note: 'impact area from byte_80EBD34; lock recalled' },
+  GigaCan2: { kind: 'shot', fx: 'explosion', anim: 'cannon', lock: 30, impact: 0xC, confidence: 'rom-verified' },
+  GigaCan3: { kind: 'shot', fx: 'explosion', anim: 'cannon', lock: 30, impact: 0xC, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 30, release: 9, anim: 'throw', lock: 22, confidence: 'recalled' },
   CrakShot: { kind: 'crack', anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },
