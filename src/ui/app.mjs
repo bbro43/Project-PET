@@ -138,8 +138,9 @@ function start() {
 const folders = loadFolders(DEFAULT_FOLDER);
 let folderOpen = false;
 const folderUI = createFolderUI({ getBank: () => bank, folders, onExit: () => quit() });
+const menuButtons = on => document.querySelectorAll('.menu-only').forEach(b => { b.hidden = !on; });
 function openFolder() {
-  folderOpen = true; state = null;
+  folderOpen = true; state = null; menuButtons(true);
   $('#menu').hidden = true; $('#battle').hidden = false; $('#custom').hidden = true;
   cancelAnimationFrame(raf); raf = requestAnimationFrame(folderFrame);
 }
@@ -156,7 +157,7 @@ $('#screen').addEventListener('click', ev => {
   folderUI.tap((ev.clientX - r.left) * 240 / r.width, (ev.clientY - r.top) * 160 / r.height);
 });
 function quit() {
-  folderOpen = false;
+  folderOpen = false; menuButtons(false);
   cancelAnimationFrame(raf); state = null;
   $('#battle').hidden = true; $('#menu').hidden = false; $('#custom').hidden = true;
 }
@@ -166,7 +167,8 @@ $('#quit').addEventListener('click', quit);
 function inputForTick() {
   const order = ['up', 'down', 'left', 'right'];
   const dir = order.find(k => pressed.has(k)) || order.find(k => held.has(k)) || null;
-  const input = { dir, a: held.has('a') || pressed.has('a'), b: pressed.has('b'), l: pressed.has('l') || pressed.has('r') };
+  // As in the game: B fires the buster (hold to charge), A uses the chip. (The engine calls the buster input `a`.)
+  const input = { dir, a: held.has('b') || pressed.has('b'), b: pressed.has('a'), l: pressed.has('l') || pressed.has('r') };
   pressed.clear();
   return input;
 }

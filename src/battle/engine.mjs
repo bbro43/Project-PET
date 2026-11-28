@@ -636,7 +636,12 @@ function endBattleEffects(s) {
 // ---------- main step ----------
 export function step(s, input = {}) {
   s.events = [];
-  if (s.phase === 'win' || s.phase === 'lose') { s.phaseT++; stepDying(s); s.effects = s.effects.filter(f => ++f.t < 24); return s; }
+  if (s.phase === 'win' || s.phase === 'lose') {
+    s.phaseT++;
+    // MegaMan's attack plays to its end after the last enemy is deleted (no new input; hazards are already cleared).
+    if (s.phase === 'win' && s.player.hp > 0 && s.player.state !== 'idle') stepPlayer(s, {});
+    stepDying(s); s.effects = s.effects.filter(f => ++f.t < 24); return s;
+  }
   s.phaseT++;
   if (s.phase === 'custom') return s;
   if (s.phase === 'wave') {
