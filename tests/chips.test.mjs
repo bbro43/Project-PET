@@ -296,8 +296,25 @@ test('Magnum: a column while the cursor runs along the row, cracking the panels'
 });
 
 test('Wind / Fan: a box ahead that blows the enemies along the rows', () => {
-  const one = s => { s.enemies = [{ id: 7, family: 'Mettaur', x: 4, y: 1, hp: 5000, maxHp: 5000, state: 'idle', stateT: 0, think: 1e9, paralyzed: 1e9, anim: 'idle', animT: 0, element: 'none' }]; };
+  const one = s => { s.enemies = [{ id: 7, family: 'Mettaur', x: 4, y: 1, hp: 5000, maxHp: 5000, state: 'idle', stateT: 0, think: 1e9, paralyzed: 1e9, anim: 'idle', animT: 0, element: 'none' }, { id: 8, family: 'Mettaur', x: 3, y: 2, hp: 5000, maxHp: 5000, state: 'idle', stateT: 0, think: 1e9, paralyzed: 1e9, anim: 'idle', animT: 0, element: 'none' }]; };
   let s = after('Wind', 200, one); const box = s.enemies.find(e => e.family === 'WindBox');
-  assert.ok(box); assert.deepEqual([box.x, box.y, box.hp], [2, 1, 40]); assert.equal(s.enemies.find(e => e.id === 7).x, 5);
-  s = after('Fan', 200, one); assert.equal(s.enemies.find(e => e.id === 7).x, 3);
+  assert.ok(box); assert.deepEqual([box.x, box.y, box.hp], [2, 1, 40]); assert.equal(s.enemies.find(e => e.id === 7).x, 5); assert.equal(s.enemies.find(e => e.id === 8).x, 5); // slid all the way back
+  s = after('Fan', 200, one); assert.equal(s.enemies.find(e => e.id === 7).x, 3); assert.equal(s.enemies.find(e => e.id === 8).x, 3);
+});
+
+test('Meteors: 30 meteors down the enemy panels from the back column, inside the freeze', () => {
+  const s = after('Meteors', 0); const ts = s.timestop;
+  assert.deepEqual(ts.special.order.slice(0, 4), [[5, 0], [5, 1], [5, 2], [4, 0]]);
+  while (s.timestop) step(s, {});
+  const h = hurt(s); assert.equal(h.length, 9);
+  assert.equal(h.reduce((n, x) => n + x[2], 0), 30 * 40); // 30 meteors of 40, cycling the 9 panels
+  assert.equal(h.find(x => x[0] === 5 && x[1] === 0)[2], 4 * 40);
+});
+
+test('Mine: hides on a free enemy panel and goes off when an enemy steps on it', () => {
+  const s = after('Mine', 0, s => { s.enemies = [{ id: 7, family: 'Mettaur', x: 5, y: 2, hp: 5000, maxHp: 5000, state: 'idle', stateT: 0, think: 1e9, paralyzed: 1e9, anim: 'idle', animT: 0, element: 'none' }]; });
+  while (s.timestop) step(s, {});
+  const m = s.hazards.find(h => h.kind === 'chipmine'); assert.ok(m); assert.notDeepEqual([m.x, m.y], [5, 2]);
+  const e = s.enemies.find(e => e.id === 7); e.x = m.x; e.y = m.y; step(s, {});
+  assert.equal(e.hp, 4800); assert.equal(s.hazards.some(h => h.kind === 'chipmine'), false);
 });

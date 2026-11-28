@@ -391,8 +391,8 @@ export const CHIP_BEHAVIOUR = {
   // 1 frame it blows (sound 0x94 / 0xAD); every 0xC frames a gust t3 0x49 (sub_80CD488) goes down the next row in the order
   // game rows 2, 1, 3, …; mode byte_80CCFD4[1]: Wind 0 (from the nearest enemy panel, sub_80CD26C), Fan 1 (from the back
   // edge, sub_80CD236). The freeze holds 0x1E frames.
-  Wind: { kind: 'place', obj: 'WindBox', sprite: 'windbox', seq: 'idle', pal: 0, hp: 40, life: 1440, ahead: true, freeze: true, hold: 30, wind: 1, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'each gust moves the first enemy in its row one panel back (Fan: forward); the gust object t3 0x49 is not decoded' },
-  Fan: { kind: 'place', obj: 'WindBox', sprite: 'windbox', seq: 'idle', pal: 1, hp: 40, life: 1440, ahead: true, freeze: true, hold: 30, wind: -1, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'each gust moves the first enemy in its row one panel forward, staying on the enemy side; the gust object t3 0x49 is not decoded' },
+  Wind: { kind: 'place', obj: 'WindBox', sprite: 'windbox', seq: 'idle', pal: 0, hp: 40, life: 1440, ahead: true, freeze: true, hold: 30, wind: 1, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'gust t3 0x49: 10 px a frame from the first enemy panel, enemy side only; hit modifier 8 → byte_800F604 (+1, 0, 6): each enemy it passes slides back as far as it can' },
+  Fan: { kind: 'place', obj: 'WindBox', sprite: 'windbox', seq: 'idle', pal: 1, hp: 40, life: 1440, ahead: true, freeze: true, hold: 30, wind: -1, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'gust t3 0x49 from the back edge toward MegaMan; hit modifier 4 → byte_800F604 (−1, 0, 6): each enemy it passes slides forward as far as the enemy side allows' },
   // Cursor chips: inside the freeze a copy of MegaMan (t1 0x13 / 0x14) steers a cursor that moves on its own; the chip
   // button fires (AIData Unk_2c bit 0), or it fires by itself after 0x12C frames. 0x10 frames later the hit, then 0x3C.
   // BurnSqr (sub 23 → t4 0x59 → t1 0x13): a 2 × 2 square, game x 5 → 1 along rows 2–3, then x 1 → 5 along rows 1–2,
@@ -405,6 +405,17 @@ export const CHIP_BEHAVIOUR = {
   // row it hits that column (region 4), while running down the column that row (region 0x1D); the panels break
   // (object_breakPanel_dup2, region type 0xA, 0x0A050601), the screen shakes 0x1E (sub_80BB52E).
   Magnum: { kind: 'cursor', cursor: 'magnum', every: 12, freeze: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // Meteors (sub 16 → t4 0x34, sub_80E41CC): targets sub_80E42AA = the enemy panels column by column from the back edge
+  // (rows 1–3 each), in that order; 2 frames, then one meteor every 0xA frames, 0x1E of them, cycling the list; then 0x5A.
+  // Each meteor (sub_80CF5B2 → t3 0x56, Param1 1: byte_80CF3AC = sprite 0x0C/0x31, collision 0x0A / 5, shake, no crack)
+  // waits 0x1E high up, falls 0x10 frames (16 px a frame, from 256 px behind and above) and hits its panel if it is there
+  // (0x0F800010). All of it runs inside the freeze (object flag 0x10).
+  Meteors: { kind: 'meteors', freeze: true, hold: 2 + 10 * 30 + 90, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // Mine (sub 11 → t4 0x29, hold 0x78 → sub_80CDF60 → t3 0x4C): candidates = solid enemy panels with nobody on them
+  // (byte_80CDF50: needs 0x30, not 0x0F8C0080), shuffled (ShuffleByteList_PrimaryRNG); it hops to the next one every 2
+  // frames, 0x3C times, then hides on the last (region 1, collision 0x33 / 0x2A, HP 1). It goes off when an enemy steps on
+  // it or its panel breaks: the chip's damage, explosion effect 0x47.
+  Mine: { kind: 'mine', freeze: true, hold: 120, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

@@ -4754,6 +4754,81 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "windgustfx": {
+   "label": "Wind / Fan gust (t3 0x49 sub_80CD310): sprite 0x0C/0x2E, palette Param1 × 2",
+   "sources": {
+    "bn6f": {
+     "offset": "324E14",
+     "compression": "none",
+     "bytes": 548,
+     "sha256": "673e34f7913ed217256328a396f400a606559b0e97acf17dce85b60f76ad7ca3",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "32438C",
+     "compression": "none",
+     "bytes": 548,
+     "sha256": "673e34f7913ed217256328a396f400a606559b0e97acf17dce85b60f76ad7ca3",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "gust": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "meteorfx": {
+   "label": "Meteors' meteor (t3 0x56 Param1 1, byte_80CF3AC): sprite 0x0C/0x31",
+   "sources": {
+    "bn6f": {
+     "offset": "325C94",
+     "compression": "none",
+     "bytes": 608,
+     "sha256": "48c93d7269143163389466c5f94575e36011ce43b30e955970b9d35ffedefbb0",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "32520C",
+     "compression": "none",
+     "bytes": 608,
+     "sha256": "48c93d7269143163389466c5f94575e36011ce43b30e955970b9d35ffedefbb0",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "fall": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "minefx": {
+   "label": "Mine (t3 0x4C sub_80CDD64): sprite 0x0C/0x22",
+   "sources": {
+    "bn6f": {
+     "offset": "31E8C0",
+     "compression": "none",
+     "bytes": 384,
+     "sha256": "f084fa33029b1fe61c656adc613aac652a14a047fde8f4d1adc701d7d3099015",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "31DE38",
+     "compression": "none",
+     "bytes": 384,
+     "sha256": "f084fa33029b1fe61c656adc613aac652a14a047fde8f4d1adc701d7d3099015",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

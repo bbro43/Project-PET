@@ -228,6 +228,10 @@ export function render(g, s, bank) {
     const [ax, ay] = anchor(h.fx, h.fy);
     sprite(g, bank, 'thunderfx', 'ball', h.t, ax, ay - 12, (g, x, y) => { g.fillStyle = '#ffe060'; g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); }, 0, false);
   }
+  for (const h of s.hazards) if (h.kind === 'windgust') { // Wind / Fan gust (sprite 0x0C/0x2E, palette 0 / 2)
+    const [ax, ay] = anchor(h.fx, h.y);
+    sprite(g, bank, 'windgustfx', 'gust', s.tick, ax, ay - 12, (g, x, y) => { g.strokeStyle = 'rgba(220,240,255,.8)'; g.lineWidth = 2; for (let i = 0; i < 3; i++) { g.beginPath(); g.moveTo(x - 10, y - 6 * i); g.lineTo(x + 10, y - 6 * i); g.stroke(); } }, h.dir > 0 ? 0 : 2, h.dir < 0);
+  }
   for (const h of s.hazards) if (h.kind === 'widewave' && s.tick >= h.start) { // WideShot wave (sprite 0x10/0x37): forming, then travelling; AntiSwrd's wave (0x0C/0x14)
     const [ax, ay] = anchor(h.fx, h.y), t = s.tick - h.start;
     if (h.sprite) { sprite(g, bank, h.sprite, 'wave', t, ax, ay - 16, (g, x, y) => { g.strokeStyle = '#e0f0ff'; g.lineWidth = 3; g.beginPath(); g.arc(x - 10, y, 30, -1, 1); g.stroke(); }, 0, false); continue; }
@@ -775,6 +779,15 @@ export function render(g, s, bank) {
       for (const [x, y] of sp.cells) { const [ax, ay] = anchor(x, y); g.fillStyle = sp.def.type === 'holy' ? 'rgba(255,240,160,.55)' : 'rgba(255,255,255,.45)'; g.fillRect(ax - 20, ay - 14, 40, 24); }
     if (sp?.cursor && ts.t >= ts.start && sp.cursor.fireAt === undefined && !((ts.t - ts.start) & 4)) // BurnSqr / Magnum cursor: highlighted panels (highlightPanelIfSomeCondition_8109660, Timer2 & 4)
       for (const [x, y] of cursorCells(sp.cursor, sp.def.cursor)) if (x >= 0 && x <= 5 && y >= 0 && y <= 2) { g.fillStyle = 'rgba(255,240,80,.85)'; g.fillRect(x * PANEL_W + 3, FIELD_Y + y * PANEL_H + 3, PANEL_W - 6, PANEL_H - 9); }
+    if (sp?.def.kind === 'meteors' && sp.order.length) for (let k = 0; k < 30; k++) { // meteors (sprite 0x0C/0x31): 0x1E up high, then 0x10 frames down from behind
+      const f = ts.t - ts.start - 2 - 10 * k - 30; if (f < 0 || f >= 16) continue;
+      const [x, y] = sp.order[k % sp.order.length], [ax, ay] = anchor(x, y), z = 256 - 16 * f;
+      sprite(g, bank, 'meteorfx', 'fall', f, ax - z, ay - z, (g, x, y) => { g.fillStyle = '#ff9040'; g.beginPath(); g.arc(x, y - 8, 8, 0, 7); g.fill(); }, 0, false);
+    }
+    if (sp?.def.kind === 'mine' && sp.order.length && ts.t >= ts.start && ts.t < ts.start + sp.def.hold) { // Mine hopping every 2 frames (sprite 0x0C/0x22)
+      const [x, y] = sp.order[Math.min(59, (ts.t - ts.start) >> 1) % sp.order.length], [ax, ay] = anchor(x, y);
+      sprite(g, bank, 'minefx', 'idle', ts.t, ax, ay - 4, (g, x, y) => { g.fillStyle = '#c03030'; g.fillRect(x - 6, y - 6, 12, 6); }, 0, false);
+    }
     if (ts.t >= dim) { g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(0, 18, 96, 14); g.font = '10px monospace'; text(g, ts.name, 6, 29, '#fff'); g.font = '8px monospace'; }
     for (const b of ts.beams) {
       const [bx, by] = anchor(b.x, b.y), z = Math.round(b.z * 256);

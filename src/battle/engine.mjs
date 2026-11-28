@@ -268,10 +268,8 @@ function stepPlacedBomb(o, api) {
   }
   if (o.wind && o.stateT >= 1 && (o.stateT - 1) % 12 === 0) { // Wind / Fan: a gust down rows 2, 1, 3 (game) in turn
     const y = [1, 0, 2][o.cycle++ % 3];
-    s.effects.push({ kind: 'gust', y, dir: o.wind, t: 0 });
-    const foes = s.enemies.filter(e => e.hp > 0 && e.owner !== 'player' && e.kind !== 'coil' && !e.cells && e.y === y && e.x > o.x).sort((a, b) => a.x - b.x);
-    const e = o.wind > 0 ? foes[0] : foes[0];
-    if (e) { const nx = e.x + o.wind; if (nx >= 3 && nx <= 5 && sideAt(s, nx, y) === 'e' && standable(s, nx, y) && !at(s, nx, y)) { e.x = nx; e.drawX = nx; } }
+    let x0 = o.x + 1; while (x0 <= 5 && sideAt(s, x0, y) !== 'e') x0++; // Wind: the first enemy panel in the row (sub_80CD26C); Fan: the back edge (sub_80CD236)
+    if (x0 <= 5) s.hazards.push({ kind: 'windgust', owner: 'player', fx: o.wind > 0 ? x0 : 5, y, dir: o.wind, hit: [] });
   }
   if (--o.life > 0) return;
   if (o.family === 'BlackBomb' || o.family === 'Cube' || o.family === 'MusicBox' || o.family === 'WindBox') { o.hp = 0; s.effects.push({ kind: 'puff', x: o.x, y: o.y, t: 0 }); } // left alone: it just goes away
@@ -570,6 +568,14 @@ function startSpecial(s, name, def, damage, element) {
     for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rng(s) * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
     hold = 8 * order.length + 8;
   }
+  if (def.kind === 'meteors') { // sub_80E42AA: back column first, rows top to bottom, while the column has enemy panels
+    order = [];
+    for (let x = 5; x >= 0; x--) { const col = [0, 1, 2].filter(y => sideAt(s, x, y) === 'e'); if (!col.length) break; for (const y of col) order.push([x, y]); }
+  }
+  if (def.kind === 'mine') { // sub_80CDF18: free solid enemy panels, shuffled
+    order = [0, 1, 2, 3, 4, 5].flatMap(x => [0, 1, 2].map(y => [x, y])).filter(([x, y]) => sideAt(s, x, y) === 'e' && standable(s, x, y) && !at(s, x, y));
+    for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rng(s) * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+  }
   let cursor = null;
   if (def.kind === 'cursor') { // Magnum: from the front enemy column (sub_800D5F0)
     let fx = 5; while (fx > 0 && [0, 1, 2].some(y => sideAt(s, fx - 1, y) === 'e')) fx--;
@@ -637,6 +643,14 @@ function stepTimestop(s, input = {}) {
   if (ts.special) { // a special chip: its step runs inside the freeze (panel chips: blink, then set at the end of `hold`)
     const sp = ts.special;
     if (sp.def.kind === 'panels') { if (t === ts.start + sp.def.hold) applySpecial(s, sp); }
+    else if (sp.def.kind === 'meteors') { // a meteor every 0xA frames from start + 2; each lands 0x1E + 0x10 later
+      const k = t - ts.start - 2 - 46;
+      if (sp.order.length && k >= 0 && k % 10 === 0 && k / 10 < 30) {
+        const [x, y] = sp.order[(k / 10) % sp.order.length];
+        if (standable(s, x, y)) { const e = at(s, x, y); if (e && e.owner !== 'player') hitEnemy(s, e, sp.damage, { element: sp.element, chip: true }); s.effects.push({ kind: 'blast', x, y, t: 0 }, { kind: 'shake', t: 0 }); }
+      }
+    }
+    else if (sp.def.kind === 'mine') { if (t === ts.start + sp.def.hold && sp.order.length) { const [x, y] = sp.order[59 % sp.order.length]; s.hazards.push({ kind: 'chipmine', owner: 'player', x, y, damage: sp.damage, element: sp.element }); } }
     else if (sp.def.kind === 'geddon') { const k = (t - ts.start) / 8 - 1; if (Number.isInteger(k) && k >= 0 && sp.order[k]) { const [x, y] = sp.order[k]; breakPanel(s, x, y); s.effects.push({ kind: 'puff', x, y, t: 0 }); } }
     else if (t === ts.start) applySpecial(s, sp);
     s.effects = s.effects.filter(f => ++f.t < 24);
@@ -1219,6 +1233,22 @@ function stepHazards(s) {
       const x = Math.round(at_.x), y = Math.round(at_.y), key = x + ',' + y;
       if (y >= 0 && y <= 2 && x >= 0 && x <= 5 && key !== h.last) { h.last = key; const e = at(s, x, y); if (e) hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
       return true;
+    }
+    if (h.kind === 'chipmine') { // Mine (t3 0x4C), hidden: goes off when an enemy steps on its panel or the panel breaks
+      const e = at(s, h.x, h.y);
+      if ((e && e.owner !== 'player' && e.hp > 0) || !standable(s, h.x, h.y)) { if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); s.effects.push({ kind: 'blast', x: h.x, y: h.y, t: 0 }); return false; }
+      return true;
+    }
+    if (h.kind === 'windgust') { // Wind / Fan gust (t3 0x49): 10 px a frame along the enemy side (byte_80CD478); hit modifier
+      const x = Math.round(h.fx); // 8 (Wind) / 4 (Fan) → byte_800F604: slide away / toward MegaMan as far as it can (6)
+      if (x < 0 || x > 5 || sideAt(s, x, h.y) !== 'e') return false;
+      const e = at(s, x, h.y);
+      if (e && e.owner !== 'player' && e.kind !== 'coil' && !e.cells && !h.hit.includes(e.id)) {
+        h.hit.push(e.id);
+        while (sideAt(s, e.x + h.dir, e.y) === 'e' && standable(s, e.x + h.dir, e.y) && !at(s, e.x + h.dir, e.y) && e.x + h.dir >= 0 && e.x + h.dir <= 5) e.x += h.dir;
+        e.drawX = e.x;
+      }
+      h.fx += h.dir * 10 / 40; return true;
     }
     if (h.kind === 'shuriken') { // AntiDmg's / BodyGrd's shurikens (sub_80DD91A / sub_80D006E): straight onto an enemy
       if (s.tick < h.at) return true;
