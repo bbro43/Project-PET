@@ -805,6 +805,12 @@ export function render(g, s, bank) {
       const [x0, y0] = anchor(sp.order[0].x, sp.order[0].y); g.strokeStyle = 'rgba(120,255,160,.8)'; g.lineWidth = 2;
       for (const e of sp.order.slice(1)) { const [x1, y1] = anchor(e.x, e.y); g.beginPath(); g.moveTo(x0, y0 - 16); g.lineTo(x1, y1 - 16); g.stroke(); }
     }
+    if (sp?.def.kind === 'sumnblk' && sp.order.length && ts.t >= ts.start) { // SumnBlk's creature (sprite 4/0x1D)
+      const k = ts.t - ts.start, e1 = 0x18, e2 = e1 + 35, e3 = e2 + 0x1E, w = e3 + 2, a1 = w + 41, a2 = a1 + 0xA, a3 = a2 + 26 + 0x10;
+      const there = sp.order[1] && k >= w && k < a3, [px, py] = there ? sp.order[1] : sp.order[0], [ax, ay] = anchor(px, py);
+      const seq = k < e1 ? 's0' : k < e2 ? 's5' : k < e3 ? 's4' : !sp.order[1] ? 's4' : k < a1 ? 's1' : k < a2 ? 's1' : k < a3 ? 's2' : 's0';
+      sprite(g, bank, 'sumnblkfx', seq, k, ax, ay, (g, x, y) => { g.fillStyle = '#302040'; g.fillRect(x - 8, y - 24, 16, 24); }, CHIP_DATA[ts.name] ? CHIP_DATA[ts.name].params[0] * 3 : 0, true);
+    }
     if (sp?.def.kind === 'snake') for (const n of sp.snakes || []) { // Snake (sprite 0x0C/0x2C): rises from its hole, bites, flies
       const [ax, ay] = anchor(n.x / 40, n.y / 24);
       sprite(g, bank, 'snakefx', n.anim || 'rise', n.t, ax, ay - n.z, (g, x, y) => { g.fillStyle = '#60c040'; g.fillRect(x - 3, y - 14, 6, 14); }, 0, false);

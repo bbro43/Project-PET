@@ -500,6 +500,15 @@ export const CHIP_BEHAVIOUR = {
   // LifeSync (sub 7 → t4 0x5C, sub_80E72C8): a cursor 2 panels ahead in MegaMan's row; if an enemy stands there, every
   // other enemy is linked to it (0x14, then 0x3C) and gets its HP (sub_80E73A2), then 0x1E. Cybeasts (0x49–0x4E) are left out.
   LifeSync: { kind: 'lifesync', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // SumnBlk (sub 36 → t4 0x7C, sub_80E9164): only when the panel ahead is a hole (no 0x0F800010). A creature (t1 0x32,
+  // sprite 4/0x1D, palette level × 3) rises from it: 0x18, animation 5 to its end, animation 4 for 0x1E; then it picks an
+  // enemy at least 2 columns from MegaMan with a free panel in front (sub_80C18B0: walked from the last slot, joining
+  // while no farther than the nearest so far, then the top-most row, ties to the later), warps there (effects 0x15 /
+  // 0x14, 2 frames), animation 1 to its end, 0xA, animation 2: a slash on the column in front (0x0705FF04, rows ±1, sword
+  // type 7, effect 0x16), animation 2 to its end, 0x10, then back to the hole (0x10). Inside the freeze.
+  SumnBlk1: { kind: 'sumnblk', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  SumnBlk2: { kind: 'sumnblk', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  SumnBlk3: { kind: 'sumnblk', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

@@ -410,3 +410,11 @@ test('ComingRd / GoingRd: the enemy area becomes road and carries the enemies', 
   s = after('GoingRd', 0, one); while (s.timestop) step(s, {}); for (let i = 0; i < 40; i++) step(s, {});
   assert.equal(s.enemies[0].x, 5);
 });
+
+test('SumnBlk: needs a hole ahead; the creature slashes the column of the nearest enemy', async () => {
+  const { setPanel } = await import('../src/battle/panels.mjs');
+  let s = after('SumnBlk1', 0); assert.equal(s.timestop.special.order.length, 0); while (s.timestop) step(s, {}); assert.equal(hurt(s).length, 0);
+  s = after('SumnBlk1', 0, s => { setPanel(s, 2, 1, 'broken'); s.enemies = s.enemies.filter(e => e.x === 4); });
+  while (s.timestop) step(s, {});
+  assert.deepEqual(hurt(s), [[4, 0, 160], [4, 1, 160]]); // the top-most candidate, (4, 0): column x 4, rows 0–1
+});

@@ -637,6 +637,20 @@ function startSpecial(s, name, def, damage, element) {
     order = others.length ? [tgt, ...others] : [];
     hold = order.length ? 0x14 + 0x3C + 0x1E : 0;
   }
+  if (def.kind === 'sumnblk') { // sub_80E9164: a hole ahead; sub_80C18B0: the target
+    const hx = p.x + 1, hole = hx <= 5 && !standable(s, hx, p.y);
+    // candidates walked from the last opponent slot; one joins while its distance is no more than the nearest so far; then the
+    // top-most row wins, a tie going to the later one
+    const list = []; let near = Infinity;
+    for (const e of s.enemies.filter(e => e.hp > 0 && e.owner !== 'player' && e.kind !== 'coil' && !e.cells).reverse()) {
+      if (at(s, e.x - 1, e.y)) continue; const d = e.x - p.x; if (d < 2) continue;
+      if (!list.length || d <= near) { list.push(e); near = d; }
+    }
+    let pick = null; for (const e of list) if (!pick || e.y <= pick.y) pick = e;
+    order = hole ? [[hx, p.y], pick ? [pick.x - 1, pick.y] : null] : [];
+    const emerge = 0x18 + 35 + 0x1E;
+    hold = !hole ? 0 : order[1] ? emerge + 2 + 41 + 0xA + 26 + 0x10 + 0x10 : emerge + 0x10;
+  }
   if (def.kind === 'meteors') { // sub_80E42AA: back column first, rows top to bottom, while the column has enemy panels
     order = [];
     for (let x = 5; x >= 0; x--) { const col = [0, 1, 2].filter(y => sideAt(s, x, y) === 'e'); if (!col.length) break; for (const y of col) order.push([x, y]); }
@@ -717,6 +731,10 @@ function stepTimestop(s, input = {}) {
     const sp = ts.special;
     if (sp.def.kind === 'panels') { if (t === ts.start + sp.def.hold) applySpecial(s, sp); }
     else if (sp.def.kind === 'snake') stepSnakes(s, ts, sp, t);
+    else if (sp.def.kind === 'sumnblk' && sp.order[1]) { // the slash: column in front of it, rows ±1
+      const slashAt = ts.start + 0x18 + 35 + 0x1E + 2 + 41 + 0xA;
+      if (t === slashAt) { const [x, y] = sp.order[1]; for (const dy of [-1, 0, 1]) { const e = at(s, x + 1, y + dy); if (e && e.owner !== 'player') hitEnemy(s, e, sp.damage, { element: sp.element, chip: true }); } s.effects.push({ kind: 'slash', area: 'wide', x: x + 2, y, t: 0 }); }
+    }
     else if (sp.def.kind === 'lifesync') { if (sp.order.length && t === ts.start + 0x14 + 0x3C) { const [tgt, ...others] = sp.order; for (const e of others) e.hp = Math.min(e.maxHp ?? tgt.hp, tgt.hp) || tgt.hp; } }
     else if (sp.def.kind === 'blizzard') { if (t === ts.start + 0x22) s.hazards.push({ kind: 'snowball', owner: 'player', fx: s.player.x * 40 + 10, y: s.player.y, x: s.player.x, damage: sp.damage, base: sp.damage, element: sp.element, size: 0 }); }
     else if (sp.def.kind === 'numberball') { // a ball every 0x12 frames from 0x14; each rolls after 0xE + 0xA

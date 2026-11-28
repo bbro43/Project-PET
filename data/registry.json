@@ -5139,6 +5139,51 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "sumnblkfx": {
+   "label": "SumnBlk's creature (t1 0x32 sub_80C1590): sprite 4/0x1D, palette = level × 3",
+   "sources": {
+    "bn6f": {
+     "offset": "263484",
+     "compression": "lz77",
+     "bytes": 4960,
+     "sha256": "781bb9b974336e836df5ecb97e02e2cd839514cabb44dfc5f5ad85ba672ff7e9",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "263484",
+     "compression": "lz77",
+     "bytes": 4960,
+     "sha256": "781bb9b974336e836df5ecb97e02e2cd839514cabb44dfc5f5ad85ba672ff7e9",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "s0": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "s1": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    },
+    "s2": {
+     "seq": 2,
+     "confidence": "rom-verified"
+    },
+    "s3": {
+     "seq": 3,
+     "confidence": "rom-verified"
+    },
+    "s4": {
+     "seq": 4,
+     "confidence": "rom-verified"
+    },
+    "s5": {
+     "seq": 5,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {
