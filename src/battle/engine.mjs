@@ -1,11 +1,11 @@
 // Deterministic fixed-tick Battle Network battle simulation (BN6 ruleset).
 // No rendering, DOM or timing here: the client feeds one input object per tick.
 // Input: { dir: 'up'|'down'|'left'|'right'|null, a: held bool, b: pressed bool, l: pressed bool }
-import { val, CHIP_BEHAVIOUR, WEAKNESS, PANELS } from '../../data/rules.mjs';
+import { val, CHIP_BEHAVIOUR, WEAKNESS, PANELS, GRAB } from '../../data/rules.mjs';
 import CHIPDATA from '../../data/bn6-chips.mjs';
 import { createVirus, stepVirus, virusName, PLAYABLE_FAMILIES } from './viruses.mjs';
 import { createNavi, stepNavi, stepCoil, naviVariants, PLAYABLE_NAVIS } from './navis.mjs';
-import { createPanels, stepPanels, panelHit, standable, crackPanel, breakPanel, setPanel, panelType, FIELDS } from './panels.mjs';
+import { createPanels, stepPanels, panelHit, standable, sideAt, crackPanel, breakPanel, setPanel, panelType, FIELDS } from './panels.mjs';
 export { FIELDS };
 
 // ROM chip data by name; the default folder is the game's starting folder (FolderTable entry 0).
@@ -187,6 +187,7 @@ function useChip(s, chip) {
   else if (def.kind === 'throw') s.hazards.push({ kind: 'bomb', owner: 'player', x: p.x, y: p.y, tx: p.x + def.range, land: s.tick + def.flight, start: s.tick, damage });
   else if (def.kind === 'heal') { p.hp = Math.min(p.maxHp, p.hp + def.heal); s.events.push({ type: 'heal', amount: def.heal }); s.effects.push({ kind: 'heal', x: p.x, y: p.y, t: 0 }); }
   else if (def.kind === 'vulcan') for (let k = 0; k < def.hits; k++) s.hazards.push({ kind: 'pvulcan', owner: 'player', y: p.y, from: p.x, at: s.tick + k * def.gap, damage, element });
+  else if (def.kind === 'grab') startGrab(s, def, damage, element);
   else if (def.kind === 'busterup') { s.busterUp++; s.events.push({ type: 'busterUp', level: 1 + s.busterUp }); }
   else if (def.kind === 'crack') {
     const x = p.x + 1, y = p.y;
@@ -194,6 +195,43 @@ function useChip(s, chip) {
       setPanel(s, x, y, 'broken'); s.effects.push({ kind: 'panelbreak', x, y, t: 0 });
       s.hazards.push({ kind: 'crackshot', owner: 'player', fx: x, x, y, speed: def.speed, damage, element });
     }
+  }
+}
+
+// ---------- area stealing (AreaGrab 0x80E0754, beam t3 0xF 0x80C6414) ----------
+function startGrab(s, def, damage, element) {
+  const p = s.player;
+  let cells = [];
+  if (def.column) {
+    let x = p.x; while (x <= 5 && [0, 1, 2].every(y => sideAt(s, x, y) === 'p')) x++;
+    if (x <= 5) cells = [0, 1, 2].map(y => [x, y]);
+  } else {
+    let x = p.x; while (x <= 5 && sideAt(s, x, p.y) === 'p') x++;
+    if (x <= 5) cells = [[x, p.y]];
+  }
+  s.timestop = { name: p.chip.name, t: 0, start: GRAB.dim.value + GRAB.name.value, cells, damage, element, beams: [] };
+}
+function stepTimestop(s) {
+  const ts = s.timestop, t = ++ts.t, fall = GRAB.beamFall.value;
+  if (t === ts.start) ts.beams = ts.cells.map(([x, y]) => ({ x, y, z: 1 }));
+  if (t === ts.start + fall) for (const b of ts.beams) {
+    const e = at(s, b.x, b.y), mm = s.player.x === b.x && s.player.y === b.y;
+    if (e) hitEnemy(s, e, ts.damage, { element: ts.element });
+    s.effects.push({ kind: 'grabland', x: b.x, y: b.y, t: 0 });
+    const c = s.panels[b.y][b.x];
+    if (!e && !mm && c.side === 'e' && sideAt(s, b.x - 1, b.y) === 'p') { c.side = 'p'; c.stolenT = GRAB.returnTicks.value; s.events.push({ type: 'grab', x: b.x, y: b.y }); }
+  }
+  if (t >= ts.start) for (const b of ts.beams) b.z = Math.max(0, 1 - (t - ts.start) / fall);
+  s.effects = s.effects.filter(f => ++f.t < 24);
+  if (t >= ts.start + fall + GRAB.hold.value + GRAB.dim.value) s.timestop = null;
+}
+// Stolen panels go back after the return timer, once nobody stands on them (hand-back order partly decoded).
+function stepArea(s) {
+  for (let y = 0; y < 3; y++) for (let x = 3; x <= 5; x++) {
+    const c = s.panels[y][x];
+    if (c.side !== 'p' || !c.stolenT) continue;
+    if (c.stolenT > 1) { c.stolenT--; continue; }
+    if (!(s.player.x === x && s.player.y === y)) { c.side = 'e'; c.stolenT = 0; s.events.push({ type: 'areaReturn', x, y }); }
   }
 }
 
@@ -238,7 +276,7 @@ function stepPlayer(s, input) {
   }
   if (p.slide && (p.state === 'idle' || p.state === 'appear')) {
     const [dx, dy] = p.slide, x = p.x + dx, y = p.y + dy;
-    if (x >= 0 && x < 3 && y >= 0 && y < 3 && !at(s, x, y) && standable(s, x, y)) { p.state = 'slide'; p.stateT = 0; setAnim(p, 'idle'); return; }
+    if (x >= 0 && x <= 5 && y >= 0 && y < 3 && sideAt(s, x, y) === 'p' && !at(s, x, y) && standable(s, x, y)) { p.state = 'slide'; p.stateT = 0; setAnim(p, 'idle'); return; }
     p.slide = null;
   }
   // Charge accumulates while A is held in any non-flinch state.
@@ -268,7 +306,7 @@ function stepPlayer(s, input) {
   const d = DIRS[input.dir];
   if (d) {
     const x = p.x + d[0], y = p.y + d[1];
-    if (x >= 0 && x < 3 && y >= 0 && y < 3 && !at(s, x, y) && standable(s, x, y)) {
+    if (x >= 0 && x <= 5 && y >= 0 && y < 3 && sideAt(s, x, y) === 'p' && !at(s, x, y) && standable(s, x, y)) {
       p.dest = [x, y]; p.moveDir = d; p.state = 'vanish'; p.stateT = 0; setAnim(p, 'vanish');
     }
   }
@@ -280,7 +318,7 @@ function virusApi(s) {
   const p = s.player;
   return {
     s,
-    at: (x, y) => at(s, x, y) || (standable(s, x, y) ? undefined : HOLE), // a broken panel can't be moved onto
+    at: (x, y) => at(s, x, y) || (standable(s, x, y) && !(x >= 3 && sideAt(s, x, y) === 'p') ? undefined : HOLE), // a broken or stolen panel can't be moved onto
     crackPanel: (x, y) => crackPanel(s, x, y),
     breakPanel: (x, y) => breakPanel(s, x, y),
     setPanel: (x, y, type) => setPanel(s, x, y, type),
@@ -323,9 +361,13 @@ function stepHazards(s) {
       return s.tick < h.until && (s.tick < h.hit || panelType(s, h.x, h.y) === 'volcano');
     }
     if (h.kind === 'wave') {
+      // Shockwave type3 0x16 (0x80C6B64 / 0x80C6C14): each segment needs panel flag 0x10 under it, every frame.
+      // Broken panels (flags 0x14000) lack it, so the wave dies at a hole; cracked panels (0x10050) carry it.
+      const solid = () => h.big || standable(s, h.x, h.y);
+      if (!solid()) { if (s.turns[h.family] === h.owner) delete s.turns[h.family]; return false; }
       if (p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage);
       if (s.tick >= h.next) { h.x += h.dir; h.next = s.tick + h.step; }
-      const alive = h.x >= 0;
+      const alive = h.x >= 0 && solid();
       if (!alive && s.turns[h.family] === h.owner) delete s.turns[h.family];
       return alive;
     }
@@ -545,7 +587,9 @@ export function step(s, input = {}) {
     if (s.phaseT >= 90) { s.wave++; spawn(s, survivalWave(s.wave, k => pickSurvival(s, k))); openCustom(s); }
     return s;
   }
+  if (s.timestop) { stepTimestop(s); return s; } // time freeze: nothing else moves, the gauge waits
   s.tick++;
+  stepArea(s);
   s.gauge = Math.min(val('customGaugeTicks'), s.gauge + 1);
   if (input.l && s.gauge >= val('customGaugeTicks') && s.player.state === 'idle') { openCustom(s); return s; }
   stepPlayer(s, input);

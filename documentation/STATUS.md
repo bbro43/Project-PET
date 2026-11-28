@@ -1,4 +1,4 @@
-# Project PET — status (updated 27 Nov 2026, app 0.38.1 / assets 42)
+# Project PET — status (updated 27 Nov 2026, app 0.39.0 / assets 43)
 
 Legend: **Done** = implemented and tested · **Partial** = works but incomplete or using unverified values · **Pending** = not started · **Unverified** = claim without fresh evidence.
 
@@ -16,8 +16,8 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 | Asset registry | Partial | BN6: MegaMan, Mettaur, Champy, Gunner, ShockWave, crosshair (both versions). Sprite offsets + stats for all 29 BN6 virus families. BN4/BN5 not mapped |
 | Sequence roles (MegaMan, Mettaur) | Unverified | Visual candidates; runtime trace pending |
 | Battle engine core | Partial | 60 Hz deterministic; 6×3 field, areas, move, buster, charge, flinch + invincibility, custom gauge, chip select rules, queue. Several timings unverified (data/rules.mjs) |
-| BattleChips | Partial | All 411 BN6 chips (names, codes, damage, element, class, MB) and the starting folder from the ROM; chip pictures and icons decoded on device; the game's custom window (frame, slots, code strips, digits, element icons) decoded on device and pixel-matched (0.37.0), drawn over the battle screen with D-pad/A/B control (0.38.0), selected-chip column from the ROM (0.38.1), with Add on R; gauge timing from the ROM (documentation/audit/2026-11-27-bn6-chips.md). Effects in for the starting folder's chips except AreaGrab / WhiCapsl; the rest pending (Phase 2) |
-| Panel types | Partial | Cracked/broken (+ repair), poison, holy, grass, ice (slide, freeze), volcano eruptions decoded and playable; ROM panel graphics + palette animations decoded on device and pixel-matched (0.35.0); Field option in the menu (documentation/audit/2026-11-27-bn6-panels.md). Roads not modelled yet |
+| BattleChips | Partial | All 411 BN6 chips (names, codes, damage, element, class, MB) and the starting folder from the ROM; chip pictures and icons decoded on device; the game's custom window (frame, slots, code strips, digits, element icons) decoded on device and pixel-matched (0.37.0), drawn over the battle screen with D-pad/A/B control (0.38.0), selected-chip column from the ROM (0.38.1), with Add on R; gauge timing from the ROM (documentation/audit/2026-11-27-bn6-chips.md). Effects in for the starting folder's chips except WhiCapsl; AreaGrab / PanlGrab with time freeze, ROM beam sprite and area return (0.39.0); MiniBomb uses the ROM bomb sprite; other chip graphics pending; the rest pending (Phase 2) |
+| Panel types | Partial | Cracked/broken (+ repair), poison, holy, grass, ice (slide, freeze), volcano eruptions decoded and playable; ROM panel graphics + palette animations decoded on device and pixel-matched (0.35.0); Field option in the menu (documentation/audit/2026-11-27-bn6-panels.md). Roads not modelled yet. Shockwaves stop at broken panels (flag 0x10, 0.39.0); area stealing with panel ownership (0.39.0) |
 | Folder editor | Pending | The game's starting folder is used |
 | Virus battles | Done (BN6) | All 29 BN6 families decoded from the ROM, all 6 versions each: Mettaur, Piranha, Heady, Swordy, KillerEye, Quaker, Catack, Champy, WindBox, Trumpy, OldStove, HauntedCandle, Kettle, Puffy, StarFish, Dragon, ScareCrow, PulseBulb, BigHat, BombCorn, Shrubby, HoneyBomber, Gunner, FighterPlane, DarkMech, SnakeArm, Armadillo, Cragger, Nightmare (documentation/audit/2026-11-27-bn6-virus-ai.md); some timings estimated. Paralysis (DarkMech's elec ball) added in 0.33.0, length unverified |
 | Endless survival | Partial | Random Mettaur/Champy/Gunner waves up to Ω; composition non-canonical |
@@ -41,4 +41,4 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 ## Next checkpoint
 1. BN5/BN4 Navis (sprites located; AI not decoded yet). Smaller leftovers: road panel movement, TomahawkMan's eagle-to-axe during his chop.
 2. Trace timings in an emulator (glide speeds, hit frames, custom gauge, charge, invincibility).
-3. Chips Phase 2: effects in batches by family (area stealing for AreaGrab); folder editor; Navi Customizer.
+3. Chips Phase 2: effects and ROM chip graphics in batches by family (trace the chip-family dispatch first); folder editor; Navi Customizer. Enemy attacks that list MegaMan's panels as x 0–2 don't yet include stolen panels.

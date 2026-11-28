@@ -8,7 +8,7 @@ export const FIELDS = ['normal', 'cracked', 'grass', 'ice', 'holy', 'poison', 'v
 
 // Field presets for the battle menu (not canonical stage layouts).
 export function createPanels(field = 'normal', rng = Math.random) {
-  const grid = Array.from({ length: 3 }, () => Array.from({ length: 6 }, () => ({ type: 'normal', t: 0, occ: false })));
+  const grid = Array.from({ length: 3 }, () => Array.from({ length: 6 }, (_, x) => ({ type: 'normal', t: 0, occ: false, side: x < 3 ? 'p' : 'e' })));
   const set = (x, y, type) => { grid[y][x].type = type; };
   if (['cracked', 'grass', 'ice', 'holy'].includes(field)) for (let y = 0; y < 3; y++) for (let x = 0; x < 6; x++) set(x, y, field);
   if (field === 'poison' || field === 'volcano') for (let y = 0; y < 3; y++) { set(1, y, field); set(4, y, field); } // each side's middle column
@@ -22,6 +22,8 @@ export function createPanels(field = 'normal', rng = Math.random) {
 export const panelAt = (s, x, y) => s.panels?.[y]?.[x];
 export const panelType = (s, x, y) => panelAt(s, x, y)?.type ?? 'normal';
 export const standable = (s, x, y) => panelType(s, x, y) !== 'broken';
+// Whose area a panel is in ('p' MegaMan, 'e' enemy). Stolen panels change side (AreaGrab).
+export const sideAt = (s, x, y) => panelAt(s, x, y)?.side ?? (x < 3 ? 'p' : 'e');
 
 export function setPanel(s, x, y, type) {
   const c = panelAt(s, x, y);

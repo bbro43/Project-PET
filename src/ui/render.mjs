@@ -14,7 +14,7 @@ const SURFACE = { poison: '#9a48b8', holy: '#f2e2a0', grass: '#5cb24a', ice: '#c
 const TYPE_NUMBER = { none: 0, broken: 1, normal: 2, cracked: 3, poison: 4, holy: 5, grass: 6, ice: 7, volcano: 8, 'road-up': 9, 'road-down': 10, 'road-left': 11, 'road-right': 12 };
 function panels(g, s, bank) {
   for (let y = 0; y < 3; y++) for (let x = 0; x < 6; x++) {
-    const red = x < 3, px = x * PANEL_W, py = FIELD_Y + y * PANEL_H, c = s.panels?.[y]?.[x], type = c?.type || 'normal';
+    const c0 = s.panels?.[y]?.[x], red = (c0?.side ?? (x < 3 ? 'p' : 'e')) === 'p', px = x * PANEL_W, py = FIELD_Y + y * PANEL_H, c = s.panels?.[y]?.[x], type = c?.type || 'normal';
     if (bank?.field) {
       let n = TYPE_NUMBER[type] ?? 2;
       if (type === 'broken' && 600 - c.t <= 60 && ((600 - c.t) >> 2) & 1) n = 2; // blinks back in (0x800C3F2)
@@ -499,7 +499,13 @@ export function render(g, s, bank) {
     const k = Math.min(1, (s.tick - h.start) / (h.land - h.start));
     const [sx, sy] = anchor(h.x, h.y), [tx, ty] = anchor(h.tx, h.y);
     const x = sx + (tx - sx) * k, y = sy + (ty - sy) * k - 40 * Math.sin(Math.PI * k) - 16;
-    g.fillStyle = '#222'; g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill();
+    const bomb = bank?.get('minibomb')?.fly; // sprite 0x0C/0x24 (t3 0x4A): body OAM above, shadow OAM (8 rows from origin − 3) stays on the floor
+    if (bomb) {
+      const f = frameAt(bomb, s.tick - h.start), split = f.originY - 3, W = f.image.width, H = f.image.height;
+      const gx = Math.round(sx + (tx - sx) * k - f.originX), gy = Math.round(sy + (ty - sy) * k - 2);
+      g.drawImage(f.image, 0, split, W, H - split, gx, gy - 3 + (f.originY - f.originY), W, H - split);
+      g.drawImage(f.image, 0, 0, W, split, gx, Math.round(y + 10 - f.originY), W, split);
+    } else { g.fillStyle = '#222'; g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill(); }
   }
   // Volcano eruption (object type3 0x07, sprite 0x10/0x24): bubbles, then a flame column
   for (const h of s.hazards) if (h.kind === 'volcano') {
@@ -577,6 +583,18 @@ export function render(g, s, bank) {
   if (s.mode === 'survival') text(g, `WAVE ${s.wave}`, 237, 12, '#ffe070', 'right');
   // Enemy names, top right (BN style list)
   if (s.mode !== 'survival') s.enemies.filter(e => e.hp > 0 && e.kind !== 'coil').forEach((e, i) => text(g, e.name, 237, 12 + i * 9, '#fff', 'right'));
+  // Time freeze (AreaGrab / PanlGrab): the field dims, the chip name shows, the beams drop (sprite 0x0C/0x13).
+  const ts = s.timestop;
+  if (ts) {
+    const dim = 16, a = Math.min(1, ts.t / dim) * 0.5;
+    g.fillStyle = `rgba(0,0,24,${a})`; g.fillRect(0, 0, 240, 160);
+    if (ts.t >= dim) { g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(0, 18, 96, 14); g.font = '10px monospace'; text(g, ts.name, 6, 29, '#fff'); g.font = '8px monospace'; }
+    for (const b of ts.beams) {
+      const [bx, by] = anchor(b.x, b.y), z = Math.round(b.z * 256);
+      if (z > 0) sprite(g, bank, 'grabbeam', 'fall', ts.t, bx, by - z, (g, x, y) => { g.fillStyle = '#fff8a0'; g.fillRect(x - 3, y - 40, 6, 40); });
+    }
+  }
+  for (const f of s.effects) if (f.kind === 'grabland') { const [bx, by] = anchor(f.x, f.y); sprite(g, bank, 'grabbeam', 'land', f.t, bx, by, (g, x, y) => { g.fillStyle = `rgba(255,250,180,${1 - f.t / 24})`; g.fillRect(x - 16, y - 12, 32, 16); }); }
   const banner = { win: 'ENEMY DELETED!', lose: 'MegaMan deleted…', wave: `WAVE ${s.wave} CLEAR` }[s.phase];
   if (banner) {
     g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, 50, 240, 22);

@@ -48,7 +48,20 @@ export const CHIP_BEHAVIOUR = {
   CrakShot: { kind: 'crack', anim: 'throw', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },
   BusterUp: { kind: 'busterup', anim: 'idle', lock: 20, confidence: 'recalled', note: 'lockout 20 from the ROM' },
+  AreaGrab: { kind: 'grab', column: true, anim: 'idle', lock: 1, confidence: 'rom-verified', note: 't4 0x3 0x80E0754: time freeze, a beam (t3 0xF 0x80C6414) on each panel of the first column ahead that is not all MegaMan\'s (0x800D58C)' },
+  PanlGrab: { kind: 'grab', column: false, anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'same chip action with param 0: one beam on the edge panel of MegaMan\'s row (object_getEdgePanelMatchingRow)' },
   'Atk+10': { kind: 'plus', confidence: 'recalled', note: 'added to the attack chip picked before it' },
+};
+
+// Area stealing (AreaGrab / PanlGrab).
+export const GRAB = {
+  beamFall: v(32, 'rom-verified', 't3 0xF 0x80C6438: drops from Z 0x100 at 8 px a frame'),
+  stealable: v('a panel is taken only if nothing stands on it (reserved flag 0x80) and it joins MegaMan\'s area (0x800D668); whoever stands there takes the beam damage', 'rom-verified', '0x80C64A0, byte_80C6514'),
+  hold: v(60, 'rom-verified', '0x80E07B0: 0x3C frames after the beams before time resumes'),
+  returnTicks: v(1800, 'rom-verified', 'object_setPanelAllianceTimerLong: 0x708 frames per column (counted down in 0x800C746)'),
+  returnRule: v('the column goes back when its timer runs out and nobody stands on it', 'unverified', 'the hand-back order in 0x800C746 is not fully decoded'),
+  dim: v(16, 'unverified', 'object_dimScreen fade 0x3C step 4; length estimated'),
+  name: v(40, 'unverified', 'object_drawChipName; length estimated'),
 };
 
 // Element weakness (attacker element → element it deals double damage to).
