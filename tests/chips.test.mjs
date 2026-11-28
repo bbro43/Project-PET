@@ -222,54 +222,54 @@ test('Dragons: down the nearest enemy column, one column back, and up it', () =>
 });
 
 test('special chips: barriers, Invisibl, panel chips, cubes', () => {
-  let s = after('Barr100', 70); s.player.invuln = 0; hitPlayer(s, 60); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 40);
+  let s = after('Barr100', 90); s.player.invuln = 0; hitPlayer(s, 60); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 40);
   s.player.invuln = 0; hitPlayer(s, 60); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 0); // the breaking hit is stopped too
-  s = after('LifeAur', 70); s.player.invuln = 0; hitPlayer(s, 150); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 1);
-  s = after('BblWrap', 70); s.player.invuln = 0; hitPlayer(s, 80); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 0);
+  s = after('LifeAur', 90); s.player.invuln = 0; hitPlayer(s, 150); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 1);
+  s = after('BblWrap', 90); s.player.invuln = 0; hitPlayer(s, 80); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 0);
   for (let i = 0; i < 320; i++) step(s, {}); assert.equal(s.player.barrier, 1);
-  s = after('Invisibl', 110); assert.ok(s.player.invis > 300 && !s.timestop);
-  s = after('Snctuary', 140); assert.equal(panelType(s, 0, 0), 'holy'); assert.equal(panelType(s, 2, 2), 'holy');
-  s = after('RockCube', 70); assert.ok(s.enemies.some(e => e.family === 'Cube' && e.x === 2 && e.hp === 200));
+  s = after('Invisibl', 130); assert.ok(s.player.invis > 300 && !s.timestop);
+  s = after('Snctuary', 160); assert.equal(panelType(s, 0, 0), 'holy'); assert.equal(panelType(s, 2, 2), 'holy');
+  s = after('RockCube', 90); assert.ok(s.enemies.some(e => e.family === 'Cube' && e.x === 2 && e.hp === 200));
 });
 
 test('batch 11: gauge chips, time bombs, instruments, Geddon', () => {
-  let s = after('FstGauge', 150); s.gauge = 0; step(s, {}); assert.equal(s.gauge, 2);
-  s = after('SloGauge', 150); s.gauge = 0; step(s, {}); assert.equal(s.gauge, 0.5);
-  s = after('TimeBom1', 60, s => { s.enemies = s.enemies.filter(e => e.x !== 3 || e.y !== 1); }); // first free enemy panel in the row: (3, 1)
+  let s = after('FstGauge', 170); s.gauge = 0; step(s, {}); assert.equal(s.gauge, 2);
+  s = after('SloGauge', 170); s.gauge = 0; step(s, {}); assert.equal(s.gauge, 0.5);
+  s = after('TimeBom1', 80, s => { s.enemies = s.enemies.filter(e => e.x !== 3 || e.y !== 1); }); // first free enemy panel in the row: (3, 1)
   const bomb = s.enemies.find(e => e.family === 'TimeBomb'); assert.ok(bomb && bomb.x === 3);
   for (let i = 0; i < 260; i++) step(s, {});
   assert.equal(bomb.hp, 0); assert.equal(hurt(s).length, 8);
-  s = after('Timpani', 120); for (let i = 0; i < 60; i++) step(s, {});
+  s = after('Timpani', 140); for (let i = 0; i < 60; i++) step(s, {});
   assert.ok(s.enemies.filter(e => e.owner !== 'player').every(e => e.paralyzed > 0));
-  s = after('Geddon', 260);
+  s = after('Geddon', 280);
   assert.ok([0, 1, 2, 3, 4, 5].flatMap(x => [0, 1, 2].map(y => [x, y])).filter(([x, y]) => !(x === 1 && y === 1)).every(([x, y]) => panelType(s, x, y) === 'broken' || s.enemies.some(e => e.x === x && e.y === y)));
 });
 
 test('traps: AntiDmg, BodyGrd, AntiSwrd and ElemTrap spring on the right hits', () => {
-  let s = after('AntiDmg', 140); s.player.invuln = 0;
+  let s = after('AntiDmg', 160); s.player.invuln = 0;
   hitPlayer(s, 5); assert.equal(s.player.hp, 95); assert.ok(s.trap); // under 10: no
   s.player.invuln = 0; s.attacker = s.enemies.find(e => e.x === 5 && e.y === 0); hitPlayer(s, 40);
   assert.equal(s.player.hp, 95); assert.equal(s.trap, null);
   for (let i = 0; i < 10; i++) step(s, {});
   assert.deepEqual(hurt(s), [[5, 0, 100]]);
-  s = after('BodyGrd', 140); s.player.invuln = 0; hitPlayer(s, 40); for (let i = 0; i < 260; i++) step(s, {});
+  s = after('BodyGrd', 160); s.player.invuln = 0; hitPlayer(s, 40); for (let i = 0; i < 260; i++) step(s, {});
   assert.equal(hurt(s).reduce((n, h) => n + h[2], 0), 1000); // 10 shurikens of 100
-  s = after('AntiSwrd', 140); s.player.invuln = 0; hitPlayer(s, 40); assert.equal(s.player.hp, 60); // not a sword: no
+  s = after('AntiSwrd', 160); s.player.invuln = 0; hitPlayer(s, 40); assert.equal(s.player.hp, 60); // not a sword: no
   s.player.invuln = 0; hitPlayer(s, 40, { sword: true }); assert.equal(s.player.hp, 60); for (let i = 0; i < 120; i++) step(s, {});
   assert.deepEqual(hurt(s).map(h => h[2]), Array(9).fill(300)); // three waves over the 3×3 enemy block
-  s = after('ElemTrap', 140); s.player.invuln = 0; hitPlayer(s, 20, { element: 'fire' });
+  s = after('ElemTrap', 160); s.player.invuln = 0; hitPlayer(s, 20, { element: 'fire' });
   assert.equal(s.player.hp, 80); assert.equal(hurt(s).length, 9); assert.ok(hurt(s).every(h => h[2] >= 240));
 });
 
 test('ElemTrap springs on an elemental attack that misses MegaMan', async () => {
   const { elemTrapSees } = await import('../src/battle/engine.mjs');
-  let s = after('ElemTrap', 140); elemTrapSees(s, { element: 'aqua' });
+  let s = after('ElemTrap', 160); elemTrapSees(s, { element: 'aqua' });
   assert.equal(s.player.hp, 100); assert.equal(s.trap, null); assert.equal(hurt(s).length, 9);
-  s = after('ElemTrap', 140); elemTrapSees(s, { element: 'none' }); assert.ok(s.trap);
+  s = after('ElemTrap', 160); elemTrapSees(s, { element: 'none' }); assert.ok(s.trap);
 });
 
 test('ElemTrap springs on an elemental enemy hazard away from MegaMan', () => {
-  const s = after('ElemTrap', 140); const e = s.enemies.find(e => e.hp > 0);
+  const s = after('ElemTrap', 160); const e = s.enemies.find(e => e.hp > 0);
   e.element = 'fire'; s.hazards.push({ kind: 'pillar', x: 0, y: 0, start: s.tick, rise: 10, burn: 10, fall: 10, damage: 50, owner: e.id });
   s.player.x = 2; s.player.y = 2; step(s, {});
   assert.equal(s.trap, null); assert.equal(s.player.hp, 100);
@@ -333,4 +333,24 @@ test('Sensor: aims by its row, fires a laser down the line when an enemy is on t
   const sn = s.enemies.find(e => e.family === 'Sensor'); assert.deepEqual([sn.x, sn.y, sn.hp], [2, 1, 20]);
   for (let i = 0; i < 64 + 3 * 8 + 2; i++) step(s, {});
   assert.ok(sn.fired); assert.deepEqual(hurt(s), [[5, 1, 100]]);
+});
+
+test('Snake: one snake per hole on MegaMan\'s side, each at the nearest enemy by row', async () => {
+  const { setPanel } = await import('../src/battle/panels.mjs');
+  const s = after('Snake', 0, s => { setPanel(s, 0, 0, 'broken'); setPanel(s, 2, 2, 'broken'); });
+  assert.deepEqual(s.timestop.special.order, [[2, 2], [0, 0]]);
+  while (s.timestop) step(s, {});
+  assert.deepEqual(hurt(s), [[3, 0, 30], [3, 2, 30]]);
+  const t = after('Snake', 0); assert.equal(t.timestop.special.order.length, 0); while (t.timestop) step(t, {}); assert.equal(hurt(t).length, 0);
+});
+
+test('GrabRvng: takes back stolen panels and strikes every enemy once per panel; Anubis drains the enemy area', () => {
+  let s = after('GrabRvng', 0, s => { s.panels[0][2].side = 'e'; s.panels[1][2].side = 'e'; });
+  while (s.timestop) step(s, {});
+  assert.equal(s.panels[0][2].side, 'p'); assert.ok(hurt(s).every(h => h[2] === 80)); assert.equal(hurt(s).length, 9);
+  s = after('GrabBnsh', 0); while (s.timestop) step(s, {}); assert.equal(hurt(s).length, 0);
+  s = after('Anubis', 0); while (s.timestop) step(s, {});
+  const a = s.enemies.find(e => e.family === 'Anubis'); assert.deepEqual([a.x, a.y, a.hp], [2, 1, 100]);
+  for (let i = 0; i < 20 + 60; i++) step(s, {});
+  assert.ok(hurt(s).every(h => h[2] >= 10 && h[2] <= 11)); assert.equal(hurt(s).length, 9);
 });

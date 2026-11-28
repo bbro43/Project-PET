@@ -21,7 +21,7 @@ export const RULES = {
   flinchTicks: v(28, 'rom-verified', 'candidate flinch sequence 1 = 4+2+2+2+2+4+5+3 (fits observed hitstun feel; trace pending)'),
   invincibleTicks: v(120, 'unverified', 'post-hit invincibility'),
   customGaugeTicks: v(512, 'rom-verified', 'gauge 0x4000, +0x20 a frame (0x801BE70, 0x801DFB8); FastGauge 0x40 / SlowGauge 0x10 (0x80141A0)'),
-  chipParalyzeTicks: v(120, 'unverified', 'paralysis from a WhiCapsl-tagged attack: the timer (collision data +0x1C, counted down in 0x80175B8, shortened by button presses for MegaMan) is set in collision code not traced yet; same estimate as the DarkMech ball'),
+  chipParalyzeTicks: v(90, 'rom-verified', 'status 0x10 (off_80209EC group 1: flag2 0x8, timer at collision +0x1C): WhiCapsl (sub_8019F44: damage bit 15 → status 0x10, hit modifier 1), Thunder / DarkThnd params[2] = 0x10, ElcPuls1, Sensor\'s laser'),
   addBonus: v(5, 'recalled', 'ADD: no chips this turn, 5 more next turn'),
   maxHand: v(10, 'recalled'),
   firstBarrierHp: v(10, 'rom-verified', 'FstBarr sets Navi stat 6 = 1 (navicust_NCP_FstBarr); the battle starts with barrier type 1 (loc_80138D2 → sub_801A7CC): byte_8020B2C[1] = 10 HP'),
@@ -76,6 +76,8 @@ export const BUGS = {
 // Families share a behaviour; the number in a Recov name is its heal.
 // The game's hit areas (PanelOffsetListsPointerTable 0x8019B78, all 0x2F lists, read from the ROM): (dx, dy) from the panel in front of
 // the attacker. Chip actions pass the area number as the collision region's Param1 (CollisionData Region).
+// Status effects (sub_801A554): status 0xGN → off_80209EC[G − 1][N] = flag2, frames, timer field (ROM, both versions).
+export const STATUS_FRAMES = { 0x10: 90, 0x11: 120, 0x12: 150, 0x13: 4, 0x20: 480, 0x21: 720, 0x22: 960, 0x23: 4, 0x30: 480, 0x31: 720, 0x32: 1200, 0x33: 4, 0x40: 2, 0x41: 60, 0x42: 120, 0x43: 4, 0x50: 150, 0x51: 150, 0x52: 150, 0x53: 4, 0x60: 150, 0x61: 150, 0x62: 150, 0x63: 4 };
 export const REGIONS = [[], [[0,0]],
    [[0,0], [1,0]],
    [[1,0]],
@@ -185,12 +187,12 @@ export const CHIP_BEHAVIOUR = {
   IronShl3: { kind: 'shell', speed: 8, pal: 2, anim: 'idle', lock: 16, confidence: 'rom-verified' },
   ParaShl: { kind: 'shell', speed: 8, pal: 0, rows: [0, 1, 2], fromX: 1, anim: 'idle', lock: 16, confidence: 'rom-verified' },
   // ElecPulses (family 0x42, sub_80EE57C → t3 0x8C): held out for params[2] = 60 frames over area 0x15 (the panel ahead and the
-  // column after it). params[0] = hit modifier, params[1] = status (0x10 paralysis for ElcPuls1; 0x12 for DestPuls, not in the app);
+  // column after it). params[0] = hit modifier, params[1] = status (0x10 paralysis 90 frames for ElcPuls1; 0x12 paralysis 150 for DestPuls, STATUS_FRAMES);
   // ElcPuls2's 0x51 pulls the target in (its description: "Pul enemy in").
-  ElcPuls1: { kind: 'pulse', region: 0x15, hold: 60, pal: 1, status: 'paralyze', anim: 'idle', lock: 66, confidence: 'rom-verified', note: 'hits once per enemy (recalled)' },
-  ElcPuls2: { kind: 'pulse', region: 0x15, hold: 60, pal: 2, pull: true, anim: 'idle', lock: 66, confidence: 'rom-verified', note: 'pull = 1 panel toward MegaMan (recalled)' },
+  ElcPuls1: { kind: 'pulse', region: 0x15, hold: 60, pal: 1, status: 'paralyze', statusCode: 0x10, anim: 'idle', lock: 66, confidence: 'rom-verified', note: 'hits once per enemy (recalled)' },
+  ElcPuls2: { kind: 'pulse', region: 0x15, hold: 60, pal: 2, pull: true, anim: 'idle', lock: 66, confidence: 'rom-verified', note: 'hit modifier 0x51 → sub_800F598: bit 0x10 → byte_800F604 (−1, 0, 1): pulled 1 panel toward MegaMan' },
   ElcPuls3: { kind: 'pulse', region: 0x15, hold: 60, pal: 0, anim: 'idle', lock: 66, confidence: 'rom-verified' },
-  DestPuls: { kind: 'pulse', region: 0x15, hold: 60, pal: 3, anim: 'idle', lock: 66, confidence: 'rom-verified', note: 'status 0x12 (a bug on the target) not in the app' },
+  DestPuls: { kind: 'pulse', region: 0x15, hold: 60, pal: 3, status: 'paralyze', statusCode: 0x12, anim: 'idle', lock: 66, confidence: 'rom-verified', note: 'status 0x12 = paralysis 150 frames (off_80209EC)' },
   // AuraHeads (family 0x43, sub_80EE66E → t3 0x92): Heady's head (sprite 4/3 animation 4, palette params[0]) flies from MegaMan's
   // panel at 12 px a frame (byte_80D74D4) for 3 panels, hitting what it passes; MegaMan recoils. StreamHd (subfamily 1,
   // params[3] = 1) sends 5, 15 frames apart, each to the far edge (sub_80EE6A4 counts params[0] up to 4).
@@ -301,7 +303,7 @@ export const CHIP_BEHAVIOUR = {
   //     side (sub_80CD7D0) with the chip's damage, as Fire. Areas ≥ 0x80 (sub_300777C, byte_8019C34) cover every panel of one
   //     side: 0x82 the panels with flag 0x20 (the enemy side), 0x81 the others.
   //   FlshBom (sub 14 → t3 0xA4, byte_80D9A20[params[0]]): HP 10 / 15 / 20; after 60 frames it flashes: a hit area 0x82 / 0x81
-  //     with status 0x10 / 0x12 (paralysis); FlshBom3 adds status 0x30 at the end (not modelled).
+  //     with status byte_80D9A20 [2] = 0x10 / 0x12 / 0x12 (paralysis 90 / 150 / 150); FlshBom3 adds status 0x30 (blind 480, not modelled on enemies).
   //   LilBolr (sub 3 → t3 0x93): a boiler that soaks up hits; after 180 frames (0xB4) or its third hit it bursts over the 8
   //     panels around it (area 0x10) for MaxHP − HP (sub_80D7A2A): HP starts at 0xFA0 − the chip's damage (sub_80D761C) and
   //     never drops under 0xBB9, so the burst is the chip's damage plus what it took, at most 999.
@@ -309,9 +311,9 @@ export const CHIP_BEHAVIOUR = {
   //     the CPU Navis have no bugs here, so it does nothing to them).
   // The Dragons' body pieces (t3 0xC8) have no collision data: only the head hits.
   BlkBomb: { kind: 'place', obj: 'BlackBomb', sprite: 'blkbombfx', hp: 100, life: 6000, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
-  FlshBom1: { kind: 'place', obj: 'FlashBomb', sprite: 'flshbombfx', hp: 10, life: 60, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
-  FlshBom2: { kind: 'place', obj: 'FlashBomb', sprite: 'flshbombfx', hp: 15, life: 60, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
-  FlshBom3: { kind: 'place', obj: 'FlashBomb', sprite: 'flshbombfx', hp: 20, life: 60, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
+  FlshBom1: { kind: 'place', obj: 'FlashBomb', sprite: 'flshbombfx', statusCode: 0x10, hp: 10, life: 60, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
+  FlshBom2: { kind: 'place', obj: 'FlashBomb', sprite: 'flshbombfx', statusCode: 0x12, hp: 15, life: 60, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
+  FlshBom3: { kind: 'place', obj: 'FlashBomb', sprite: 'flshbombfx', statusCode: 0x12, hp: 20, life: 60, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
   LilBolr1: { kind: 'place', obj: 'Boiler', sprite: 'boilerfx', hp: 4000, life: 180, hits: 3, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
   LilBolr2: { kind: 'place', obj: 'Boiler', sprite: 'boilerfx', hp: 4000, life: 180, hits: 3, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
   LilBolr3: { kind: 'place', obj: 'Boiler', sprite: 'boilerfx', hp: 4000, life: 180, hits: 3, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
@@ -430,10 +432,29 @@ export const CHIP_BEHAVIOUR = {
   // middle → straight, bottom → up; dword_80DA3E8 −1 / 0 / +1). Animation 10, after 0x28 animation 0, after 0xA [1, 0, 4],
   // after 0xE [2, 0, 5] and a dot (t3 0x9F, sprite 0x10/0x50) that steps one panel along the line every 8 frames and
   // starts over at the field's edge (sub_80D9298). An enemy on the dot's panel (0x4000000) fires it: animation [8, 7, 9],
-  // a laser (t3 0xA0, sprite 0x10/0x51, Timer 0x64, collision 0x16) on every panel of the line, and 0x78 frames left.
+  // a laser (t3 0xA0, sprite 0x10/0x51, animation dword_80D9408 [1, 0, 2], height byte_80D9410 [0x10, 0x16, 0x14], collision 0x16,
+  // status byte_80D941C[0] = 0x10 paralysis) on every panel of the line until it hits once; the Sensor goes 0x78 frames later.
   Sensor1: { kind: 'place', obj: 'Sensor', sprite: 'sensorfx', seq: 's10', pal: 0, hp: 20, life: 720, ahead: true, freeze: true, hold: 60, sensor: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   Sensor2: { kind: 'place', obj: 'Sensor', sprite: 'sensorfx', seq: 's10', pal: 3, hp: 30, life: 720, ahead: true, freeze: true, hold: 60, sensor: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   Sensor3: { kind: 'place', obj: 'Sensor', sprite: 'sensorfx', seq: 's10', pal: 6, hp: 40, life: 720, ahead: true, freeze: true, hold: 60, sensor: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // Snake (sub 12 → t4 0x45, sub_80E5988 → sub_80D2E94 → t3 0x72): inside the freeze it walks the holes on MegaMan's side
+  // (byte_80D2D30: not 0x20, not solid 0x10, not 0x0F880080), back column first, rows top to bottom (sub_80D2CBE). Each hole
+  // sends a snake (t3 0x73, sprite 0x0C/0x2C): rises 2 px a frame to 10 px, waits 0x14, bites (animation 1, 9 frames), then
+  // flies at 16 px a frame at its target (sub_80D2D40: panels ahead with 0x05800000, nearest row, then nearest column) and
+  // hits that panel (0x04050501); with no target it flies straight on. Next snake 8 frames later in the same column,
+  // 0x18 otherwise; when the last one is gone, 0x28 more.
+  Snake: { kind: 'snake', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // GrabBnsh / GrabRvng (sub 15 → t4 0x22, sub_80E2D08): every panel of MegaMan's the enemy holds (sub_800D618: original
+  // alliance ≠ current, original = his) gets effect 0x3B and goes back soon (object_setPanelAllianceTimerShort); then, after
+  // 0x1E, once per panel taken back and 0x1E apart, every enemy-occupied panel (byte_80E2E24: 0x200000) is struck (t3 0x46,
+  // sprite 0x0C/0x13) with the chip's damage; 0x3C after. With no stolen panel it ends after 0x1E.
+  GrabBnsh: { kind: 'grabback', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'the CPU enemies here never steal MegaMan\'s panels, so in practice it only stops time' },
+  GrabRvng: { kind: 'grabback', freeze: true, hold: 0, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'the CPU enemies here never steal MegaMan\'s panels, so in practice it only stops time' },
+  // Anubis (sub 17 → t4 0x33, sub_80E4130, hold 0x78 → sub_80CF374 → t3 0x55): a statue (byte_80CF0C0[0]: sprite 0x0C/0x30,
+  // every 6 frames, animation 0, HP 100, Timer 0xBB8) drops on the panel ahead from Z 0xA0 at 8 px a frame (shake 0x1E; it
+  // breaks if the panel is not solid and free), then every 6 frames hits the whole enemy area (byte_80CF31C: region 0x82,
+  // collision 0x52) with the chip's damage (1), and every 0x10 frames shows an effect on a random enemy panel.
+  Anubis: { kind: 'place', obj: 'Anubis', sprite: 'anubisfx', seq: 'idle', pal: 0, hp: 100, life: 3000 + 20, ahead: true, freeze: true, hold: 120, anubis: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },
@@ -451,8 +472,8 @@ export const GRAB = {
   hold: v(60, 'rom-verified', '0x80E07B0: 0x3C frames after the beams before time resumes'),
   returnTicks: v(1800, 'rom-verified', 'object_setPanelAllianceTimerLong: 0x708 frames per column (counted down in 0x800C746)'),
   returnRule: v('the column goes back when its timer runs out and nobody stands on it', 'unverified', 'the hand-back order in 0x800C746 is not fully decoded'),
-  dim: v(16, 'unverified', 'object_dimScreen fade 0x3C step 4; length estimated'),
-  name: v(40, 'unverified', 'object_drawChipName; length estimated'),
+  dim: v(16, 'rom-verified', 'object_dimScreen: SetScreenFade(0x3C, 4) → sub_800647C adds 4 a frame up to 0x40 (FadeParams 0x8006130); undim 0x38 counts back down the same way'),
+  name: v(59, 'rom-verified', 'object_drawChipName waits for sub_801E754: message 0x4C (pt_801EF84, type 3) slides in 5 frames, holds 0x30, slides out 5, then clears (sub_801CE28)'),
 };
 
 // Element weakness (attacker element → element it deals double damage to).
@@ -690,8 +711,8 @@ export const AI = {
     throwTicks: v(12, 'rom-verified', 'table 0x8113DA8: hold before release'),
     throwAfter: v(25, 'rom-verified', 'table 0x8113DB0'),
     ballSpeed: v([1.312, 1.375, 1.438, 1.5, 1.562, 2], 'rom-verified', 'table 0x8113DC0 (px per frame); object type3 0xC0 runs along the row to MegaMan\'s column, then turns up or down it (0x80DD1AC)'),
-    ballStatus: v('paralyzes', 'recalled', 'collision status 0x10–0x12 (0x80DD144) read as paralysis because DarkMech\'s slash only fires on a paralyzed target'),
-    paralyzeTicks: v(120, 'unverified', 'paralysis length not decoded; mashing buttons shortens it (0x8017628)'),
+    ballStatus: v('paralyzes', 'rom-verified', 'byte_80DD144 = 0x10 for every kind: status group 1 = paralysis (off_80209EC: flag2 0x8, timer +0x1C)'),
+    paralyzeTicks: v(90, 'rom-verified', 'status 0x10 → off_80209EC: 90 frames; mashing buttons shortens it for MegaMan (0x8017628)'),
     dashTicksPerPanel: v(2, 'rom-verified', '0x8113CC8: 0x14 px per frame, 2 frames per panel'),
     charge: v(20, 'rom-verified', '0x8113984: 20 loops of the dash-ready animation before warping'),
     slashWarn: v(16, 'unverified', 'front panel flashes before the slash (Unk_10 start value not traced)'),

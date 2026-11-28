@@ -235,7 +235,7 @@ export function render(g, s, bank) {
   for (const e of s.enemies) if (e.sensor && e.dot && e.hp > 0) { const [ax, ay] = anchor(e.dot.x, e.dot.y); sprite(g, bank, 'sensordot', 'dot', s.tick, ax, ay, (g, x, y) => { g.fillStyle = '#ff4040'; g.fillRect(x - 2, y - 4, 4, 4); }, 0, false); } // Sensor's dot (sprite 0x10/0x50)
   for (const h of s.hazards) if (h.kind === 'sensorlaser') for (const [x, y] of h.cells) { // Sensor's laser (sprite 0x10/0x51)
     const [ax, ay] = anchor(x, y);
-    sprite(g, bank, 'sensorlaser', 's' + h.aim, s.tick - h.start, ax, ay - 16, (g, x, y) => { g.fillStyle = 'rgba(255,80,80,.8)'; g.fillRect(x - 20, y - 2, 40, 4); }, 0, false);
+    sprite(g, bank, 'sensorlaser', 's' + [1, 0, 2][h.aim], s.tick - h.start, ax, ay - [0x10, 0x16, 0x14][h.aim], /* dword_80D9408 / byte_80D9410 */ (g, x, y) => { g.fillStyle = 'rgba(255,80,80,.8)'; g.fillRect(x - 20, y - 2, 40, 4); }, 0, false);
   }
   for (const h of s.hazards) if (h.kind === 'windgust') { // Wind / Fan gust (sprite 0x0C/0x2E, palette 0 / 2)
     const [ax, ay] = anchor(h.fx, h.y);
@@ -792,6 +792,10 @@ export function render(g, s, bank) {
       const f = ts.t - ts.start - 2 - 10 * k - 30; if (f < 0 || f >= 16) continue;
       const [x, y] = sp.order[k % sp.order.length], [ax, ay] = anchor(x, y), z = 256 - 16 * f;
       sprite(g, bank, 'meteorfx', 'fall', f, ax - z, ay - z, (g, x, y) => { g.fillStyle = '#ff9040'; g.beginPath(); g.arc(x, y - 8, 8, 0, 7); g.fill(); }, 0, false);
+    }
+    if (sp?.def.kind === 'snake') for (const n of sp.snakes || []) { // Snake (sprite 0x0C/0x2C): rises from its hole, bites, flies
+      const [ax, ay] = anchor(n.x / 40, n.y / 24);
+      sprite(g, bank, 'snakefx', n.anim || 'rise', n.t, ax, ay - n.z, (g, x, y) => { g.fillStyle = '#60c040'; g.fillRect(x - 3, y - 14, 6, 14); }, 0, false);
     }
     if (sp?.def.kind === 'mine' && sp.order.length && ts.t >= ts.start && ts.t < ts.start + sp.def.hold) { // Mine hopping every 2 frames (sprite 0x0C/0x22)
       const [x, y] = sp.order[Math.min(59, (ts.t - ts.start) >> 1) % sp.order.length], [ax, ay] = anchor(x, y);

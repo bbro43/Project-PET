@@ -1,7 +1,7 @@
 // Deterministic fixed-tick Battle Network battle simulation (BN6 ruleset).
 // No rendering, DOM or timing here: the client feeds one input object per tick.
 // Input: { dir: 'up'|'down'|'left'|'right'|null, a: held bool, b: pressed bool, l: pressed bool }
-import { val, CHIP_BEHAVIOUR, WEAKNESS, PANELS, GRAB, BUGS, EMOTION, BUBBLE, REGIONS } from '../../data/rules.mjs';
+import { STATUS_FRAMES, val, CHIP_BEHAVIOUR, WEAKNESS, PANELS, GRAB, BUGS, EMOTION, BUBBLE, REGIONS } from '../../data/rules.mjs';
 import CHIPDATA from '../../data/bn6-chips.mjs';
 import { createVirus, stepVirus, virusName, PLAYABLE_FAMILIES } from './viruses.mjs';
 import { createNavi, stepNavi, stepCoil, naviVariants, PLAYABLE_NAVIS } from './navis.mjs';
@@ -241,7 +241,7 @@ function placedBombBurst(s, o) {
   };
   if (o.family === 'BlackBomb') wide(e => hitEnemy(s, e, o.damage, { element: 'fire', chip: true }));
   else if (o.family === 'TimeBomb') wide(e => hitEnemy(s, e, o.damage, { element: o.element, chip: true }));
-  else if (o.family === 'FlashBomb') { s.effects.push({ kind: 'flash', t: 0 }); wide(e => hitEnemy(s, e, o.damage, { element: o.element, paralyze: val('chipParalyzeTicks'), chip: true })); }
+  else if (o.family === 'FlashBomb') { s.effects.push({ kind: 'flash', t: 0 }); wide(e => hitEnemy(s, e, o.damage, { element: o.element, paralyze: STATUS_FRAMES[o.statusCode] || val('chipParalyzeTicks'), chip: true })); }
   else for (const [dx, dy] of REGIONS[0x10]) { // Boiler / BugBomb: the 8 panels around it
     const e = at(s, o.x + dx, o.y + dy); if (!e || e.owner === 'player') continue;
     hitEnemy(s, e, o.family === 'Boiler' ? Math.min(999, o.damage + o.soaked) : 0, { element: o.element, chip: true }); // LilBolr: MaxHP 4000 − HP, HP starting at 4000 − the chip's damage, floor 3001
@@ -273,6 +273,10 @@ function stepPlacedBomb(o, api) {
   }
   if (o.raid) stepAirRaid(s, o);
   if (o.sensor) stepSensor(s, o);
+  if (o.anubis) { // Anubis (t3 0x55): drops 8 px a frame, then every 6 frames hits the whole enemy area (region 0x82)
+    if (o.z > 0) { o.z = Math.max(0, o.z - 8); if (o.z === 0) s.effects.push({ kind: 'shake', t: 0 }); return; }
+    if (o.stateT % 6 === 0) for (const e of s.enemies.filter(e => e.hp > 0 && e.owner !== 'player' && e.kind !== 'coil')) if (sideAt(s, e.x, e.y) === 'e') hitEnemy(s, e, o.damage, { element: o.element, chip: true, quiet: true });
+  }
   if (--o.life > 0) return;
   if (o.family === 'BlackBomb' || o.family === 'Cube' || o.family === 'MusicBox' || o.family === 'WindBox' || o.family === 'AirRaid' || o.family === 'Sensor') { o.hp = 0; s.effects.push({ kind: 'puff', x: o.x, y: o.y, t: 0 }); } // left alone: it just goes away
   else placedBombBurst(s, o);
@@ -309,7 +313,7 @@ function stepSensor(s, o) {
   if (e && e.owner !== 'player') { // fire: a laser on every panel of the line (sub_80DA290)
     o.dot = null; o.fired = true; o.anim = ['s8', 's7', 's9'][aim]; o.life = 0x78;
     const cells = []; for (let x = o.x + 1, y = o.y + dy; x <= 5 && y >= 0 && y <= 2; x++, y += dy) cells.push([x, y]);
-    s.hazards.push({ kind: 'sensorlaser', owner: 'player', cells, start: s.tick, until: s.tick + 0x64, damage: o.damage, element: o.element, aim, hit: [] });
+    for (const c of cells) s.hazards.push({ kind: 'sensorlaser', owner: 'player', cells: [c], start: s.tick, until: s.tick + 0x78, damage: o.damage, element: o.element, aim, hit: [] }); // one t3 0xA0 a panel; all go with the Sensor
   }
 }
 function hitEnemy(s, e, damage, extra = {}) {
@@ -497,7 +501,7 @@ function useChip(s, chip) {
     const x = def.fromX === 'self' ? p.x : def.fromX ?? p.x + 1, start = s.tick + k * (def.gap || 0);
     if (x <= 5 && standable(s, x, y)) s.hazards.push({ kind: 'shell', owner: 'player', fx: x, x, y, speed: def.speed / 40, pal: def.pal, sprite: def.sprite, seq: def.seq, toX: def.range ? x + def.range : 5, damage, element, start, hit: [] });
   }
-  else if (def.kind === 'pulse') s.hazards.push({ kind: 'pulse', owner: 'player', x: p.x + 1, y: p.y, start: s.tick, hold: def.hold, region: def.region, pal: def.pal, pull: def.pull, paralyze: def.status === 'paralyze' ? val('chipParalyzeTicks') : paralyze, damage, element, hit: [] });
+  else if (def.kind === 'pulse') s.hazards.push({ kind: 'pulse', owner: 'player', x: p.x + 1, y: p.y, start: s.tick, hold: def.hold, region: def.region, pal: def.pal, pull: def.pull, paralyze: def.status === 'paralyze' ? STATUS_FRAMES[def.statusCode] : paralyze, damage, element, hit: [] });
   else if (def.kind === 'widewave') s.hazards.push({ kind: 'widewave', owner: 'player', fx: p.x, x: p.x, y: p.y, speed: def.speed / 40, damage, element, start: s.tick, hit: [] });
   else if (def.kind === 'tankcan') {
     const target = rowTarget(s, p.x, p.y);
@@ -605,6 +609,16 @@ function startSpecial(s, name, def, damage, element) {
     for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rng(s) * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
     hold = 8 * order.length + 8;
   }
+  if (def.kind === 'snake') { // sub_80D2CBE: holes on MegaMan's side, back column first
+    order = [];
+    for (let x = 5; x >= 0; x--) for (let y = 0; y < 3; y++) if (sideAt(s, x, y) === 'p' && !standable(s, x, y)) order.push([x, y]);
+    hold = 1e6;
+  }
+  if (def.kind === 'grabback') { // sub_80E2D98: MegaMan's panels the enemy holds go back
+    order = [0, 1, 2, 3, 4, 5].flatMap(x => [0, 1, 2].map(y => [x, y])).filter(([x, y]) => x <= 2 && sideAt(s, x, y) === 'e');
+    for (const [x, y] of order) { s.panels[y][x].side = 'p'; s.panels[y][x].stolenT = 0; s.effects.push({ kind: 'grabland', x, y, t: 0 }); }
+    hold = order.length ? 0x1E + 0x1E * order.length + 0x3C : 0x1E;
+  }
   if (def.kind === 'meteors') { // sub_80E42AA: back column first, rows top to bottom, while the column has enemy panels
     order = [];
     for (let x = 5; x >= 0; x--) { const col = [0, 1, 2].filter(y => sideAt(s, x, y) === 'e'); if (!col.length) break; for (const y of col) order.push([x, y]); }
@@ -631,7 +645,7 @@ function applySpecial(s, sp) {
   else if (def.kind === 'place' && (def.ahead || def.inRow)) {
     let x = p.x + 1;
     if (def.inRow) while (x <= 5 && !(standable(s, x, p.y) && sideAt(s, x, p.y) === 'e' && !at(s, x, p.y))) x++; // sub_80E3264: the first free enemy panel ahead
-    if (x <= 5 && standable(s, x, p.y) && !at(s, x, p.y)) s.enemies.push({ id: s.nextId++, kind: 'coil', family: def.obj, name: def.obj, owner: 'player', sprite: def.sprite, palette: def.pal || 0, flip: true, x, y: p.y, drawX: x, drawY: p.y, hp: def.hp, maxHp: def.hp, noHp: true, anim: def.seq, animT: 0, state: 'idle', stateT: 0, flash: 0, discharge: 0, life: def.life, damage: sp.damage, element: sp.element, music: def.music, play: def.play, rest: def.rest, wind: def.wind, raid: def.raid, sensor: def.sensor, cycle: 0 });
+    if (x <= 5 && standable(s, x, p.y) && !at(s, x, p.y)) s.enemies.push({ id: s.nextId++, kind: 'coil', family: def.obj, name: def.obj, owner: 'player', sprite: def.sprite, palette: def.pal || 0, flip: true, x, y: p.y, drawX: x, drawY: p.y, hp: def.hp, maxHp: def.hp, noHp: true, anim: def.seq, animT: 0, state: 'idle', stateT: 0, flash: 0, discharge: 0, life: def.life, damage: sp.damage, element: sp.element, music: def.music, play: def.play, rest: def.rest, wind: def.wind, raid: def.raid, sensor: def.sensor, anubis: def.anubis, z: def.anubis ? 160 : 0, cycle: 0 });
   }
   else if (def.apply) def.apply(s, sp);
 }
@@ -680,6 +694,8 @@ function stepTimestop(s, input = {}) {
   if (ts.special) { // a special chip: its step runs inside the freeze (panel chips: blink, then set at the end of `hold`)
     const sp = ts.special;
     if (sp.def.kind === 'panels') { if (t === ts.start + sp.def.hold) applySpecial(s, sp); }
+    else if (sp.def.kind === 'snake') stepSnakes(s, ts, sp, t);
+    else if (sp.def.kind === 'grabback') { const k = t - ts.start; if (k > 0 && k % 0x1E === 0 && k / 0x1E <= sp.order.length) for (const e of s.enemies.filter(e => e.hp > 0 && e.owner !== 'player' && e.kind !== 'coil')) { hitEnemy(s, e, sp.damage, { element: sp.element, chip: true }); s.effects.push({ kind: 'grabland', x: e.x, y: e.y, t: 0 }); } }
     else if (sp.def.kind === 'meteors') { // a meteor every 0xA frames from start + 2; each lands 0x1E + 0x10 later
       const k = t - ts.start - 2 - 46;
       if (sp.order.length && k >= 0 && k % 10 === 0 && k / 10 < 30) {
@@ -705,6 +721,40 @@ function stepTimestop(s, input = {}) {
   if (t >= ts.start) for (const b of ts.beams) b.z = Math.max(0, 1 - (t - ts.start) / fall);
   s.effects = s.effects.filter(f => ++f.t < 24);
   if (t >= ts.start + fall + GRAB.hold.value + GRAB.dim.value) s.timestop = null;
+}
+// Snake (t3 0x72 / 0x73): one snake per hole, flying 16 px a frame at the nearest enemy (row first, then column).
+function snakeTarget(s, hx, hy) { // sub_80D2D40
+  let best = null;
+  for (let x = hx + 1; x <= 5; x++) for (let y = 0; y < 3; y++) {
+    const e = at(s, x, y); if (!e || e.owner === 'player') continue;
+    if (!best) { best = [x, y]; continue; }
+    const dr = Math.abs(y - hy) - Math.abs(best[1] - hy), dc = Math.abs(x - hx) - Math.abs(best[0] - hx);
+    if (dr < 0 || (dr === 0 && (dc < 0 || (dc === 0 && x <= best[0])))) best = [x, y];
+  }
+  return best;
+}
+function stepSnakes(s, ts, sp, t) {
+  const k = t - ts.start; if (k < 0) return;
+  sp.snakes ??= []; sp.next ??= 1; sp.i ??= 0;
+  if (sp.i < sp.order.length && --sp.next === 0) {
+    const [hx, hy] = sp.order[sp.i++];
+    sp.snakes.push({ hx, hy, x: hx * 40, y: hy * 24, z: 0, t: 0, target: snakeTarget(s, hx, hy) });
+    sp.next = sp.i < sp.order.length && sp.order[sp.i][0] === hx ? 8 : 0x18;
+  }
+  for (const n of sp.snakes) {
+    n.t++;
+    if (n.z < 10) { n.z += 2; continue; }                // rise
+    if (n.t <= 5 + 0x14) continue;                       // wait
+    if (n.t <= 5 + 0x14 + 9) { n.anim = 'bite'; continue; } // bite (animation 1: 2 + 6 + 1 frames)
+    const [tx, ty] = n.target ? [n.target[0] * 40, n.target[1] * 24] : [n.x + 1000, n.y];
+    const d = Math.hypot(tx - n.x, ty - n.y), v = Math.min(16, d);
+    if (d > 0) { n.x += (tx - n.x) / d * v; n.y += (ty - n.y) / d * v; }
+    const px = Math.round(n.x / 40), py = Math.round(n.y / 24);
+    if (n.target && px === n.target[0] && py === n.target[1]) { const e = at(s, px, py); if (e && e.owner !== 'player') hitEnemy(s, e, sp.damage, { element: sp.element, chip: true }); n.done = true; }
+    if (px > 5) n.done = true;
+  }
+  sp.snakes = sp.snakes.filter(n => !n.done);
+  if (sp.i >= sp.order.length && !sp.snakes.length && ts.end > ts.start + k + 0x28 + GRAB.dim.value) ts.end = ts.start + k + 0x28 + GRAB.dim.value;
 }
 // Cursor chips (BurnSqr t1 0x13, Magnum t1 0x14): the cursor steps on its own until the chip button or 0x12C frames.
 export function cursorCells(c, kind) {
@@ -1133,7 +1183,7 @@ function stepHazards(s) {
       if (h.place) { // a placed bomb: an object on the landing panel (MegaMan's side)
         if (target) { s.effects.push({ kind: 'puff', x: h.tx, y: h.y, t: 0 }); return false; }
         const d = h.place;
-        s.enemies.push({ id: s.nextId++, kind: 'coil', family: d.obj, name: d.obj, owner: 'player', sprite: d.sprite, palette: 0, flip: true, x: h.tx, y: h.y, drawX: h.tx, drawY: h.y,
+        s.enemies.push({ id: s.nextId++, kind: 'coil', family: d.obj, name: d.obj, owner: 'player', statusCode: d.statusCode, sprite: d.sprite, palette: 0, flip: true, x: h.tx, y: h.y, drawX: h.tx, drawY: h.y,
           hp: d.hp, maxHp: d.hp, noHp: true, anim: 'idle', animT: 0, state: 'idle', stateT: 0, flash: 0, discharge: 0, life: d.life, hitsLeft: d.hits, soaked: 0, damage: h.damage, element: h.element });
         return false;
       }
@@ -1276,8 +1326,9 @@ function stepHazards(s) {
       const e = at(s, h.x, h.y); if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true });
       s.effects.push({ kind: 'raidblast', x: h.x, y: h.y, t: 0 }); return false;
     }
-    if (h.kind === 'sensorlaser') { // Sensor's laser (t3 0xA0): 0x64 frames on the line, each enemy hit once
-      for (const [x, y] of h.cells) { const e = at(s, x, y); if (e && e.owner !== 'player' && !h.hit.includes(e.id)) { h.hit.push(e.id); hitEnemy(s, e, h.damage, { element: h.element, chip: true }); } }
+    if (h.kind === 'sensorlaser') { // Sensor's laser (t3 0xA0, sub_80D9434): on its panel until it hits once (status 0x10 = paralysis, byte_80D941C) or the Sensor goes
+      const [x, y] = h.cells[0], e = at(s, x, y);
+      if (e && e.owner !== 'player') { hitEnemy(s, e, h.damage, { element: h.element, chip: true, paralyze: val('chipParalyzeTicks') }); return false; }
       return s.tick < h.until;
     }
     if (h.kind === 'chipmine') { // Mine (t3 0x4C), hidden: goes off when an enemy steps on its panel or the panel breaks

@@ -4944,6 +4944,60 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "snakefx": {
+   "label": "Snake (t3 0x73 sub_80D2EDC): sprite 0x0C/0x2C",
+   "sources": {
+    "bn6f": {
+     "offset": "3245E8",
+     "compression": "none",
+     "bytes": 968,
+     "sha256": "36cc329018032c4edc93f0f05b5f326089ce23aad7c73abb08599e7c7b77af87",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "323B60",
+     "compression": "none",
+     "bytes": 968,
+     "sha256": "36cc329018032c4edc93f0f05b5f326089ce23aad7c73abb08599e7c7b77af87",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "rise": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "bite": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "anubisfx": {
+   "label": "Anubis statue (t3 0x55, byte_80CF0C0[0]): sprite 0x0C/0x30, animation 0",
+   "sources": {
+    "bn6f": {
+     "offset": "3255C0",
+     "compression": "none",
+     "bytes": 1748,
+     "sha256": "95185c11a5ab2621e00568428e476a6c7ff8ec7ca9664415b22e3c5019e9a87a",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "324B38",
+     "compression": "none",
+     "bytes": 1748,
+     "sha256": "95185c11a5ab2621e00568428e476a6c7ff8ec7ca9664415b22e3c5019e9a87a",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {
