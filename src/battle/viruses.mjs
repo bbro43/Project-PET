@@ -115,7 +115,7 @@ const BEHAVIOUR = {
         if (e.stateT >= P.slashWarn.value) { e.highlight = null; go(e, 'slash', 'slash'); }
         return;
       case 'slash':
-        if (e.stateT === 3) { api.hitPlayerAt(front(), e.y, pv(P.slashDamage, v), { sword: true }); s.effects.push({ kind: 'slash', area: 'sword', x: e.x, y: e.y, t: 0, flip: e.faceBack }); }
+        if (e.stateT === 3) { api.hitPlayerAt(front(), e.y, pv(P.slashDamage, v), { sword: true }); /* type 7 (0x8113C10) */ s.effects.push({ kind: 'slash', area: 'sword', x: e.x, y: e.y, t: 0, flip: e.faceBack }); }
         if (e.stateT >= 12 + pv(P.slashAfter, v)) {
           const [hx, hy] = e.home; if (!api.at(hx, hy)) { e.x = hx; e.y = hy; }
           e.faceBack = false; setAnim(e, 'idle'); api.endTurn(e); e.think = pv(P.moveWait, v); go(e, 'idle', null);
@@ -283,7 +283,7 @@ const BEHAVIOUR = {
       case 'mark': // 16 frames with the scythe up, then the column flashes
         if (e.stateT === P.raise.value) e.highlight = [e.cells];
         if (e.stateT >= P.raise.value + P.mark.value) {
-          e.highlight = null; setAnim(e, 'slash'); api.hitPlayerCells(e.cells, pv(P.damage, v));
+          e.highlight = null; setAnim(e, 'slash'); api.hitPlayerCells(e.cells, pv(P.damage, v), { sword: true }); // type 7 (0x8115D9C)
           s.effects.push({ kind: 'slash', area: 'wide', x: e.x, y: e.y, t: 0 });
           go(e, 'after', null);
         }
@@ -742,7 +742,7 @@ const BEHAVIOUR = {
       case 'windup':
         if (e.stateT >= pv(P.windup, v)) {
           e.highlight = null; setAnim(e, 'slash');
-          api.hitPlayerCells(shapeCells(e.type, e.x, e.y), pv(P.damage, v));
+          api.hitPlayerCells(shapeCells(e.type, e.x, e.y), pv(P.damage, v), { sword: true }); // collision type 7 (0x810B2C0)
           s.effects.push({ kind: 'slash', area: e.type, x: e.x, y: e.y, t: 0 });
           go(e, 'after', null);
         }

@@ -382,8 +382,8 @@ export const CHIP_BEHAVIOUR = {
   // enemies here use no chips, so they never spring.
   AntiDmg: { kind: 'trap', freeze: true, hold: 60, trap: 'damage', anim: 'idle', lock: 20, confidence: 'rom-verified' },
   BodyGrd: { kind: 'trap', freeze: true, hold: 60, trap: 'bodyguard', anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'which enemy each shuriken picks (sub_80E8326) is taken as the next one in turn' },
-  AntiSwrd: { kind: 'trap', freeze: true, hold: 60, trap: 'sword', anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'which enemy attacks carry the sword flag is the app\'s reading: Swordy, ProtoMan\'s slashes, Colonel\'s Screen Divide' },
-  ElemTrap: { kind: 'trap', freeze: true, hold: 60, trap: 'element', anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'sprung by elemental attacks that hit MegaMan (in the game, any that touch a panel)' },
+  AntiSwrd: { kind: 'trap', freeze: true, hold: 60, trap: 'sword', anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'sword attacks = collision types whose flags (byte_8019C7C) have 0x2000 and not 0x20000: 7, 0x11, 0x1C, 0x28, 0x40, 0x42, 0x45, 0x50, 0x53, 0x54' },
+  ElemTrap: { kind: 'trap', freeze: true, hold: 60, trap: 'element', anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'sprung by any enemy Fire / Aqua / Elec / Wood attack aimed at panels; hazards that only check MegaMan\'s own panel spring it only when they hit him' },
   AntiNavi: { kind: 'trap', freeze: true, hold: 60, trap: 'navi', anim: 'idle', lock: 20, confidence: 'rom-verified' },
   AntiRecv: { kind: 'trap', freeze: true, hold: 60, trap: 'recovery', anim: 'idle', lock: 20, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },

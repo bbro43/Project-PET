@@ -260,3 +260,10 @@ test('traps: AntiDmg, BodyGrd, AntiSwrd and ElemTrap spring on the right hits', 
   s = after('ElemTrap', 140); s.player.invuln = 0; hitPlayer(s, 20, { element: 'fire' });
   assert.equal(s.player.hp, 80); assert.equal(hurt(s).length, 9); assert.ok(hurt(s).every(h => h[2] >= 240));
 });
+
+test('ElemTrap springs on an elemental attack that misses MegaMan', async () => {
+  const { elemTrapSees } = await import('../src/battle/engine.mjs');
+  let s = after('ElemTrap', 140); elemTrapSees(s, { element: 'aqua' });
+  assert.equal(s.player.hp, 100); assert.equal(s.trap, null); assert.equal(hurt(s).length, 9);
+  s = after('ElemTrap', 140); elemTrapSees(s, { element: 'none' }); assert.ok(s.trap);
+});

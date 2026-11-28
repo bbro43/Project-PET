@@ -301,6 +301,7 @@ function hitEnemy(s, e, damage, extra = {}) {
 
 export function hitPlayer(s, damage, opts = {}) {
   const p = s.player;
+  elemTrapSees(s, opts);
   if (p.invuln > 0 || p.invis > 0 || p.hp <= 0) return; // invisible (colour bug): attacks pass through
   const element = opts.element ?? s.attacker?.element;
   if (p.state === 'guard') { // Shield / Reflect (attack family 0x2B): the hit is blocked; Reflect answers with a 50-damage shot
@@ -594,11 +595,16 @@ function springTrap(s, damage, element, opts) {
     for (let k = 0; k < 3; k++) s.hazards.push({ kind: 'widewave', owner: 'player', fx: p.x + 1, x: p.x + 1, y: p.y, speed: 8 / 40, damage: tr.damage, element: 'none', start: s.tick + 12 + 22 * k, hit: [], sprite: 'swordwavefx' });
     return true;
   }
-  if (tr.kind === 'element' && ['fire', 'aqua', 'elec', 'wood'].includes(element)) { // not cleared: the trap answers in kind
-    s.trap = null; s.events.push({ type: 'trap', chip: tr.name });
-    for (const e of foes()) { hitEnemy(s, e, tr.damage, { element, chip: true }); s.effects.push({ kind: 'blast', x: e.x, y: e.y, t: 0 }); }
-  }
   return false;
+}
+// ElemTrap (t3 0x4D, sub_80CDFA4): an invisible catcher on every panel (region 0x80, target type 0x18) that records the
+// enemy attacks touching any panel; the first Fire / Aqua / Elec / Wood one (sub_80CE034) springs it. The hit on MegaMan,
+// if any, still lands. Called for every enemy attack aimed at panels, whether MegaMan stands there or not.
+export function elemTrapSees(s, opts = {}) {
+  const tr = s.trap, element = (typeof opts === 'object' ? opts.element : undefined) ?? s.attacker?.element;
+  if (tr?.kind !== 'element' || !['fire', 'aqua', 'elec', 'wood'].includes(element)) return;
+  s.trap = null; s.events.push({ type: 'trap', chip: tr.name });
+  for (const e of s.enemies.filter(e => e.hp > 0 && e.owner !== 'player' && e.kind !== 'coil')) { hitEnemy(s, e, tr.damage, { element, chip: true }); s.effects.push({ kind: 'blast', x: e.x, y: e.y, t: 0 }); }
 }
 function startGrab(s, def, damage, element) {
   const p = s.player;
@@ -778,8 +784,8 @@ function virusApi(s) {
     breakPanel: (x, y) => breakPanel(s, x, y),
     setPanel: (x, y, type) => setPanel(s, x, y, type),
     panelType: (x, y) => panelType(s, x, y),
-    hitPlayerAt(x, y, damage, opts) { if (p.x === x && p.y === y && p.state !== 'vanish') hitPlayer(s, damage, opts); },
-    hitPlayerCells(cells, damage, opts) { if (p.state !== 'vanish' && cells.some(([x, y]) => p.x === x && p.y === y)) hitPlayer(s, damage, opts); },
+    hitPlayerAt(x, y, damage, opts) { elemTrapSees(s, opts); if (p.x === x && p.y === y && p.state !== 'vanish') hitPlayer(s, damage, opts); },
+    hitPlayerCells(cells, damage, opts) { elemTrapSees(s, opts); if (p.state !== 'vanish' && cells.some(([x, y]) => p.x === x && p.y === y)) hitPlayer(s, damage, opts); },
     rng: () => rng(s),
     coils: owner => s.enemies.filter(c => c.kind === 'coil' && c.owner === owner.id && c.hp > 0),
     addEnemy(o) { o.id = s.nextId++; s.enemies.push(o); return o; },
@@ -836,7 +842,7 @@ function stepHazards(s) {
       const t = s.tick - h.start;
       if (t > h.spin) { h.fx = h.x - ((t - h.spin) * h.speed) / 40; }
       const px = Math.round(h.fx);
-      if (t > h.spin && p.x === px && p.y === h.y && p.state !== 'vanish') { hitPlayer(s, h.damage); return false; }
+      if (t > h.spin && p.x === px && p.y === h.y && p.state !== 'vanish') { hitPlayer(s, h.damage, { sword: h.sword }); return false; }
       return h.fx > -1;
     }
     if (h.kind === 'nozzle') {
@@ -859,7 +865,8 @@ function stepHazards(s) {
       return false;
     }
     if (h.kind === 'estrike') { // ElementMan: a lit panel, then an elemental strike on it
-      if (s.tick === h.hit && p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage, { element: h.elem });
+      if (s.tick === h.hit) elemTrapSees(s, { element: h.elem });
+      if (s.tick === h.hit && p.x === h.x && p.y === h.y && p.state !== 'vanish') hitPlayer(s, h.damage, { element: h.elem, sword: h.sword });
       if (s.tick === h.hit && h.panel) setPanel(s, h.x, h.y, h.panel);
       return s.tick < h.hit + 12;
     }
@@ -982,7 +989,7 @@ function stepHazards(s) {
     }
     if (h.kind === 'axe') { // TomahawkMan's thrown axe: lands on the marked column
       if (s.tick < h.land) return true;
-      if (h.cells.some(([x, y]) => p.x === x && p.y === y) && p.state !== 'vanish') hitPlayer(s, h.damage);
+      if (h.cells.some(([x, y]) => p.x === x && p.y === y) && p.state !== 'vanish') hitPlayer(s, h.damage, { sword: h.sword });
       for (const [x, y] of h.cells) s.effects.push({ kind: 'spark', x, y, t: 0 });
       return false;
     }

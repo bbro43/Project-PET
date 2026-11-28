@@ -140,7 +140,7 @@ function elecman(e, api) {
     case 'dashstrike':
       if (e.stateT === P.dashStrikeDelay.value) {
         setAnim(e, 'strike');
-        api.hitPlayerCells([[e.x - 1, e.y]], pv(P.dashDamage, v));
+        api.hitPlayerCells([[e.x - 1, e.y]], pv(P.dashDamage, v), { sword: true }); // type 7 (0x80F4554)
         s.effects.push({ kind: 'spark', x: e.x - 1, y: e.y, t: 0 });
       }
       if (e.stateT >= P.dashStrikeDelay.value + 12) {
@@ -307,7 +307,7 @@ function slashman(e, api) {
       const ready = pv(P.comboReady, v), sw = P.comboSwipe.value, gap = P.comboGap.value, t = e.stateT, dmg = pv(P.comboDamage, v);
       const swipe = (shape, anim) => {
         setAnim(e, anim);
-        api.hitPlayerCells(P.comboShapes.value[shape].map(([dx, dy]) => [e.x + dx, e.y + dy]), dmg);
+        api.hitPlayerCells(P.comboShapes.value[shape].map(([dx, dy]) => [e.x + dx, e.y + dy]), dmg, { sword: true }); // type 7 (0x80F4EC4 / 0x80F4F80)
         s.effects.push({ kind: 'claw', shape, x: e.x - 1, y: e.y, t: 0 });
       };
       if (t === ready) swipe('down', 'down');
@@ -322,7 +322,7 @@ function slashman(e, api) {
     case 'rolling': {
       e.drawX = e.rollFrom - (e.stateT * pv(P.rollSpeed, v)) / 40;
       const px = Math.round(e.drawX);
-      if (px >= 0 && px <= 5) { e.x = px; api.hitPlayerCells([[px, e.y]], pv(P.rollDamage, v)); }
+      if (px >= 0 && px <= 5) { e.x = px; api.hitPlayerCells([[px, e.y]], pv(P.rollDamage, v), { sword: true }); } // body type 0x53 (0x80F50E2)
       if (e.drawX < -1) { setAnim(e, 'recover'); goHome(pv(P.rollWait, v)); }
       return;
     }
@@ -333,7 +333,7 @@ function slashman(e, api) {
         setAnim(e, 'throw');
         const rowSet = P.kunaiPatterns.value[p.y];
         const pair = rowSet[Math.floor(api.rng() * 3)];
-        for (const [kx, ky] of pair) s.hazards.push({ kind: 'kunai', x: kx, y: ky, fx: kx, start: s.tick, spin: P.kunaiSpin.value, speed: P.kunaiSpeed.value, damage: pv(P.kunaiDamage, v) });
+        for (const [kx, ky] of pair) s.hazards.push({ kind: 'kunai', x: kx, y: ky, fx: kx, start: s.tick, spin: P.kunaiSpin.value, speed: P.kunaiSpeed.value, damage: pv(P.kunaiDamage, v), sword: true }); // t3 0x43, type 0x40
       }
       if (e.stateT >= raise + 12) {
         if (++e.kunaiRound < P.kunaiRounds.value) return warpTo(pick(freeEnemyPanels(e, api), api) || [e.x, e.y], 'kunai');
@@ -399,7 +399,7 @@ function eraseman(e, api) {
       if (e.stateT === wind + hold) {
         const cells = P.strikeShape.value.map(([dx, dy]) => [e.x + dx, e.y + dy]);
         e.struck = cells.some(([x, y]) => p.x === x && p.y === y && p.state !== 'vanish');
-        api.hitPlayerCells(cells, pv(P.strikeDamage, v));
+        api.hitPlayerCells(cells, pv(P.strikeDamage, v), { sword: true }); // type 7 (0x80F624C)
         for (const [x, y] of cells) s.effects.push({ kind: 'spark', x, y, t: 0 });
         s.effects.push({ kind: 'shake', t: 0 });
       }
@@ -672,7 +672,7 @@ function tomahawkman(e, api) {
       if (e.stateT === 1) { e.mark = [0, 1, 2].map(y => [p.x, y]); e.highlight = [e.mark]; }
       if (e.stateT === P.throwMark.value) {
         e.highlight = null; setAnim(e, 'throw');
-        s.hazards.push({ kind: 'axe', x0: e.x, y0: e.y, cells: e.mark, start: s.tick, land: s.tick + P.throwFlight.value, damage: pv(P.throwDamage, v), owner: e.id });
+        s.hazards.push({ kind: 'axe', x0: e.x, y0: e.y, cells: e.mark, start: s.tick, land: s.tick + P.throwFlight.value, damage: pv(P.throwDamage, v), owner: e.id, sword: true }); // t3 0x3A, type 7
       }
       if (e.stateT >= P.throwMark.value + P.throwFlight.value + 6) wait(pv(P.throwWait, v));
       return;
@@ -682,7 +682,7 @@ function tomahawkman(e, api) {
       if (e.stateT === 1) e.highlight = [cells];
       if (e.stateT === P.swingWindup.value) { e.highlight = null; setAnim(e, 'swing'); }
       if (e.stateT === P.swingWindup.value + P.swingHit.value) {
-        api.hitPlayerCells(cells, pv(P.swingDamage, v));
+        api.hitPlayerCells(cells, pv(P.swingDamage, v), { sword: true }); // type 7 (0x80F8B18)
         s.effects.push({ kind: 'slash', x: e.x, y: e.y, area: 'wide', t: 0 });
       }
       if (e.stateT >= P.swingWindup.value + P.swingHit.value + 10) wait(pv(P.swingWait, v));
@@ -1444,7 +1444,7 @@ function colonel(e, api) {
       if (e.stateT === 1) e.highlight = [cells];
       if (e.stateT === mark) {
         e.highlight = null; setAnim(e, 'slash'); s.effects.push({ kind: 'shake', t: 0 });
-        api.hitPlayerCells(cells, follow ? pv(P.divideFollowDamage, v) : pv(P.divideDamage, v), { sword: true });
+        api.hitPlayerCells(cells, follow ? pv(P.divideFollowDamage, v) : pv(P.divideDamage, v), { sword: true }); // type 7 (byte_8103990)
         for (const [x, y] of cells) s.effects.push({ kind: 'spark', x, y, t: 0 });
       }
       if (e.stateT >= mark + 16) {
@@ -1519,7 +1519,7 @@ function bass(e, api) {
   const wait = t => { go(e, 'idle', 'idle'); e.think = Math.max(1, t); };
   const free = (x, y) => x >= 3 && x <= 5 && y >= 0 && y <= 2 && (!api.at(x, y) || api.at(x, y) === e);
   const low = () => e.hp < e.maxHp / 2;
-  const strike = (cells, delay, damage) => { for (const [x, y] of cells) if (x >= 0 && x <= 2 && y >= 0 && y <= 2) s.hazards.push({ kind: 'estrike', x, y, start: s.tick, hit: s.tick + delay, elem: 'dark', damage, owner: e.id }); };
+  const strike = (cells, delay, damage, sword = false) => { for (const [x, y] of cells) if (x >= 0 && x <= 2 && y >= 0 && y <= 2) s.hazards.push({ kind: 'estrike', x, y, start: s.tick, hit: s.tick + delay, elem: 'dark', damage, owner: e.id, sword }); };
   switch (e.state) {
     case 'idle':
       if (--e.think > 0) return;
@@ -1562,7 +1562,7 @@ function bass(e, api) {
     }
     case 'blade': { // Dark Arm Blade: 2 x 3 slash in front of him
       const mark = pv(P.attackMark, v);
-      if (e.stateT === 1) strike(P.bladeShape.value.map(([dx, dy]) => [e.x + dx, e.y + dy]), mark, low() ? pv(P.bladeLowDamage, v) : pv(P.bladeDamage, v));
+      if (e.stateT === 1) strike(P.bladeShape.value.map(([dx, dy]) => [e.x + dx, e.y + dy]), mark, low() ? pv(P.bladeLowDamage, v) : pv(P.bladeDamage, v), true); // type 7 (0x81027A0)
       if (e.stateT === mark - 4) setAnim(e, 'slash');
       if (e.stateT >= mark + 16) wait(pv(P.moveWait, v));
       return;
@@ -1615,7 +1615,7 @@ function protoman(e, api) {
     case 'swing':
       if (e.stateT === P.hitTick.value) {
         const cells = AREAS[e.plan.area].map(([dx, dy]) => [e.x + dx, e.y + dy]);
-        api.hitPlayerCells(cells, e.plan.damage, { sword: true });
+        api.hitPlayerCells(cells, e.plan.damage, { sword: true }); // type 7 (0x80FCE54); 0xE's dash body is type 0x53
         s.effects.push({ kind: 'slash', area: e.plan.area, x: e.x, y: e.y, t: 0 });
       }
       if (e.stateT >= P.recoverTicks.value) {
@@ -1744,7 +1744,7 @@ function gregar(e, api) {
         const others = [];
         for (let x = 0; x < 3; x++) for (let y = 0; y < 3; y++) if (x !== p.x || y !== p.y) others.push([x, y]);
         const [x, y] = t === 0 ? [p.x, p.y] : pick(others, api);
-        s.hazards.push({ kind: 'estrike', x, y, hit: s.tick + mark, damage: pv(P.breathDamage, v), elem: 'beast', owner: e.id });
+        s.hazards.push({ kind: 'estrike', x, y, hit: s.tick + mark, damage: pv(P.breathDamage, v), elem: 'beast', owner: e.id, sword: true }); // t3 0xAB, type 0x54
       }
       if (t >= gap * (n - 1) + mark + 12) wait(pv(P.jumpWait, v));
       return;

@@ -1,4 +1,4 @@
-# Project PET — status (updated 28 Nov 2026, app 0.71.0 / assets 75)
+# Project PET — status (updated 28 Nov 2026, app 0.71.1 / assets 75)
 
 Legend: **Done** = implemented and tested · **Partial** = works but incomplete or using unverified values · **Pending** = not started · **Unverified** = claim without fresh evidence.
 
