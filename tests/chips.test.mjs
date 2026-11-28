@@ -432,3 +432,17 @@ test('HubBatc: buster to Attack 5, Speed and Charge max, custom 8, shoes and und
   assert.equal(1 + s.navi.attack + (s.busterUp || 0), 5); assert.equal(s.navi.speed, 4); assert.equal(s.navi.charge, 4); assert.equal(s.navi.custom, 8);
   assert.ok(s.navi.floatShoes && s.navi.airShoes && s.navi.underShirt);
 });
+
+test('FireHit hits the first enemy column; Boomer loops the field edge; PunchArm makes the charge shot a FireHit', () => {
+  let s = after('FireHit1', 30); assert.deepEqual(hurt(s), [[3, 0, 60], [3, 1, 60], [3, 2, 60]]);
+  s = after('Boomer', 60); assert.deepEqual(hurt(s).map(h => h.slice(0, 2)), [[3, 0], [3, 2], [4, 0], [4, 2], [5, 0], [5, 1], [5, 2]]);
+  s = after('PunchArm', 0); while (s.timestop) step(s, {}); for (let i = 0; i < 30; i++) step(s, {});
+  assert.equal(s.chargeShot.name, 'FireHit1');
+  for (let i = 0; i < 200; i++) step(s, { a: true }); step(s, {}); for (let i = 0; i < 30; i++) step(s, {});
+  assert.deepEqual(hurt(s), [[3, 0, 100], [3, 1, 101], [3, 2, 100]]); // +1: the buster shot on the press
+});
+
+test('FireHit: the fists never land more than 3 columns ahead', () => {
+  const s = after('FireHit1', 30, s => { s.enemies = s.enemies.filter(e => e.x === 5 && e.y === 1); });
+  assert.deepEqual(hurt(s), []);
+});

@@ -5184,6 +5184,56 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "firehitfx": {
+   "label": "FireHit fist (t3 0x5B sub_80CFD1C): sprite 0x14/0x1A",
+   "sources": {
+    "bn6f": {
+     "offset": "3BA940",
+     "compression": "none",
+     "bytes": 2816,
+     "sha256": "f11f8d2cd03264829c87ab975f97b5e159b760005aba4f905f5c042dae9cbb07",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3B9EB8",
+     "compression": "none",
+     "bytes": 2816,
+     "sha256": "f11f8d2cd03264829c87ab975f97b5e159b760005aba4f905f5c042dae9cbb07",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "hit": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "boomerfx": {
+   "label": "Boomer (t3 0x32 sub_80CA2D4): sprite 0x10/0x07",
+   "sources": {
+    "bn6f": {
+     "offset": "354EF0",
+     "compression": "none",
+     "bytes": 3680,
+     "sha256": "b47ba7d40aedd50fa219a7decb08b91f134cbbd7d3732041e0d308c07eadb75b",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "354468",
+     "compression": "none",
+     "bytes": 3680,
+     "sha256": "b47ba7d40aedd50fa219a7decb08b91f134cbbd7d3732041e0d308c07eadb75b",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "fly": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

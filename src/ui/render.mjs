@@ -238,6 +238,8 @@ export function render(g, s, bank) {
     sprite(g, bank, 'sensorlaser', 's' + [1, 0, 2][h.aim], s.tick - h.start, ax, ay - [0x10, 0x16, 0x14][h.aim], /* dword_80D9408 / byte_80D9410 */ (g, x, y) => { g.fillStyle = 'rgba(255,80,80,.8)'; g.fillRect(x - 20, y - 2, 40, 4); }, 0, false);
   }
   for (const h of s.hazards) if (h.kind === 'snowball') { const [ax, ay] = anchor(h.fx / 40, h.y); sprite(g, bank, 'snowballfx', h.size ? 's1' : 's0', s.tick, ax, ay - 8, (g, x, y) => { g.fillStyle = '#e8f4ff'; g.beginPath(); g.arc(x, y - 8, 8 + 3 * Math.min(h.size, 2), 0, 7); g.fill(); }, 0, false); } // BlzrdBal (sprite 0x10/0x47)
+  for (const h of s.hazards) if (h.kind === 'firefist') { if (s.tick < h.hit) { if ((h.hit - s.tick) & 4) { g.fillStyle = 'rgba(255,240,80,.6)'; g.fillRect(h.x * PANEL_W + 3, FIELD_Y + h.y * PANEL_H + 3, PANEL_W - 6, PANEL_H - 9); } continue; } const [ax, ay] = anchor(h.x, h.y); sprite(g, bank, 'firehitfx', 'hit', s.tick - h.hit, ax, ay, (g, x, y) => { g.fillStyle = '#ff7030'; g.fillRect(x - 8, y - 20, 16, 16); }, 0, false); } // FireHit: panel flashes (timer bit 2), then the fist (sprite 0x14/0x1A)
+  for (const h of s.hazards) if (h.kind === 'boomer') { const [ax, ay] = anchor(h.fx, h.fy); sprite(g, bank, 'boomerfx', 'fly', s.tick, ax, ay - 10, (g, x, y) => { g.fillStyle = '#80d040'; g.beginPath(); g.arc(x, y - 6, 7, 0, 7); g.fill(); }, 0, false); } // Boomer (sprite 0x10/0x07)
   for (const h of s.hazards) if (h.kind === 'numball') { // NumbrBl's ball (sprite 0x10/0x46)
     const [ax, ay] = anchor(h.fx / 40, h.y);
     sprite(g, bank, 'numballfx', h.t <= 0xE ? 'appear' : 'roll', h.t, ax, ay - 8, (g, x, y) => { g.fillStyle = '#f0f0f0'; g.beginPath(); g.arc(x, y - 6, 7, 0, 7); g.fill(); }, 0, false);

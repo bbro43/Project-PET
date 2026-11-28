@@ -471,13 +471,13 @@ function useChip(s, chip) {
     p.state = 'chip'; p.stateT = 0; p.chip = { ...chip, lock: def.lock }; setAnim(p, 'idle');
     s.effects.push({ kind: 'capsule', x: p.x, y: p.y, t: 0, life: 16 }); return;
   }
-  let damage = (data.damage === 1021 ? p.hp % 100 : data.damage) + (chip.bonus || 0); // 1021: NumbrBl, sub_8010BF0 = HP mod 100
+  let damage = (chip.damage ?? (data.damage === 1021 ? p.hp % 100 : data.damage)) + (chip.bonus || 0); // 1021: NumbrBl, sub_8010BF0 = HP mod 100
   const mood = emotionOf(s);
   if ((data.flags & 2) && damage > 0 && (mood === 'synchro' || mood === 'angry')) { // Full Synchro / Angry: double damage, then it's used up (sub_8012A38)
     damage *= 2; s.events.push({ type: 'emotionBoost', emotion: mood });
     if (mood === 'synchro') s.emotion.mood = 0x80; else resetEmotion(s);
   }
-  const element = data.element === 'none' ? undefined : data.element;
+  const el = chip.element ?? data.element, element = el === 'none' ? undefined : el;
   const paralyze = chip.status === 'paralyze' ? val('chipParalyzeTicks') : 0;
   p.state = 'chip'; p.stateT = 0; p.chip = { ...chip, lock: def.lock }; setAnim(p, def.anim);
   if (def.kind === 'shot') {
@@ -506,6 +506,10 @@ function useChip(s, chip) {
   else if (def.kind === 'heal') { p.hp = Math.min(p.maxHp, p.hp + def.heal); s.events.push({ type: 'heal', amount: def.heal }); s.effects.push({ kind: 'heal', x: p.x, y: p.y, t: 0 }); } // effect object 6 (0x800E2FC): sprite 0x0C/0x12
   else if (def.kind === 'vulcan') for (let k = 0; k < def.hits; k++) s.hazards.push({ kind: 'pvulcan', owner: 'player', y: p.y, from: p.x, at: s.tick + (def.lead || 0) + k * def.gap, damage, element, paralyze });
   else if (def.kind === 'grab') startGrab(s, def, damage, element);
+  else if (def.kind === 'firehit') { // sub_80CFE08: the first column ahead holding an enemy, a fist on each enemy there
+    for (let x = p.x + 1, n = 0; x <= 5; x++, n++) { const col = [0, 1, 2].map(y => at(s, x, y)).filter(e => e && e.owner !== 'player'); if (!col.length) continue; for (const e of col) s.hazards.push({ kind: 'firefist', owner: 'player', x: p.x + 1 + Math.min(n, 2), y: e.y, hit: s.tick + 10, until: s.tick + 10 + 0x26, damage, element }); break; } // the drop column stops after two empty ones
+  }
+  else if (def.kind === 'boomer') s.hazards.push({ kind: 'boomer', owner: 'player', fx: 0, fy: 2, leg: 0, vx: def.speed[0] / 40, vy: def.speed[1] / 24, last: null, damage, element }); // from the bottom row's back corner
   else if (def.kind === 'wavearm') for (const dy of def.rows) { // WaveArm / PwrWave (family 0x31): shockwaves (t3 0x16) from the panel ahead
     const x = p.x + 1, y = p.y + dy;
     if (y >= 0 && y < 3 && x <= 5) s.hazards.push({ kind: 'wave', fromPlayer: true, owner: 'player', x, y, dir: 1, step: def.step, next: s.tick + def.step, damage, start: s.tick, hit: [], anim: 'medium' }); // byte_80C6B00 kinds 12–15: animation 1
@@ -683,6 +687,7 @@ function applySpecial(s, sp) {
     const n = s.navi, lvl = 1 + n.attack + (s.busterUp || 0); if (lvl < 5) n.attack += 5 - lvl;
     n.speed = 4; n.charge = 4; n.custom = 8; n.floatShoes = n.airShoes = n.underShirt = true; s.chargeTime = CHARGE_TIMES[4];
   }
+  else if (def.kind === 'chargeshot') s.chargeShot = { ...def.shot }; // navi stat 5 BPwrAtk
   else if (def.kind === 'bugfix') { s.bugs = {}; s.hpBug = null; } // sub_80E49C4
   else if (def.kind === 'trap') s.trap = { kind: def.trap, damage: sp.damage, name: s.timestop?.name };
   else if (def.kind === 'place' && (def.ahead || def.inRow)) {
@@ -996,7 +1001,7 @@ function stepPlayer(s, input) {
   if (input.a) { p.holdT++; p.charge = Math.min(s.chargeTime, p.charge + 1); }
   if (p.state === 'appear' && p.stateT >= val('moveAppearTicks')) { p.state = 'idle'; setAnim(p, 'idle'); }
   if ((p.state === 'buster' && p.stateT >= (p.busterWait ?? val('busterCooldown'))) || (p.state === 'chip' && p.stateT >= p.chip.lock)) {
-    if (p.state === 'chip') p.chipLockout = CHIP_DATA[p.chip.name]?.lockout || 0; // sub_801171C: ChipData LockoutFrames → AIData ChipLockoutTimer when the chip's attack ends
+    if (p.state === 'chip' && !p.chip.charge) p.chipLockout = CHIP_DATA[p.chip.name]?.lockout || 0; // sub_801171C: ChipData LockoutFrames → AIData ChipLockoutTimer when the chip's attack ends
     p.state = 'idle'; p.chip = null; setAnim(p, 'idle');
     if (p.home) { [p.x, p.y] = p.home; p.home = null; } // StepSwrd: back to where he stood
   }
@@ -1005,6 +1010,7 @@ function stepPlayer(s, input) {
   if (releasedA) {
     const full = p.charge >= s.chargeTime;
     p.holdT = 0; p.charge = 0;
+    if (full && s.chargeShot) { useChip(s, { ...s.chargeShot, charge: true }); s.events.push({ type: 'chargeShot' }); return; } // a charge-shot chip's attack (sub_80117BA)
     if (full) {
       p.state = 'buster'; p.stateT = 0; setAnim(p, 'buster');
       hitEnemy(s, rowTarget(s, p.x, p.y), 10 * (1 + s.navi.attack + s.busterUp), { fx: 'charge' }); // (Attack + 1) × 10 (0x8011A7E)
@@ -1459,6 +1465,18 @@ function stepHazards(s) {
       if (o && o.owner === 'player' && o.kind === 'coil') { o.hp = 0; s.effects.push({ kind: 'puff', x: o.x, y: o.y, t: 0 }); h.damage += h.base; h.size++; }
       h.fx += 3; const x = Math.round(h.fx / 40);
       if (x !== h.x) { h.x = x; if (x > 5 || !standable(s, x, h.y)) return false; const e = at(s, x, h.y); if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
+      return true;
+    }
+    if (h.kind === 'firefist') { // FireHit (t3 0x5B): flashes 10 frames, hits once, 0x25 more on screen
+      if (s.tick === h.hit) { const e = at(s, h.x, h.y); if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
+      return s.tick < h.until;
+    }
+    if (h.kind === 'boomer') { // sub_80CA408: bottom row out, up the far column, top row back
+      if (h.leg === 0) { h.fx += h.vx; if (h.fx >= 5) { h.fx = 5; h.leg = 1; } }
+      else if (h.leg === 1) { h.fy -= h.vy; if (h.fy <= 0) { h.fy = 0; h.leg = 2; } }
+      else { h.fx -= h.vx; if (h.fx < -0.5) return false; }
+      const x = Math.round(h.fx), y = Math.round(h.fy), key = x * 3 + y;
+      if (key !== h.last) { h.last = key; const e = at(s, x, y); if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
       return true;
     }
     if (h.kind === 'chipmine') { // Mine (t3 0x4C), hidden: goes off when an enemy steps on its panel or the panel breaks

@@ -520,6 +520,30 @@ export const CHIP_BEHAVIOUR = {
   // CustomLevel 8, FloatShoes / AirShoes / UnderShirt (navi stats 0x1B–0x1D, object flags 0x40030), the custom bug pushed
   // back a turn, B+Left 0x3B if none. For the rest of the battle.
   HubBatc: { kind: 'hubbatch', freeze: true, hold: 0x3C, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'B+Left ability 0x3B is not mapped in the app' },
+  // Family 0x1C (sub_80EC39C): the attack ends at once (exitAttackState); off_80EC3F0[subfamily] spawns the object.
+  // FireHit (sub 8, sub_80CFE08 → sub_80CFE5C): looks ahead for the first column with an enemy (panel flag 0x4000000) and puts
+  // a fist t3 0x5B (sprite 0x14/0x1A) on each enemy row, but the column it puts them in stops moving after two empty columns,
+  // so the fists never land more than 3 columns ahead. The fist flashes the panel 10 frames, hits once (0x4050101), then
+  // shows its animation 0x25 frames (sub_80CFD80 / sub_80CFDB0).
+  FireHit1: { kind: 'firehit', anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  FireHit2: { kind: 'firehit', anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  FireHit3: { kind: 'firehit', anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  // Boomer (sub 1, sub_80CA4F6 → t3 0x32, sprite 0x10/0x07): from MegaMan's back corner of the bottom row it flies along the
+  // bottom row to the far column's centre, up it to the top row, then back along the top row and off (sub_80CA408);
+  // byte_80CA26C[params[0]]: X 8 / 9 / 10 px, Y 0x4CCCD / 0x56666 / 0x60000 a frame; each panel it enters is hit once.
+  Boomer: { kind: 'boomer', speed: [8, 4.8], anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  HiBoomer: { kind: 'boomer', speed: [9, 5.4], anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  'M-Boomer': { kind: 'boomer', speed: [10, 6], anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  // Charge-shot chips (sub 38 → t4 0x84): set MegaMan's charge shot (navi stat 5 BPwrAtk) for the rest of the battle; the
+  // charge shot then runs as a chip action (sub_80117BA): 0x21 BugRSwrd → sword 80 (200 with a bug frag); 0x22 BgDthThd →
+  // Thunder 40, elec (200 with a bug frag); 0x23 PunchArm → FireHit 100 fire; 0x24 NeedlArm → AquaNdl 40 aqua; 0x25
+  // PuzzlArm → ElcPuls 100 elec (status 0x10); 0x26 BoomrArm → Boomer 100 wood. 0x3C (BugRSwrd 0x3C, arms 0x3C).
+  BugRSwrd: { kind: 'chargeshot', freeze: true, hold: 0x3C, shot: { name: 'Sword', damage: 80, element: 'none' }, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'the app has no bug frags, so the 200-damage version never happens' },
+  BgDthThd: { kind: 'chargeshot', freeze: true, hold: 0x3C, shot: { name: 'Thunder', damage: 40, element: 'elec' }, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'the app has no bug frags, so the 200-damage version never happens' },
+  PunchArm: { kind: 'chargeshot', freeze: true, hold: 0x3C, shot: { name: 'FireHit1', damage: 100, element: 'fire' }, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  NeedlArm: { kind: 'chargeshot', freeze: true, hold: 0x3C, shot: { name: 'AquaNdl1', damage: 40, element: 'aqua' }, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  PuzzlArm: { kind: 'chargeshot', freeze: true, hold: 0x3C, shot: { name: 'ElcPuls1', damage: 100, element: 'elec' }, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  BoomrArmSyncTrgr: { kind: 'chargeshot', freeze: true, hold: 0x3C, shot: { name: 'Boomer', damage: 100, element: 'wood' }, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'the chip is BoomrArm; the ROM name string runs into the next one' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },
