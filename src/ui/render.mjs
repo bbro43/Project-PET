@@ -196,6 +196,30 @@ export function render(g, s, bank) {
 
   // ChargeMan's train cars (drawn facing left like ChargeMan)
   const car = bank?.get('traincar');
+  for (const h of s.hazards) if (h.kind === 'sunbeam' && s.tick >= h.start) { // GunDelSol sun (sprite 0x0C/0x3C)
+    const [ax, ay] = anchor(h.x, h.y);
+    sprite(g, bank, 'gundelfx', 'sun', s.tick - h.start, ax, ay, (g, x, y) => { g.fillStyle = 'rgba(255,230,90,.6)'; g.fillRect(x - 18, y - 120, 36, 120); }, h.pal, false);
+  }
+  for (const h of s.hazards) if (h.kind === 'dollthunder' && s.tick >= h.start) { // DollThunder (sprite 0x10/0x12)
+    const [ax, ay] = anchor(h.x, h.y);
+    sprite(g, bank, 'dollfx', 'zap', s.tick - h.start, ax + 96, ay + 4, (g, x, y) => { g.strokeStyle = '#fff070'; g.lineWidth = 3; g.beginPath(); g.moveTo(x - 90, y - 24); for (let i = 1; i < 12; i++) g.lineTo(x - 90 + i * 16, y - 24 + (i % 2 ? -6 : 6)); g.stroke(); }, 0, false); // 184 px wide, centred: MegaMan's arm to the row's end
+  }
+  for (const h of s.hazards) if (h.kind === 'hockey') { // AirHockey puck (sprite 0x10/0x06), sliding between panels
+    const [ax, ay] = anchor(h.x, h.y);
+    sprite(g, bank, 'puckfx', 'puck', h.t, ax, ay, (g, x, y) => { g.fillStyle = '#303848'; g.beginPath(); g.ellipse(x, y - 4, 12, 6, 0, 0, 7); g.fill(); }, 0, false);
+  }
+  for (const h of s.hazards) if (h.kind === 'bees') { // RiskyHoney swarm (sprite 0x10/0x31)
+    const [ax, ay] = anchor(h.fx, h.fy);
+    sprite(g, bank, 'beesfx', 'swarm', h.t, ax, ay, (g, x, y) => { g.fillStyle = '#f0c020'; for (let i = 0; i < 5; i++) g.fillRect(x - 10 + (i * 7) % 20, y - 6 + (i * 5) % 12, 4, 3); }, h.pal, false);
+  }
+  for (const h of s.hazards) if (h.kind === 'log' && s.tick >= h.start) { // RollingLog (sprite 0x10/0x34), between its two rows
+    const k = Math.min(1, (s.tick - h.start) / Math.max(1, h.land - h.start)), [ax, ay] = anchor(h.fx, h.rows[1]);
+    sprite(g, bank, 'logfx', 'roll', s.tick - h.start, ax, ay - 40 * (1 - k) * (1 - k) * 2, (g, x, y) => { g.fillStyle = '#8a5a2a'; g.fillRect(x - 10, y - 40, 20, 40); }, 0, false);
+  }
+  for (const h of s.hazards) if (h.kind === 'airspin') { // AirSpin top (sprite 0x0C/0x41)
+    const [ax, ay] = anchor(h.fx, h.y);
+    sprite(g, bank, 'airspinfx', h.phase === 'glide' ? 'glide' : 'spin', h.t, ax, ay, (g, x, y) => { g.fillStyle = '#a0d0f0'; g.beginPath(); g.ellipse(x, y - 10, 14, 8, 0, 0, 7); g.fill(); }, 0, false);
+  }
   for (const h of s.hazards) if (h.kind === 'yoyo' && h.x !== undefined) { // YoYo (sprite 0x0C/0x0B)
     const [ax, ay] = anchor(h.x, h.y);
     sprite(g, bank, 'yoyofx', 'spin', h.t, ax, ay - 16, (g, x, y) => { g.fillStyle = '#c0c8d8'; g.beginPath(); g.arc(x, y, 8, 0, 7); g.fill(); }, 0, false);
@@ -212,9 +236,9 @@ export function render(g, s, bank) {
     const [ax, ay] = anchor(h.x, h.y);
     sprite(g, bank, 'pulsefx', 'pulse', s.tick - h.start, ax, ay - 16, (g, x, y) => { g.strokeStyle = '#e080ff'; g.lineWidth = 2; g.beginPath(); g.ellipse(x, y, 8, 14, 0, 0, 7); g.stroke(); }, h.pal, true);
   }
-  for (const h of s.hazards) if (h.kind === 'shell' && s.tick >= h.start) { // IronShl: the Armadillo ball (t3 0x34); AuraHed: Heady's head (t3 0x92)
+  for (const h of s.hazards) if (h.kind === 'shell' && (s.tick >= h.start || h.showWait)) { // IronShl: the Armadillo ball (t3 0x34); AuraHed: Heady's head (t3 0x92)
     const [ax, ay] = anchor(h.fx, h.y);
-    sprite(g, bank, h.sprite || 'armadillo', h.seq || 'shell', s.tick - h.start, ax, ay, (g, x, y) => { g.fillStyle = '#b89030'; g.beginPath(); g.arc(x, y - 12, 12, 0, 7); g.fill(); }, h.pal, true);
+    sprite(g, bank, h.sprite || 'armadillo', h.seq || 'shell', Math.max(0, s.tick - h.start), ax, ay - (h.lift || 0), (g, x, y) => { g.fillStyle = '#b89030'; g.beginPath(); g.arc(x, y - 12, 12, 0, 7); g.fill(); }, h.pal, h.flip ?? true);
   }
   for (const h of s.hazards) if (h.kind === 'flame') { // burner flame (t3 0x4, sprite 0x0C/0x0E)
     const [ax, ay] = anchor(h.x, h.y);

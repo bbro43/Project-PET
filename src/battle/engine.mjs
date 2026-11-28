@@ -235,7 +235,7 @@ function hitEnemy(s, e, damage, extra = {}) {
   }
   if (extra.paralyze && e.hp > 0 && e.kind !== 'coil') { e.paralyzed = extra.paralyze; s.events.push({ type: 'paralyze', target: e.id }); }
   if (extra.bubble && e.hp > 0 && e.kind !== 'coil' && !e.cells) { e.bubble = e.paralyzed = BUBBLE.frames.value; s.events.push({ type: 'bubble', target: e.id }); } // status 0x60
-  s.effects.push({ kind: 'hit', x: e.x, y: e.y, t: 0, damage, fx: extra.fx, jx: (s.tick * 7) % 15 - 7, jy: (s.tick * 11) % 15 - 7 }); // jitter from the frame count so the battle RNG is untouched // hit effect: t4 0x4 near the target (0x801A0D8, ±7 px)
+  if (!extra.quiet || s.tick % 8 === 0) s.effects.push({ kind: 'hit', x: e.x, y: e.y, t: 0, damage, fx: extra.fx, jx: (s.tick * 7) % 15 - 7, jy: (s.tick * 11) % 15 - 7 }); // jitter from the frame count so the battle RNG is untouched // hit effect: t4 0x4 near the target (0x801A0D8, ±7 px)
   s.events.push({ type: 'hit', target: e.id, damage });
   if (extra.push && e.hp > 0) {
     const nx = e.x + 1;
@@ -439,6 +439,26 @@ function useChip(s, chip) {
       for (let x = 0; x < 6; x++) for (let y = 0; y < 3; y++) // the other grass panels of the enemy area
         if ((x !== target.x || y !== target.y) && sideAt(s, x, y) === 'e' && panelType(s, x, y) === 'grass') blast(x, y);
     }
+  }
+  else if (def.kind === 'sunbeam') s.hazards.push({ kind: 'sunbeam', owner: 'player', x: p.x + 2, y: p.y, start: s.tick + def.delay, end: s.tick + def.delay + def.frames, area: REGIONS[def.region], per: def.per, pal: def.pal, element });
+  else if (def.kind === 'bees') {
+    const foes = s.enemies.filter(e => e.hp > 0 && e.x > p.x).sort((a, b) => a.x - b.x || Math.abs(a.y - p.y) - Math.abs(b.y - p.y));
+    s.hazards.push({ kind: 'bees', owner: 'player', fx: p.x + 1, fy: p.y, tx: foes[0]?.x ?? 6, ty: foes[0]?.y ?? p.y, speed: def.speed / 40, vspeed: def.vspeed / 24, hits: def.hits, every: def.every, pal: def.pal, t: 0, damage, element });
+  }
+  else if (def.kind === 'dollthunder') s.hazards.push({ kind: 'dollthunder', owner: 'player', x: p.x, y: p.y, start: s.tick + def.delay, end: s.tick + def.delay + def.frames, hit: [], damage, element });
+  else if (def.kind === 'hockey') {
+    const h = { kind: 'hockey', owner: 'player', x: p.x + 1, y: p.y, dx: 1, dy: 1, left: def.moves, every: def.every, t: 0, damage, element };
+    if (h.x <= 5 && standable(s, h.x, h.y)) { s.hazards.push(h); const e = at(s, h.x, h.y); if (e) hitEnemy(s, e, damage, { element, chip: true }); }
+  }
+  else if (def.kind === 'logs') def.rows[p.y].forEach((top, i) => s.hazards.push({ kind: 'log', owner: 'player', fx: p.x + 2, rows: [top, top + 1], speed: def.speed / 40, land: s.tick + def.air + i * def.gap, start: s.tick + i * def.gap, damage, element }));
+  else if (def.kind === 'airspin') {
+    const free = (x, y) => x <= 5 && standable(s, x, y) && !at(s, x, y);
+    if (free(p.x + 1, p.y)) s.hazards.push({ kind: 'airspin', owner: 'player', fx: p.x + 1, x: p.x + 1, y: p.y, to: p.x + 1, max: def.maxPanels, speed: def.speed / 40, wait: def.wait, every: def.every, left: def.hits, phase: 'glide', t: 0, damage, element, free });
+  }
+  else if (def.kind === 'trainarrow') {
+    const arrow = (x, wait) => s.hazards.push({ kind: 'shell', owner: 'player', fx: x, x, y: p.y, speed: def.speed / 40, sprite: 'arrowfx', seq: 'fly', flip: false, lift: 16, fly: true, showWait: true, toX: 5, stopOnHit: true, damage, element, start: s.tick + wait, hit: [] });
+    for (let x = p.x + 1, wait = def.first; x <= 5 && sideAt(s, x, p.y) === 'p'; x++, wait -= def.gap) arrow(x, wait);
+    arrow(p.x, def.last);
   }
   else if (def.kind === 'yoyo') {
     const x0 = p.x + 1, path = [];
@@ -917,7 +937,7 @@ function stepHazards(s) {
     }
     if (h.kind === 'shell') { // rolling shell (t3 0x34): hits each enemy it passes, stops at a hole or the far edge
       if (s.tick < h.start) return true; // StreamHd: the later heads wait their turn
-      if (h.x > h.toX || h.x > 5 || !standable(s, h.x, h.y)) return false;
+      if (h.x > h.toX || h.x > 5 || (!h.fly && !standable(s, h.x, h.y))) return false;
       const e = at(s, h.x, h.y);
       if (e && !h.hit.includes(e.id)) { h.hit.push(e.id); hitEnemy(s, e, h.damage, { element: h.element, chip: true, bubble: h.bubble }); if (h.stopOnHit) return false; }
       h.fx += h.speed; h.x = Math.round(h.fx);
@@ -961,6 +981,74 @@ function stepHazards(s) {
       if (age >= h.life) return false; // frames 0, 4, … 28: 8 hits
       if (age % h.every === 0) hitEnemy(s, at(s, h.x, h.y), h.damage, { element: h.element, chip: true });
       return true;
+    }
+    if (h.kind === 'sunbeam') { // GunDelSol: a hit area every frame while the sun shines
+      if (s.tick < h.start) return true;
+      if (s.tick >= h.end) return false;
+      for (const e of new Set(h.area.map(([dx, dy]) => at(s, h.x + dx, h.y + dy)).filter(Boolean))) hitEnemy(s, e, h.per, { element: h.element, chip: true, quiet: true });
+      return true;
+    }
+    if (h.kind === 'bees') { // RiskyHoney (t3 0x74): fly to the target, then cling and hit every 5 frames
+      h.t++;
+      if (h.on) {
+        if (h.on.hp <= 0) return false;
+        h.fx = h.on.x; h.fy = h.on.y;
+        if ((h.t - h.from) % h.every) return true;
+        hitEnemy(s, h.on, h.damage, { element: h.element, chip: true });
+        return --h.hits > 0;
+      }
+      if (h.fx < h.tx) h.fx = Math.min(h.tx, h.fx + h.speed);
+      else if (h.fy !== h.ty) h.fy += Math.sign(h.ty - h.fy) * Math.min(h.vspeed, Math.abs(h.ty - h.fy));
+      else h.fx += h.speed;
+      const x = Math.round(h.fx), y = Math.round(h.fy);
+      if (x > 5) return false;
+      const e = at(s, x, y);
+      if (e) { h.on = e; h.from = h.t; hitEnemy(s, e, h.damage, { element: h.element, chip: true }); h.hits--; }
+      return true;
+    }
+    if (h.kind === 'dollthunder') { // DollThunder: the row ahead, each enemy once while the doll shows
+      if (s.tick < h.start) return true;
+      if (s.tick >= h.end) return false;
+      for (let x = h.x + 1; x <= 5; x++) { const e = at(s, x, h.y); if (e && !h.hit.includes(e.id)) { h.hit.push(e.id); hitEnemy(s, e, h.damage, { element: h.element, chip: true }); } }
+      return true;
+    }
+    if (h.kind === 'hockey') { // AirHockey puck (t3 0x2E, sub_80C9AAA)
+      if (++h.t % h.every) return true;
+      if (h.left-- <= 0) return false;
+      if (sideAt(s, h.x, h.y) === 'e') h.inside = true;
+      if (h.y + h.dy < 0 || h.y + h.dy > 2) h.dy = -h.dy;
+      if (h.x + h.dx < 0 || h.x + h.dx > 5) h.dx = -h.dx;
+      if (h.inside && sideAt(s, h.x + h.dx, h.y + h.dy) !== 'e') {
+        h.dx = -h.dx;
+        if (sideAt(s, h.x + h.dx, h.y + h.dy) !== 'e') return false;
+      }
+      h.x += h.dx; h.y += h.dy;
+      if (!standable(s, h.x, h.y)) return false;
+      const e = at(s, h.x, h.y);
+      if (e) hitEnemy(s, e, h.damage, { element: h.element, chip: true });
+      return true;
+    }
+    if (h.kind === 'log') { // RollingLog (t3 0x66): lands, then rolls; both its rows hit at once and the log breaks
+      if (s.tick < h.land) return true;
+      const x = Math.round(h.fx);
+      if (x > 5 || !standable(s, x, h.rows[1])) return false;
+      const foes = h.rows.map(y => at(s, x, y)).filter(Boolean);
+      if (foes.length) { for (const e of new Set(foes)) hitEnemy(s, e, h.damage, { element: h.element, chip: true }); s.effects.push({ kind: 'blast', x, y: h.rows[1], t: 0 }); return false; }
+      h.fx += h.speed; return true;
+    }
+    if (h.kind === 'airspin') { // AirSpin (t3 0x9B): glide while the next panel is free, spin, then hit the 8 panels around it
+      h.t++;
+      if (h.phase === 'glide') {
+        if (h.fx >= h.to) {
+          h.x = h.to;
+          if (h.max-- > 0 && h.free(h.x + 1, h.y)) h.to = h.x + 1;
+          else { h.phase = 'spin'; h.t = 0; h.fx = h.x; return true; }
+        }
+        h.fx = Math.min(h.to, h.fx + h.speed); return true;
+      }
+      if (h.t < h.wait || (h.t - h.wait) % h.every) return true;
+      for (const [dx, dy] of REGIONS[0x10]) { const e = at(s, h.x + dx, h.y + dy); if (e) hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
+      return --h.left > 0;
     }
     if (h.kind === 'yoyo') { // YoYo (t3 0x52): one entry of the path every 8 frames, a hit check on each
       if (h.t % h.step === 0) {

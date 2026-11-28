@@ -160,3 +160,39 @@ test('YoYo: out three panels, spins there twice, and back', () => {
   const s = after('YoYo', 80, s => { s.enemies = s.enemies.filter(e => e.x === 4 && e.y === 1); s.enemies[0].think = 1e9; });
   assert.deepEqual(hurt(s), [[4, 1, 150]]); // arrives, then two re-arms
 });
+
+test('TrainArrow: one arrow per own panel ahead plus MegaMan\'s own, each ending on its hit', () => {
+  const s = after('TrnArrw1', 3, s => { s.enemies = s.enemies.filter(e => e.y === 1); });
+  assert.equal(s.hazards.filter(h => h.sprite === 'arrowfx').length, 2); // MegaMan on x 1: panel 2, and his own
+  const t = after('TrnArrw1', 120, s => { s.enemies = s.enemies.filter(e => e.x === 4 && e.y === 1); });
+  assert.deepEqual(hurt(t), [[4, 1, 60]]);
+});
+
+test('RollingLog: from the middle row, two logs covering rows 0-1 and 1-2', () => {
+  const s = after('RlngLog1', 120, s => { s.enemies = s.enemies.filter(e => e.x === 4); });
+  assert.deepEqual(hurt(s), [[4, 0, 50], [4, 1, 100], [4, 2, 50]]);
+});
+
+test('AirSpin: glides up to the enemy, then hits the panels around it', () => {
+  const s = after('AirSpin2', 120, s => { s.enemies = s.enemies.filter(e => e.x === 5 && e.y === 1); });
+  assert.deepEqual(hurt(s), [[5, 1, 150]]);
+});
+
+test('GunDelSol: 2 damage a frame on the column two panels ahead, 60 / 90 / 120 frames', () => {
+  assert.deepEqual(hurt(after('GunDelS1', 100)), [[3, 0, 120], [3, 1, 120], [3, 2, 120]]);
+  assert.deepEqual(hurt(after('GunDelS3', 150)), [[3, 0, 240], [3, 1, 240], [3, 2, 240]]);
+});
+
+test('RiskyHoney: the swarm reaches the nearest enemy and hits it 5 times', () => {
+  const s = after('RskyHny1', 120, s => { s.enemies = s.enemies.filter(e => e.x === 4 && e.y === 2); });
+  assert.deepEqual(hurt(s), [[4, 2, 50]]);
+});
+
+test('DollThunder: every enemy in the row ahead, once', () => {
+  assert.deepEqual(hurt(after('DolThdr1', 40)), [[3, 1, 120], [4, 1, 120], [5, 1, 120]]);
+});
+
+test('AirHockey: the puck bounces diagonally and keeps to the enemy area', () => {
+  const s = after('AirHocky', 80, s => { s.enemies = s.enemies.filter(e => e.x === 4 && e.y === 1); });
+  assert.deepEqual(hurt(s), [[4, 1, 300]]); // (2,1) (3,2) (4,1) (5,0) (4,1) (3,2) (4,1) (5,0) (4,1) (3,2) (4,1): 5 passes
+});

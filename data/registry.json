@@ -4297,6 +4297,185 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "arrowfx": {
+   "label": "TrainArrow arrow (t3 0xB kind 2, byte_80C6038 row 2): sprite 0x0C/0x2A, animation 3",
+   "sources": {
+    "bn6f": {
+     "offset": "323728",
+     "compression": "none",
+     "bytes": 2764,
+     "sha256": "2bb0300f5c8a43ec57b75a315d0af2a0629a2ca0e72964f636cdcadb13b3d8f9",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "322CA0",
+     "compression": "none",
+     "bytes": 2764,
+     "sha256": "2bb0300f5c8a43ec57b75a315d0af2a0629a2ca0e72964f636cdcadb13b3d8f9",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "fly": {
+     "seq": 3,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "logfx": {
+   "label": "RollingLog log (t3 0x66 sub_80D124E): sprite 0x10/0x34, animation Param1·2 + 1 = 3",
+   "sources": {
+    "bn6f": {
+     "offset": "37FD98",
+     "compression": "none",
+     "bytes": 2108,
+     "sha256": "f43a0ab644e4279284aa5ab9edea02fba871846db83f2f0fe7248bd06752ea8a",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "37F310",
+     "compression": "none",
+     "bytes": 2108,
+     "sha256": "f43a0ab644e4279284aa5ab9edea02fba871846db83f2f0fe7248bd06752ea8a",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "roll": {
+     "seq": 3,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "airspinfx": {
+   "label": "AirSpin top (t3 0x9B airspinObject_init_80D8908): sprite 0x0C/0x41, animation 0 gliding, 1 spinning; palette Param1·4",
+   "sources": {
+    "bn6f": {
+     "offset": "330FA8",
+     "compression": "none",
+     "bytes": 2120,
+     "sha256": "4d25e58dd49a421fbca051778dc0c4f21934f438dba7b8cad510b0ec66eacc93",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "330520",
+     "compression": "none",
+     "bytes": 2120,
+     "sha256": "4d25e58dd49a421fbca051778dc0c4f21934f438dba7b8cad510b0ec66eacc93",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "glide": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "spin": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "gundelfx": {
+   "label": "GunDelSol sun (t4 0x48 sub_80E5C4C): dword_80E5C28 row 0 = sprite 0x0C/0x3C, animation 0, palette byte_80EDBB8 (EX 1)",
+   "sources": {
+    "bn6f": {
+     "offset": "32F0C8",
+     "compression": "none",
+     "bytes": 2048,
+     "sha256": "af09dd2afc210de3b6f666986983409fc0d5bbaa7dd5818d3e1e01bb25d5c56d",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "32E640",
+     "compression": "none",
+     "bytes": 2048,
+     "sha256": "af09dd2afc210de3b6f666986983409fc0d5bbaa7dd5818d3e1e01bb25d5c56d",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "sun": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "beesfx": {
+   "label": "RiskyHoney swarm (t3 0x74 riskyHoneyObject_init_80D30F4): sprite 0x10/0x31, animation 0, palette params[0]",
+   "sources": {
+    "bn6f": {
+     "offset": "37EB4C",
+     "compression": "none",
+     "bytes": 1940,
+     "sha256": "2963c7dc05cdd74f3a867c94bafb428ff241c5fb8f2f6e5e8b01b50711c3c420",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "37E0C4",
+     "compression": "none",
+     "bytes": 1940,
+     "sha256": "2963c7dc05cdd74f3a867c94bafb428ff241c5fb8f2f6e5e8b01b50711c3c420",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "swarm": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "dollfx": {
+   "label": "DollThunder (t3 0x82 dollThunderObject_init_80D5764): sprite 0x10/0x12, animation 0, at MegaMan's arm (arm point 0x1D)",
+   "sources": {
+    "bn6f": {
+     "offset": "35CA2C",
+     "compression": "none",
+     "bytes": 6200,
+     "sha256": "aa4c49ab1ba479bab4099f2276404d144c782def982c56cebed5eb8ea4301a68",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "35BFA4",
+     "compression": "none",
+     "bytes": 6200,
+     "sha256": "aa4c49ab1ba479bab4099f2276404d144c782def982c56cebed5eb8ea4301a68",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "zap": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "puckfx": {
+   "label": "AirHockey puck (t3 0x2E sub_80C9848): sprite 0x10/0x06, animation 0",
+   "sources": {
+    "bn6f": {
+     "offset": "354D0C",
+     "compression": "none",
+     "bytes": 484,
+     "sha256": "18436d29bc8a912c9207baf12a9c8a7c4c6a0f71a2ee4bc02189f8fcd3725298",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "354284",
+     "compression": "none",
+     "bytes": 484,
+     "sha256": "18436d29bc8a912c9207baf12a9c8a7c4c6a0f71a2ee4bc02189f8fcd3725298",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "puck": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

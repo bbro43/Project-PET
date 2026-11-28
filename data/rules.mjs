@@ -253,6 +253,48 @@ export const CHIP_BEHAVIOUR = {
   // params[3] = 2 × 8 frames (the hit area is re-armed every 8 frames, sub_80CE9DC), then comes back the same way. Each panel
   // it enters, and each re-arm, can hit.
   YoYo: { kind: 'yoyo', out: 2, hold: 2, step: 8, anim: 'buster', lock: 30, confidence: 'rom-verified', note: 'attack held 0x1E frames after the spawn (Unk_10)' },
+  // TrainArrows (family 0x28, sub_80ECE18 → t3 0xB kind 2): an arrow on every panel of MegaMan's own area in front of him,
+  // waiting 16, 12, 8 … frames (the farthest waits least), and one from MegaMan's own panel at frame 0x18. Each flies at
+  // 6 px a frame (byte_80C6038 row 2: aqua, sprite 0x0C/0x2A animation 3, 8 panels) and ends on its first hit.
+  TrnArrw1: { kind: 'trainarrow', speed: 6, first: 16, gap: 4, last: 24, anim: 'buster', lock: 40, confidence: 'rom-verified' },
+  TrnArrw2: { kind: 'trainarrow', speed: 6, first: 16, gap: 4, last: 24, anim: 'buster', lock: 40, confidence: 'rom-verified' },
+  TrnArrw3: { kind: 'trainarrow', speed: 6, first: 16, gap: 4, last: 24, anim: 'buster', lock: 40, confidence: 'rom-verified' },
+  // RollingLogs (family 0x36, sub_80EDA0E → t3 0x66): two logs, 10 frames apart, thrown 13 frames onto the panel two ahead;
+  // each covers its panel and the one above (area 0x18), the rows from byte_80EDAB4 (top: 0-1 twice; middle: 0-1 then 1-2;
+  // bottom: 1-2 twice). Then it rolls on at 3 px a frame and breaks on its first hit (both rows at once) or at a hole / the edge.
+  RlngLog1: { kind: 'logs', rows: [[0, 0], [0, 1], [1, 1]], gap: 10, air: 13, speed: 3, anim: 'throw', lock: 30, confidence: 'rom-verified', note: 'the log has params[2] = 20 HP and stops params[1] = 60 frames when hit; not modelled' },
+  RlngLog2: { kind: 'logs', rows: [[0, 0], [0, 1], [1, 1]], gap: 10, air: 13, speed: 3, anim: 'throw', lock: 30, confidence: 'rom-verified' },
+  RlngLog3: { kind: 'logs', rows: [[0, 0], [0, 1], [1, 1]], gap: 10, air: 13, speed: 3, anim: 'throw', lock: 30, confidence: 'rom-verified' },
+  // AirSpins (family 0x38 → t3 0x9B): a top on the panel ahead glides forward (4 px a frame) while the next panel is solid and
+  // empty, at most 4 panels; it spins for 15 frames, then hits the 8 panels around it (area 0x10) params[1] = 2 / 3 / 4 times,
+  // 10 frames apart.
+  AirSpin1: { kind: 'airspin', hits: 2, maxPanels: 4, speed: 4, wait: 15, every: 10, anim: 'throw', lock: 15, confidence: 'rom-verified', note: 'the top is a 400 HP field object; it is not hittable here' },
+  AirSpin2: { kind: 'airspin', hits: 3, maxPanels: 4, speed: 4, wait: 15, every: 10, anim: 'throw', lock: 15, confidence: 'rom-verified' },
+  AirSpin3: { kind: 'airspin', hits: 4, maxPanels: 4, speed: 4, wait: 15, every: 10, anim: 'throw', lock: 15, confidence: 'rom-verified' },
+  // GunDelSols (family 0x37, sub_80EDB14 / sub_80EDBCC): after 6 frames, a sun two panels ahead (t4 0x48); every frame for
+  // dword_80EDBC8 = 60 / 90 / 120 / 120 frames a hit area (t3 0x3) of 2 damage on area 4 (the column); GunDelEX area 0x11
+  // (two columns). The chip's own damage is 0.
+  GunDelS1: { kind: 'sunbeam', frames: 60, per: 2, region: 4, delay: 6, pal: 0, anim: 'buster', lock: 76, confidence: 'rom-verified', note: '4 a frame instead of 2 when Navi stat 0x22 is set (not modelled)' },
+  GunDelS2: { kind: 'sunbeam', frames: 90, per: 2, region: 4, delay: 6, pal: 0, anim: 'buster', lock: 106, confidence: 'rom-verified' },
+  GunDelS3: { kind: 'sunbeam', frames: 120, per: 2, region: 4, delay: 6, pal: 0, anim: 'buster', lock: 136, confidence: 'rom-verified' },
+  GunDelEX: { kind: 'sunbeam', frames: 120, per: 2, region: 0x11, delay: 6, pal: 1, anim: 'buster', lock: 136, confidence: 'rom-verified' },
+  // RiskyHoneys (family 0x39 → t3 0x74): a bee swarm from the panel ahead flies to the nearest enemy column (byte_80D3164:
+  // 2.5 / 3 / 3.5 px a frame across, 1.5 / 1.8 / 2.1 down) and on the row; once it touches an enemy it stays on it and hits
+  // 5 times, 5 frames apart. More swarms (up to 3) only follow when AIAttackVars 0x30 is set, which isn't traced.
+  RskyHny1: { kind: 'bees', speed: 2.5, vspeed: 1.5, hits: 5, every: 5, pal: 0, anim: 'buster', lock: 20, confidence: 'rom-verified', note: 'one swarm; the path is simplified (across, then up or down)' },
+  RskyHny2: { kind: 'bees', speed: 3, vspeed: 1.8, hits: 5, every: 5, pal: 1, anim: 'buster', lock: 20, confidence: 'rom-verified' },
+  RskyHny3: { kind: 'bees', speed: 3.5, vspeed: 2.1, hits: 5, every: 5, pal: 2, anim: 'buster', lock: 20, confidence: 'rom-verified' },
+  // DollThunders (family 0x3E, dollThunderAttack_*): after 10 frames the doll (t3 0x82) shows for params[1] = 15 frames, and
+  // every panel of the row ahead gets a hit area (t3 0x8B, byte_80D6914 row 0: hit effect 3, no status) that lasts as long
+  // and hits once.
+  DolThdr1: { kind: 'dollthunder', delay: 10, frames: 15, anim: 'buster', lock: 31, confidence: 'rom-verified' },
+  DolThdr2: { kind: 'dollthunder', delay: 10, frames: 15, anim: 'buster', lock: 31, confidence: 'rom-verified' },
+  DolThdr3: { kind: 'dollthunder', delay: 10, frames: 15, anim: 'buster', lock: 31, confidence: 'rom-verified' },
+  // AirHockey / PitHockey (family 0x26 → t3 0x2E): a puck from the panel ahead moves one panel diagonally (forward, down)
+  // every 6 frames (byte_80C9818[params[0]]: 10 / 18 moves), bouncing off the field's edges; once in the enemy area it stays
+  // there, turning back at its border. Its hit is re-armed on every new panel; a hole ends it.
+  AirHocky: { kind: 'hockey', moves: 10, every: 6, anim: 'throw', lock: 15, confidence: 'rom-verified' },
+  PitHocky: { kind: 'hockey', moves: 18, every: 6, anim: 'throw', lock: 15, confidence: 'rom-verified', note: 'its afterimages (spawnIllusionObject every 4 frames) are not drawn' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },
