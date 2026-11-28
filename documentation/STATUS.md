@@ -38,7 +38,10 @@ Legend: **Done** = implemented and tested · **Partial** = works but incomplete 
 | HeatMan, ElecMan, SlashMan, EraseMan, ChargeMan, SpoutMan, TomahawkMan, TenguMan, GroundMan, DustMan, BlastMan, DiveMan, CircusMan, JudgeMan, ElementMan, ProtoMan (BN6) CPU — all 16 | ✓ | ✓ ROM tables | AI-set animations + effect sprites | – | ✓ decoded AI (some timings estimated) | 79 tests |
 | 19 BN6 Navis, 35 BN4/BN5 Navis | offsets ✓ | ✓ (BN6 labels / BN4-5 visual) | – | – | – | ROM hash test |
 
-## Next checkpoint
-1. BN5/BN4 Navis (sprites located; AI not decoded yet). Smaller leftovers: road panel movement, TomahawkMan's eagle-to-axe during his chop.
-2. Trace timings in an emulator (glide speeds, hit frames, custom gauge, charge, invincibility).
-3. Chips Phase 2: effects and ROM chip graphics in batches by family (trace the chip-family dispatch first); folder editor; Navi Customizer. Enemy attacks that list MegaMan's panels as x 0–2 don't yet include stolen panels.
+## Next checkpoint (owner's order, 27 Nov 2026)
+1. **Chip folder**: the game's CHIP FOLDER (folders with EQUIP) and FOLDER EDIT screens (folder list ↔ Pack, chip picture / code / element / power / description, MB, 30/30 count), so the player builds their own deck from all 411 BN6 chips. The owner's screenshots are reference only (not committed).
+2. **Animations for every chip**: per family, from the chip-action table (AIAttackJumptable, family − 0x10) and the t1 0x5 attachments / effect objects.
+3. **Cross Systems and Double Souls as playable MegaMan forms**: unlike the games (a chip transforms MegaMan mid-battle), the player presets a form, e.g. TomahawkCross, before the battle and keeps it for the whole fight.
+4. **Every Navi playable**: moved to last by the owner.
+
+Carried over: BN5/BN4 Navis' AI; road panel movement; TomahawkMan's eagle-to-axe; emulator timing traces; Navi Customizer; enemy attacks that list MegaMan's panels as x 0–2 don't include stolen panels; paralysis length.
