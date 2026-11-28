@@ -220,3 +220,13 @@ test('Dragons: down the nearest enemy column, one column back, and up it', () =>
   const s = after('HeatDrgn', 90);
   assert.deepEqual(hurt(s).map(([x, y]) => [x, y]), [[3, 0], [3, 1], [3, 2], [4, 0], [4, 1], [4, 2]]);
 });
+
+test('special chips: barriers, Invisibl, panel chips, cubes', () => {
+  let s = after('Barr100', 5); s.player.invuln = 0; hitPlayer(s, 60); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 40);
+  s = after('LifeAur', 5); s.player.invuln = 0; hitPlayer(s, 150); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 1);
+  s = after('BblWrap', 5); s.player.invuln = 0; hitPlayer(s, 80); assert.equal(s.player.hp, 100); assert.equal(s.player.barrier, 0);
+  for (let i = 0; i < 245; i++) step(s, {}); assert.equal(s.player.barrier, 1);
+  s = after('Invisibl', 5); assert.ok(s.player.invis > 300);
+  s = after('Snctuary', 70); assert.equal(panelType(s, 0, 0), 'holy'); assert.equal(panelType(s, 2, 2), 'holy');
+  s = after('RockCube', 5, s => { s.enemies = []; }); assert.ok(s.enemies.some(e => e.family === 'Cube' && e.x === 2 && e.hp === 200));
+});

@@ -24,7 +24,7 @@ export const RULES = {
   chipParalyzeTicks: v(120, 'unverified', 'paralysis from a WhiCapsl-tagged attack: the timer (collision data +0x1C, counted down in 0x80175B8, shortened by button presses for MegaMan) is set in collision code not traced yet; same estimate as the DarkMech ball'),
   addBonus: v(5, 'recalled', 'ADD: no chips this turn, 5 more next turn'),
   maxHand: v(10, 'recalled'),
-  firstBarrierHp: v(10, 'unverified', 'FstBarr starts the battle with the Barrier object (sub_80E0D98); its HP is read as the Barrier chip\'s 10'),
+  firstBarrierHp: v(10, 'rom-verified', 'FstBarr sets Navi stat 6 = 1 (navicust_NCP_FstBarr); the battle starts with barrier type 1 (loc_80138D2 → sub_801A7CC): byte_8020B2C[1] = 10 HP'),
   handSize: v(5, 'recalled', 'Custom 1 draws 5 chips'),
   maxSelect: v(5, 'recalled'),
   folderSize: v(30, 'recalled'),
@@ -298,13 +298,16 @@ export const CHIP_BEHAVIOUR = {
   // Placed bombs (family 0x12, off_80EB6F8 by subfamily): thrown at 2.75 px a frame (0x2C000) to the panel 3 ahead; on a solid,
   // empty panel each becomes an object there (MegaMan's side's object, it blocks shots):
   //   BlkBomb (sub 6 → t3 0x4A): 100 HP for 6000 frames; a Fire hit (PanelDamage2) sets it off: a hit area 0x82 / 0x81 by
-  //     side (sub_80CD7D0) with the chip's damage, as Fire. The app reads 0x81 / 0x82 as the whole enemy side (recalled).
+  //     side (sub_80CD7D0) with the chip's damage, as Fire. Areas ≥ 0x80 (sub_300777C, byte_8019C34) cover every panel of one
+  //     side: 0x82 the panels with flag 0x20 (the enemy side), 0x81 the others.
   //   FlshBom (sub 14 → t3 0xA4, byte_80D9A20[params[0]]): HP 10 / 15 / 20; after 60 frames it flashes: a hit area 0x82 / 0x81
   //     with status 0x10 / 0x12 (paralysis); FlshBom3 adds status 0x30 at the end (not modelled).
   //   LilBolr (sub 3 → t3 0x93): a boiler that soaks up hits; after 180 frames (0xB4) or its third hit it bursts over the 8
-  //     panels around it (area 0x10), with the damage it took (sub_80D7A2A). The app adds the chip's damage (recalled).
+  //     panels around it (area 0x10) for MaxHP − HP (sub_80D7A2A): HP starts at 0xFA0 − the chip's damage (sub_80D761C) and
+  //     never drops under 0xBB9, so the burst is the chip's damage plus what it took, at most 999.
   //   BugBomb (sub 7 → t3 0xA5): HP 40; after 60 frames area 0x10 around it, status 0x20 (a random bug on a Navi, sub_80D9FC2;
   //     the CPU Navis have no bugs here, so it does nothing to them).
+  // The Dragons' body pieces (t3 0xC8) have no collision data: only the head hits.
   BlkBomb: { kind: 'place', obj: 'BlackBomb', sprite: 'blkbombfx', hp: 100, life: 6000, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
   FlshBom1: { kind: 'place', obj: 'FlashBomb', sprite: 'flshbombfx', hp: 10, life: 60, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
   FlshBom2: { kind: 'place', obj: 'FlashBomb', sprite: 'flshbombfx', hp: 15, life: 60, flight: 44, release: 9, anim: 'throw', lock: 22, confidence: 'rom-verified' },
@@ -316,11 +319,33 @@ export const CHIP_BEHAVIOUR = {
   // Dragons (family 0x51, sub_80EF4D0 → t3 0xC9): on frame 2 a dragon comes down the nearest enemy column (sub_80ED040; else the
   // panel ahead) from above the field at 4 px a frame (byte_80DE3DC), swings one column back over 10 frames (0x28 / 4,
   // sine bob), and goes up that column and away. Its head's hit area (area 1) is re-armed on every new panel (sub_80DE730);
-  // four body pieces (t3 0xC8) follow 3 / 6 / 9 / 12 frames behind (drawn, not hitting here).
-  HeatDrgn: { kind: 'dragon', pal: 0, anim: 'buster', lock: 50, confidence: 'rom-verified', note: 'body pieces drawn only' },
+  // four body pieces (t3 0xC8, no collision data) follow 3 / 6 / 9 / 12 frames behind.
+  HeatDrgn: { kind: 'dragon', pal: 0, anim: 'buster', lock: 50, confidence: 'rom-verified', note: 'the body pieces (t3 0xC8) make no collision data, so only the head hits' },
   ElecDrgn: { kind: 'dragon', pal: 3, anim: 'buster', lock: 50, confidence: 'rom-verified' },
   AquaDrgn: { kind: 'dragon', pal: 6, anim: 'buster', lock: 50, confidence: 'rom-verified' },
   WoodDrgn: { kind: 'dragon', pal: 9, anim: 'buster', lock: 50, confidence: 'rom-verified' },
+  // Special chips (family 0x15, sub_80EBD9C → off_802CCB4[subfamily], t4 objects; the game freezes time and shows the name).
+  // Barriers (sub 4 → t4 0x2F): sub_801A7CC(params[0]) sets the barrier type; byte_8020B2C[type] = HP, the least damage that
+  // touches it, and a timer: Barrier 1 → 10 HP, Barr100 5 → 100, Barr200 7 → 200, BblWrap 8 → 1 HP that grows back 0xF0
+  // frames after it pops (an Elec hit pops it for good), LifeAur 9 → hits under 200 do nothing, a bigger one breaks it, 3000
+  // frames (sub_801A802).
+  Barrier: { kind: 'barrier', hp: 10, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  Barr100: { kind: 'barrier', hp: 100, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  Barr200: { kind: 'barrier', hp: 200, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  BblWrap: { kind: 'barrier', hp: 1, wrap: 240, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  LifeAur: { kind: 'barrier', hp: 1, min: 200, time: 3000, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // Invisibl (sub 1 → t4 0x5D, sub_8010474): the flashing-invisible timer = params[0] | params[1] << 8 = 360 frames.
+  Invisibl: { kind: 'invis', ticks: 360, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // Panel chips (sub 5 → t4 0x20 → t4 0x1F, byte_80E272C[params[0]], 0x14 bytes): panel type, which panels, blinking for
+  // 0x40 frames, then set. PnlRetrn 0: type 2 (normal) on every panel of MegaMan's side; HolyPanl 4: type 5 (holy) under
+  // MegaMan; Snctuary 5: holy on every panel of MegaMan's side (sub_80E29F8 / sub_80E2A9A).
+  PnlRetrn: { kind: 'panels', type: 'normal', where: 'side', blink: 64, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  HolyPanl: { kind: 'panels', type: 'holy', where: 'self', blink: 64, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  Snctuary: { kind: 'panels', type: 'holy', where: 'side', blink: 64, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // Cubes (sub 6 → t4 0x37 → t3 0x59): on the panel ahead; byte_80CF934[params[0]]: RockCube 1 (animation 1, HP 0x64 · 2 = 200),
+  // IceCube 3 (animation 2, HP 200, Aqua); 6000 frames.
+  RockCube: { kind: 'place', obj: 'Cube', sprite: 'cubefx', seq: 'rock', hp: 200, life: 6000, ahead: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  IceCube: { kind: 'place', obj: 'Cube', sprite: 'cubefx', seq: 'ice', hp: 200, life: 6000, ahead: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

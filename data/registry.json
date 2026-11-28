@@ -4642,6 +4642,35 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "cubefx": {
+   "label": "RockCube / IceCube (t3 0x59 sub_80CF974): sprite 0x10/0x00, animation byte_80CF934[kind] (rock 1, ice 2)",
+   "sources": {
+    "bn6f": {
+     "offset": "350888",
+     "compression": "none",
+     "bytes": 5920,
+     "sha256": "459d8fbc541eb67797e9017b4bafd45b39e3f445a4b6aaf5912b84736b79048f",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "34FE00",
+     "compression": "none",
+     "bytes": 5920,
+     "sha256": "459d8fbc541eb67797e9017b4bafd45b39e3f445a4b6aaf5912b84736b79048f",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "rock": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    },
+    "ice": {
+     "seq": 2,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

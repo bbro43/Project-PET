@@ -232,12 +232,18 @@ export function dragonAt(t, col) {
 // MegaMan's placed bombs (BlkBomb, FlshBom, LilBolr, BugBomb): what a hit does to them, and how they go off.
 function placedBombBurst(s, o) {
   o.hp = 0; s.effects.push({ kind: 'blast', x: o.x, y: o.y, t: 0 });
-  const foes = s.enemies.filter(e => e.hp > 0 && e.owner !== 'player' && e.kind !== 'coil');
-  if (o.family === 'BlackBomb') for (const e of foes) hitEnemy(s, e, o.damage, { element: 'fire', chip: true });
-  else if (o.family === 'FlashBomb') { s.effects.push({ kind: 'flash', t: 0 }); for (const e of foes) hitEnemy(s, e, o.damage, { element: o.element, paralyze: val('chipParalyzeTicks'), chip: true }); }
+  // BlkBomb / FlshBom: hit area 0x82 / 0x81 (byte_80CD828, byte_80D9D24) = every panel of one side (byte_8019C34: 0x82 needs
+  // panel flag 0x20, the enemy side; 0x81 lacks it). On the enemy side it hits the enemies standing on enemy panels; on
+  // MegaMan's side it would hit MegaMan.
+  const wide = (fn) => {
+    if (sideAt(s, o.x, o.y) === 'e') { for (const e of s.enemies.filter(e => e.hp > 0 && e.owner !== 'player' && e.kind !== 'coil' && sideAt(s, e.x, e.y) === 'e')) fn(e); }
+    else if (sideAt(s, s.player.x, s.player.y) === 'p') hitPlayer(s, o.damage, {});
+  };
+  if (o.family === 'BlackBomb') wide(e => hitEnemy(s, e, o.damage, { element: 'fire', chip: true }));
+  else if (o.family === 'FlashBomb') { s.effects.push({ kind: 'flash', t: 0 }); wide(e => hitEnemy(s, e, o.damage, { element: o.element, paralyze: val('chipParalyzeTicks'), chip: true })); }
   else for (const [dx, dy] of REGIONS[0x10]) { // Boiler / BugBomb: the 8 panels around it
     const e = at(s, o.x + dx, o.y + dy); if (!e || e.owner === 'player') continue;
-    hitEnemy(s, e, o.family === 'Boiler' ? o.damage + o.soaked : 0, { element: o.element, chip: true });
+    hitEnemy(s, e, o.family === 'Boiler' ? Math.min(999, o.damage + o.soaked) : 0, { element: o.element, chip: true }); // LilBolr: MaxHP 4000 − HP, HP starting at 4000 − the chip's damage, floor 3001
     s.effects.push({ kind: 'blast', x: o.x + dx, y: o.y + dy, t: 0 });
   }
 }
@@ -251,7 +257,7 @@ function hitPlacedBomb(s, o, damage, extra) {
 function stepPlacedBomb(o, api) {
   const s = api.s; o.animT++; o.stateT++; if (o.flash) o.flash--;
   if (--o.life > 0) return;
-  if (o.family === 'BlackBomb') { o.hp = 0; s.effects.push({ kind: 'puff', x: o.x, y: o.y, t: 0 }); } // left alone: it just goes away
+  if (o.family === 'BlackBomb' || o.family === 'Cube') { o.hp = 0; s.effects.push({ kind: 'puff', x: o.x, y: o.y, t: 0 }); } // left alone: it just goes away
   else placedBombBurst(s, o);
 }
 function hitEnemy(s, e, damage, extra = {}) {
@@ -299,7 +305,12 @@ export function hitPlayer(s, damage, opts = {}) {
     p.state = 'idle'; setAnim(p, 'idle'); p.invuln = val('invincibleTicks');
     return;
   }
-  if (p.barrier > 0) { // FstBarr barrier soaks damage first
+  if (p.barrier > 0 && p.barrierMin && damage < p.barrierMin) { s.effects.push({ kind: 'guard', x: p.x, y: p.y, t: 0 }); s.events.push({ type: 'barrier' }); return; } // LifeAur: too small to touch it
+  if (p.barrier > 0 && p.barrierWrap) { // BblWrap: pops, blocking the hit; grows back unless Elec popped it
+    p.barrier = 0; p.wrapT = 0; if (element === 'elec') p.barrierWrap = 0;
+    s.effects.push({ kind: 'guard', x: p.x, y: p.y, t: 0 }); s.events.push({ type: 'barrier' }); return;
+  }
+  if (p.barrier > 0) { // barrier (FstBarr, Barrier chips) soaks damage first
     const soak = Math.min(p.barrier, damage); p.barrier -= soak; damage -= soak;
     s.effects.push({ kind: 'guard', x: p.x, y: p.y, t: 0 });
     if (!damage) { s.events.push({ type: 'barrier' }); return; }
@@ -419,6 +430,10 @@ function useChip(s, chip) {
     if (def.slashFx) s.effects.push({ kind: 'slash', x: p.x, y: p.y, t: 0, area: def.slashFx, flip: true }); // the game's slash, swinging right
   }
   else if (def.kind === 'dragon') { const col = s.enemies.some(e => e.hp > 0 && e.owner !== 'player' && e.x > p.x) ? nearestEnemyColumn(s, p.x) : p.x + 1; s.hazards.push({ kind: 'dragon', owner: 'player', col, t: -2, pal: def.pal, damage, element, last: null }); }
+  else if (def.kind === 'barrier') { p.barrier = def.hp; p.barrierMin = def.min || 0; p.barrierTime = def.time || 0; p.barrierWrap = def.wrap || 0; p.wrapT = 0; }
+  else if (def.kind === 'invis') { p.invis = def.ticks; }
+  else if (def.kind === 'panels') { const cells = def.where === 'self' ? [[p.x, p.y]] : [0, 1, 2, 3, 4, 5].flatMap(x => [0, 1, 2].map(y => [x, y])).filter(([x, y]) => sideAt(s, x, y) === 'p'); s.hazards.push({ kind: 'panelset', cells, type: def.type, at: s.tick + def.blink }); }
+  else if (def.kind === 'place' && def.ahead) { const x = p.x + 1; if (x <= 5 && standable(s, x, p.y) && !at(s, x, p.y)) s.enemies.push({ id: s.nextId++, kind: 'coil', family: def.obj, name: def.obj, owner: 'player', sprite: def.sprite, palette: 0, flip: true, x, y: p.y, drawX: x, drawY: p.y, hp: def.hp, maxHp: def.hp, noHp: true, anim: def.seq, animT: 0, state: 'idle', stateT: 0, flash: 0, discharge: 0, life: def.life, damage: 0, element }); }
   else if (def.kind === 'place') { const r = def.release || 0; s.hazards.push({ kind: 'bomb', owner: 'player', x: p.x, y: p.y, tx: p.x + 3, land: s.tick + r + def.flight, start: s.tick + r, damage, element, place: def, sprite: def.sprite }); }
   else if (def.kind === 'throw') { const r = def.release || 0; s.hazards.push({ kind: 'bomb', owner: 'player', x: p.x, y: p.y, tx: p.x + def.range, land: s.tick + r + def.flight, start: s.tick + r, damage, paralyze, element, region: def.region, hits: def.hits, seed: def.seed }); } // the ball leaves the hand on frame 9 (0x80EB69A)
   else if (def.kind === 'heal') { p.hp = Math.min(p.maxHp, p.hp + def.heal); s.events.push({ type: 'heal', amount: def.heal }); s.effects.push({ kind: 'heal', x: p.x, y: p.y, t: 0 }); } // effect object 6 (0x800E2FC): sprite 0x0C/0x12
@@ -571,6 +586,8 @@ function stepPlayer(s, input) {
   p.animT++; p.stateT++;
   if (p.invuln > 0) p.invuln--;
   if (p.invis > 0) p.invis--;
+  if (p.barrierTime > 0 && --p.barrierTime === 0) p.barrier = 0;        // LifeAur runs out (Unk_1a_1b)
+  if (p.barrierWrap && p.barrier === 0 && ++p.wrapT >= p.barrierWrap) p.barrier = 1; // BblWrap grows back (sub_801A802)
   if (p.blind > 0) p.blind--;
   if (p.guardHitT > 0) p.guardHitT--;
   if (s.hpBug && p.hp > 1 && s.phase === 'battle') { // HP bug: 1 HP every byte_80102A4[level] frames, never below 1 (sub_8010230)
@@ -1077,6 +1094,11 @@ function stepHazards(s) {
       const x = Math.round(at_.x), y = Math.round(at_.y), key = x + ',' + y;
       if (y >= 0 && y <= 2 && x >= 0 && x <= 5 && key !== h.last) { h.last = key; const e = at(s, x, y); if (e) hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
       return true;
+    }
+    if (h.kind === 'panelset') { // panel chips (t4 0x1F): the panels blink, then change
+      if (s.tick < h.at) return true;
+      for (const [x, y] of h.cells) if (panelType(s, x, y) !== 'broken' || h.type === 'normal') setPanel(s, x, y, h.type);
+      return false;
     }
     if (h.kind === 'log') { // RollingLog (t3 0x66): lands, then rolls; both its rows hit at once and the log breaks
       if (s.tick < h.land) return true;
