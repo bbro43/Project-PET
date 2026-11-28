@@ -32,6 +32,21 @@ export const RULES = {
 
 export const val = key => RULES[key].value;
 
+// Navi Customizer bugs in battle (bug table byte_813CC18 → Navi stats; levels 1–3 = min(bug count, 3); BugStop clears all).
+export const BUGS = {
+  processing: v('every move slides MegaMan as far as he can go in the pressed direction', 'rom-verified', 'type 1 → stat 0x31; sub_80103A8 passes mode 3 to the move (sub_80116AE) → sub_800FA20 walks panels in that direction until one is invalid (sub_800D120)'),
+  panelChance: v([0, 2, 3, 4], 'rom-verified', 'type 3 → stat 0x13 = 2/3/4: when MegaMan leaves a panel, (rnd & 7) ≤ stat − 1 cracks it (sub_8013CC4, stat 0x12 = 3 → object_crackPanel)'),
+  customTurn: v([0, 4, 3, 2], 'rom-verified', 'type 4 → stat 0x63 (TurnsUntilCustBugActivates) = 4/3/2 (sub_813CD5C/66/70)'),
+  customLoss: v('from that turn on, the custom screen shows turn − value + 1 fewer chips (at least 2)', 'recalled', 'sub_802A40C; which turn counts as the first is not checked against the game'),
+  busterTable: v([[0, 0], [6, 1], [10, 2], [13, 3]], 'rom-verified', 'type 7 → stats 0x14 / 0x15 (sub_813CDB4/C0/CC); a charge shot rolls one of 16 slots (sub_8013D5E): 1 → attack 0x33, 2 → attack 0x16, else the normal charge shot'),
+  busterEffect: v('slot 1: the charge shot misfires (no shot); slot 2: a weaker shot of (Attack + 1) × 10', 'unverified', 'attacks 0x33 (sub_801208A) and 0x16 (sub_8011D38) are not decoded; the app treats 1 as a misfire and 2 as the (Attack + 1) × 10 shot it already uses'),
+  hpDrainFrames: v([0, 40, 35, 30, 25, 20, 15, 10], 'rom-verified', 'type 9 → stat 0x18 += level, stat 0x16 = 3; byte_80102A4[stat 0x18]: 1 HP lost every N frames, never below 1 (sub_8010230); each hit raises stat 0x18 by 1 up to 7 (sub_8013F96)'),
+  startStatus: v(['invisible', 'invulnerable', 'blind', 'bubble'], 'rom-verified', 'types B (5 colours) / C (6+): stat 0x1A = 9 / 10 → one of four at random (sub_8013E58): sub_8010474 flashing invisibility, object_setInvulnerableTime, BlindTimer + flag2 0x20, CollisionData 0x1E (bubble timer, t4 0x3C bubble sprite)'),
+  startStatusFrames: v([300, 600], 'rom-verified', '0x12C for type B, 0x258 for type C (off_80141BC / off_80141C0)'),
+  startStatusEffect: v('invisible: attacks pass through; blind: enemies are hidden; bubble: MegaMan can\'t move or attack', 'recalled', 'what blind and the bubble timer do to the player is not traced; the app uses these readings'),
+  noEffect: v('type 2 (emotion), 5 and 6 (encounters), 8 (VS-only helpers): no battle effect in the app', 'rom-verified', 'type 2 → stat 0x24 (emotion), 5 → 0x28 and 6 → 0x26 (asm29 encounters), 8 → stat 0xD = 0xFF (Rush/Beat/Tango, sub_8010660); type A (stat 0x62) is used by no program'),
+};
+
 // Chips: names, codes, damage, element, class and MB come from the ROM (data/bn6-chips.mjs).
 // CHIP_BEHAVIOUR says what each chip does in battle; chips not listed here can be picked but do nothing yet.
 // Families share a behaviour; the number in a Recov name is its heal.

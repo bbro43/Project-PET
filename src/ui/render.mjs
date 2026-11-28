@@ -405,7 +405,7 @@ export function render(g, s, bank) {
   }
   const draw = [];
   const p = s.player;
-  if (p.hp > 0 && !(p.invuln > 0 && p.state !== 'flinch' && (s.tick >> 1) & 1)) {
+  if (p.hp > 0 && !((p.invuln > 0 || p.invis > 0) && p.state !== 'flinch' && (s.tick >> 1) & 1)) { // invisible (colour bug) flashes like invincibility
     const [ax, ay] = anchor(p.drawX ?? p.x, p.drawY ?? p.y);
     draw.push({ y: p.y, fn: () => {
       // Vulcan: raise (animation 0xA), then animation 0xD again for every shot (0x80EBF6E)
@@ -413,14 +413,17 @@ export function render(g, s, bank) {
       const [an, at] = gap && p.animT >= 2 ? ['vulcanfire', (p.animT - 2) % gap] : [p.anim, p.animT];
       sprite(g, bank, 'megaman', an, at, ax, ay, placeholderNavi);
       for (const a of armParts(p)) sprite(g, bank, a.key, a.seq, a.t, ax + a.dx, ay - a.dz, () => {}, a.pal || 0);
-      // Navi Customizer abilities (app-drawn for now): FstBarr barrier, Shield / Reflect guard, AntiDmg stance
-      if (p.barrier > 0) { g.strokeStyle = 'rgba(140,220,255,.8)'; g.lineWidth = 1; g.beginPath(); g.ellipse(ax, ay - 16, 15, 20, 0, 0, 7); g.stroke(); }
-      if (p.state === 'guard') { g.fillStyle = p.guardReflect ? 'rgba(255,240,120,.55)' : 'rgba(160,200,255,.55)'; g.fillRect(ax + 10, ay - 34, 6, 30); g.strokeStyle = '#fff'; g.strokeRect(ax + 10.5, ay - 33.5, 5, 29); }
+      // Navi Customizer abilities: the game's barrier (t4 0x7) and guard (t3 0x2B) sprites; app-drawn without a ROM
+      if (p.barrier > 0 && bank?.get('barrierfx')) { g.save(); g.globalAlpha = 0.5; sprite(g, bank, 'barrierfx', 'barrier', s.tick, ax, ay - 16, () => {}); g.restore(); } // see-through (blend level not traced)
+      else if (p.barrier > 0) { g.strokeStyle = 'rgba(140,220,255,.8)'; g.lineWidth = 1; g.beginPath(); g.ellipse(ax, ay - 16, 15, 20, 0, 0, 7); g.stroke(); }
+      if (p.state === 'guard' && bank?.get('guardfx')) sprite(g, bank, 'guardfx', p.guardReflect ? (p.guardHitT > 0 ? 'reflectHit' : 'reflect') : (p.guardHitT > 0 ? 'shieldHit' : 'shield'), p.stateT, ax + 16, ay - 16, () => {});
+      else if (p.state === 'guard') { g.fillStyle = p.guardReflect ? 'rgba(255,240,120,.55)' : 'rgba(160,200,255,.55)'; g.fillRect(ax + 10, ay - 34, 6, 30); g.strokeStyle = '#fff'; g.strokeRect(ax + 10.5, ay - 33.5, 5, 29); }
       if (p.state === 'antidmg' && (s.tick >> 1) & 1) { g.strokeStyle = 'rgba(255,255,255,.7)'; g.beginPath(); g.ellipse(ax, ay - 16, 13, 18, 0, 0, 7); g.stroke(); }
       if (p.charge >= val('chargeDelay')) { // the charge aura (t4 0x8): charging from 10 held ticks, charged at full; palette 2, arm offset (2, 0)
         const full = p.charge >= (s.chargeTime ?? val('chargeTime'));
         sprite(g, bank, 'chargefx', full ? 'charged' : 'charging', p.holdT - (full ? (s.chargeTime ?? val('chargeTime')) : val('chargeDelay')), ax + 2, ay, () => {}, 2);
       }
+      if (p.bubble > 0) sprite(g, bank, 'bubblefx', 'bubble', s.tick, ax, ay - 16, () => { g.strokeStyle = 'rgba(200,230,255,.8)'; g.beginPath(); g.arc(ax, ay - 16, 16, 0, 7); g.stroke(); }); // bubble (colour bug)
       if (p.frozen && p.paralyzed > 0) { g.fillStyle = 'rgba(180,230,255,.55)'; g.fillRect(ax - 12, ay - 34, 24, 34); } // frozen on ice
       else if (p.paralyzed > 0 && (s.tick >> 1) & 1) { // paralysis: flicker bright
         g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.6;
@@ -436,7 +439,7 @@ export function render(g, s, bank) {
       draw.push({ y: e.drawY ?? e.y, fn: () => t < 0 ? (fn(dissolveCtx()), blitDissolve(g, ax, ay, 1, 1)) : (fn(dissolveCtx()), blitDissolve(g, ax, ay, (t >> 1) + 1, Math.max(0, 16 - (t >> 1)) / 16)) });
       continue;
     }
-    if (e.hp <= 0 || e.hidden) continue;
+    if (e.hp <= 0 || e.hidden || p.blind > 0) continue; // blind (colour bug): enemies are hidden
     const [ax, ay0] = anchor(e.drawX ?? e.x, e.drawY ?? e.y);
     const ay = ay0 - (e.z || 0);
     const fallback = e.big ? placeholderBeast : e.kind === 'navi' ? placeholderEnemyNavi : e.kind === 'coil' ? placeholderCoil : placeholderVirus;

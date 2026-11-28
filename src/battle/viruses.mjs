@@ -580,7 +580,7 @@ const BEHAVIOUR = {
     e.gustRow = e.gustRow <= 1 ? 3 : e.gustRow - 1;
     const y = e.gustRow - 1, dir = e.variant % 2 ? 1 : -1; // VacuumFan pulls toward the front column
     s.effects.push({ kind: 'gust', y, dir, t: 0 });
-    if (p.y === y && p.state !== 'vanish') { const nx = p.x + dir; if (nx >= 0 && nx <= 2) p.x = nx; }
+    if (p.y === y && p.state !== 'vanish' && !s.navi?.superArmor) { const nx = p.x + dir; if (nx >= 0 && nx <= 2) p.x = nx; } // SuperArmor: "Won't be pushed!"
   },
 
   // 0x810D554: hop around, then play a song (effect by version).

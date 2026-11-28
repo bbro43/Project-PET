@@ -4017,6 +4017,95 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "barrierfx": {
+   "label": "FstBarr barrier (t4 0x7 param 1, table byte_80E0A14 entry 1): sprite 0x0C/0x3D, animation 0, palette 0",
+   "sources": {
+    "bn6f": {
+     "offset": "32F8C8",
+     "compression": "none",
+     "bytes": 4456,
+     "sha256": "c31c160f18003e8a2c9b8fff1d884bbd047062b754a6e75136540b6283af9a54",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "32EE40",
+     "compression": "none",
+     "bytes": 4456,
+     "sha256": "c31c160f18003e8a2c9b8fff1d884bbd047062b754a6e75136540b6283af9a54",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "barrier": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "guardfx": {
+   "label": "Shield / Reflect guard (t3 0x2B, byte_80C9664: Shield entry 2 → animations 4/5, Reflect entry 1 → 2/3): sprite 0x0C/0x1B, palette 0; palette entries 9–15 are 0x03E0 fillers in the sprite's own palette (the game's source for them is not traced), drawn transparent",
+   "sources": {
+    "bn6f": {
+     "offset": "317340",
+     "compression": "none",
+     "bytes": 5600,
+     "sha256": "42f4f85af3b8c8b9cf162502c5c041b83ca927b4be9fb4fd7d4e0849b66704bd",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3168B8",
+     "compression": "none",
+     "bytes": 5600,
+     "sha256": "42f4f85af3b8c8b9cf162502c5c041b83ca927b4be9fb4fd7d4e0849b66704bd",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "reflect": {
+     "seq": 2,
+     "confidence": "rom-verified"
+    },
+    "reflectHit": {
+     "seq": 3,
+     "confidence": "rom-verified"
+    },
+    "shield": {
+     "seq": 4,
+     "confidence": "rom-verified"
+    },
+    "shieldHit": {
+     "seq": 5,
+     "confidence": "rom-verified"
+    }
+   },
+   "clearFrom": 9
+  },
+  "bubblefx": {
+   "label": "Bubble status (t4 0x3C, sub_80E4A6E): sprite 0x0C/0x20, animation 2, palette 0; palette entries 5–15 are 0x03E0 fillers in the sprite's own palette (the game's source for them is not traced), drawn transparent",
+   "sources": {
+    "bn6f": {
+     "offset": "31CAF8",
+     "compression": "none",
+     "bytes": 7044,
+     "sha256": "10def897336c923cd3310877b13bbe0f232a44c693730a62e4826bbb9fa35c42",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "31C070",
+     "compression": "none",
+     "bytes": 7044,
+     "sha256": "10def897336c923cd3310877b13bbe0f232a44c693730a62e4826bbb9fa35c42",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "bubble": {
+     "seq": 2,
+     "confidence": "rom-verified"
+    }
+   },
+   "clearFrom": 5
   }
  },
  "tables": {

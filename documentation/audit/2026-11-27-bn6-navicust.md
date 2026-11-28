@@ -38,7 +38,7 @@ SuperArmor stat 0x23; Custom1/2 stat 0xA +1/+2 (max 8); MegFldr1/2 stat 0xB +1/+
 | Buster recovery | sub_80EB450 / sub_80EB502, byte_80209CC | 5 ticks + table[Speed][empty panels before the target, max 5]: Speed 1 = 4/8/12/16/20/24 … MAX = 2/3/4/5/6/7 |
 
 ## Bug effects (byte_813CC18: [type·4 + level])
-Type 1 ProcessingBug (stat 0x31 = 1); 2 EmotionBug (0x24 = 1); 3 stats 0x12 = 3, 0x13 = 2/3/4; 4 TurnsUntilCustBugActivates (0x63) = 4/3/2; 5 stat 0x28 = 1; 6 stat 0x26 = 1; 7 stats 0x14/0x15 = 6,1 / 10,2 / 13,3; 8 stat 0xD = 0xFF; 9 stat 0x18 += level, 0x16 = 3; 0xA stat 0x62 = 3/2/1; 0xB stat 0x1A = 9; 0xC stat 0x1A = 10. What each of these does in battle is not traced yet.
+Type 1 ProcessingBug (stat 0x31 = 1); 2 EmotionBug (0x24 = 1); 3 stats 0x12 = 3, 0x13 = 2/3/4; 4 TurnsUntilCustBugActivates (0x63) = 4/3/2; 5 stat 0x28 = 1; 6 stat 0x26 = 1; 7 stats 0x14/0x15 = 6,1 / 10,2 / 13,3; 8 stat 0xD = 0xFF; 9 stat 0x18 += level, 0x16 = 3; 0xA stat 0x62 = 3/2/1; 0xB stat 0x1A = 9; 0xC stat 0x1A = 10. What each does in battle: see "Bugs in battle (0.55.0)" below.
 
 ## Screen (decoded on device, src/rom/navicust.mjs)
 Setup sub_81356F4 → sub_8135B94: palette list 0x8135C2C (resolved by sub_811FB84, PET theme 0), decompAndCopyData list 0x8135C64, BG palettes 4–11 from 0x201CF80; BG1 frame 0x201BE80 + board 0x201C380/0x201C780/0x201CB80 (17×17 at (1,2)); BG2 0x201D180 (12×9 at (17,11)); BG3 INFORMATION 0x813565C (10×6 at (18,13)). Mode 0x10 (byte_8001618). Board cells: per-cell palette entries (byte_813C4E8 + 0x34·Expand), colours byte_813C2EC (set 0 / set 1 brighter), Plus pattern byte_813C308, frame cells 0x5A91 empty / 0x3968 covered (sub_813C1C0). Sprites: cursor 0x20218F0, Move/Remove menu 0x20222F0, list bar 0x201DD70, banners 0x20226F0.
@@ -55,3 +55,30 @@ Setup sub_81356F4 → sub_8135B94: palette list 0x8135C2C (resolved by sub_811FB
 | AutoHeal | sub_8014040 (stat 0x36) | (MaxBaseHP + 9) / 10 HP, heal effect 6 |
 | SlipRunr | stat 0x35, read only by ow_player | overworld |
 | Navi base stats | byte_80210DD (16 bytes per Navi, init_8013B64) | HP/2, SuperArmor, FloatShoes, AirShoes, UnderShirt, FstBarr, Mega, Giga, BButton, BPwrAtk, BLeftAbility … (for playable Navis later) |
+
+## Bugs in battle (0.55.0)
+Level = min(bug count, 3) (sub_813BF0C); the routine for level 0 is empty. BugStop skips them all (sub_813CBCC → sub_813C490).
+
+| Type | Stats set | In battle | Confidence |
+|---|---|---|---|
+| 1 Processing | 0x31 = 1 | sub_80103A8 gives the move routine (sub_80116AE, family 0x10) mode 3 → sub_800FA20: from MegaMan's panel, step in the pressed direction (byte_800FA14) while panels are valid (sub_800D120). Every move slides as far as it can go | rom-verified |
+| 2 Emotion | 0x24 = 1 | random mood (sub_8013DA0). The app has no emotion system | no effect |
+| 3 Panel | 0x12 = 3, 0x13 = 2/3/4 | when MegaMan leaves a panel (move routine, before PanelX = FuturePanelX), (rnd & 7) ≤ 0x13 − 1 → object_crackPanel; not on empty or broken panels (sub_8013CC4, actor type 2 only) | rom-verified |
+| 4 Custom | 0x63 = 4/3/2 | from that turn on the custom screen shows turn − value + 1 fewer chips, at least 2 (sub_802A40C) | rom-verified values; first-turn count recalled |
+| 5 / 6 | 0x28 / 0x26 | encounters (asm29) | no effect |
+| 7 Buster | 0x14 / 0x15 = 6,1 / 10,2 / 13,3 | the charge shot (megamanChargeShotBPwrAtk_init_8011A26) rolls a 16-slot table (sub_8013D5E): 1 → attack 0x33 (sub_8011ADA), 2 → attack 0x16 with (Attack + 1) × 10. The app treats 1 as a misfire; 0x33 / 0x16 are not decoded | table rom-verified; effect unverified |
+| 8 | 0xD = 0xFF | turns off Rush / Beat / Tango (sub_8010660) | no effect (those are VS only) |
+| 9 HP | 0x18 += level, 0x16 = 3 | every byte_80102A4[0x18] frames (0, 40, 35, 30, 25, 20, 15, 10) MegaMan loses 1 HP, never below 1 (sub_8010230); each hit raises 0x18 by 1, max 7 (sub_8013F1E → sub_8013F96) | rom-verified |
+| 0xA | 0x62 = 3/2/1 | no program has bug type 0xA | — |
+| 0xB / 0xC colours | 0x1A = 9 / 10 | at battle start one of four at random (sub_8013E58), 0x12C (B) or 0x258 (C) frames: flashing invisibility (sub_8010474), invulnerability (object_setInvulnerableTime), blind (BlindTimer, flag2 0x20), bubble (CollisionData 0x1E; sub_800E730 puts the object in action 7 and spawns t4 0x3C) | rom-verified; what blind and the bubble timer do to MegaMan is recalled (enemies hidden / can't act) |
+
+## SuperArmor and pushing (0.55.0)
+The ROM's text for SuperArmor is "Won't be pushed!". WindBox / VacuumFan gusts no longer move MegaMan when it's installed. The code path that skips the push was not traced (the push itself is in the hit routine sub_80178D4 → sub_800E45E).
+
+## Game sprites for the abilities (0.55.0)
+| Effect | Object | Sprite | Notes |
+|---|---|---|---|
+| FstBarr barrier | t4 0x7 (sub_80E0D98, param 1 = stat 6) | 0x0C/0x3D, byte_80E0A14 entry 1: animation 0, palette 0 | drawn half see-through; the game's blend level is not traced |
+| Shield / Reflect | t3 0x2B (sub_80C97E0; Unk_0c 0x214 / 0x114 → param 2 / 1) | 0x0C/0x1B, byte_80C9664: Shield animations 4/5, Reflect 2/3, palette 0 | palette entries 9–15 are 0x03E0 fillers; drawn transparent. Reflect's body uses them, so it shows only in part |
+| Bubble | t4 0x3C (sub_80E4A6E) | 0x0C/0x20, animation 2 | entries 5–15 are fillers; drawn transparent |
+| AntiDmg star | family 0x5A spawns t1 0x5 (byte_80B8BD4 entry 3 = 0x0C/0x00) | that sprite is a sword slash, so the star is still app-drawn | not resolved |

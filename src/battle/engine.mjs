@@ -1,7 +1,7 @@
 // Deterministic fixed-tick Battle Network battle simulation (BN6 ruleset).
 // No rendering, DOM or timing here: the client feeds one input object per tick.
 // Input: { dir: 'up'|'down'|'left'|'right'|null, a: held bool, b: pressed bool, l: pressed bool }
-import { val, CHIP_BEHAVIOUR, WEAKNESS, PANELS, GRAB } from '../../data/rules.mjs';
+import { val, CHIP_BEHAVIOUR, WEAKNESS, PANELS, GRAB, BUGS } from '../../data/rules.mjs';
 import CHIPDATA from '../../data/bn6-chips.mjs';
 import { createVirus, stepVirus, virusName, PLAYABLE_FAMILIES } from './viruses.mjs';
 import { createNavi, stepNavi, stepCoil, naviVariants, PLAYABLE_NAVIS } from './navis.mjs';
@@ -62,6 +62,14 @@ export function createBattle({ mode = 'virus', enemies = formation('Mettaur', 0,
     navi: { attack: navi.attack || 0, speed: navi.speed || 0, charge: navi.charge || 0, custom: navi.custom ?? 5, bLeft: navi.bLeft || null, body: navi.body || null,
       ...Object.fromEntries(['superArmor', 'underShirt', 'firstBarrier', 'floatShoes', 'airShoes', 'chipShuffle', 'numberOpen', 'sneakRun', 'autoHeal'].map(f => [f, !!navi.flags?.has(f)])) },
   };
+  s.bugs = (navi.bugs || []).slice(0, 16); // NaviCust bug levels by type (0 = none); BugStop already zeroed them
+  if (bug(s, 9)) s.hpBug = { level: bug(s, 9), t: 0 }; // HP bug: stat 0x18 starts at the level
+  const startBug = bug(s, 0xB) ? 0 : bug(s, 0xC) ? 1 : -1; // colour bugs: a random status at the start (sub_8013E58)
+  if (startBug >= 0) {
+    const kind = BUGS.startStatus.value[Math.floor(rng(s) * 4)], T = BUGS.startStatusFrames.value[startBug], p = s.player;
+    if (kind === 'invisible') p.invis = T; else if (kind === 'invulnerable') p.invuln = T; else if (kind === 'blind') p.blind = T; else p.bubble = T;
+    s.startBug = kind;
+  }
   if (s.navi.firstBarrier) s.player.barrier = val('firstBarrierHp'); // FstBarr: "Start with Barrier" (loc_80138D2 → sub_80E0D98)
   s.chargeTime = CHARGE_TIMES[s.navi.charge];
   s.panels = createPanels(field, () => rng(s));
@@ -131,9 +139,18 @@ function spawn(s, list) {
   s.hazards = []; s.turns = {};
 }
 
+const bug = (s, type) => s.bugs?.[type] || 0;
+// Custom bug (type 4): from turn stat 0x63 on, the custom screen shows turn − value + 1 fewer chips, at least 2.
+function customBugLoss(s) {
+  const at = BUGS.customTurn.value[bug(s, 4)];
+  return at && s.customTurn >= at ? s.customTurn - at + 1 : 0;
+}
 function refillHand(s) {
   // Custom level (Navi stat 0xA, 5 at start); NumbrOpn: 10 chips (sub_802A40C → sub_802A5A0)
-  const size = s.navi?.numberOpen ? 10 : Math.min(val('maxHand'), (s.navi?.custom ?? val('handSize')) + s.handBonus);
+  s.customTurn = (s.customTurn || 0) + 1;
+  let size = s.navi?.numberOpen ? 10 : Math.min(val('maxHand'), (s.navi?.custom ?? val('handSize')) + s.handBonus);
+  const loss = customBugLoss(s);
+  if (loss) size = Math.max(2, size - loss);
   while (s.hand.length < size && s.draw.length) s.hand.push(s.draw.shift());
   s.handBonus = 0;
 }
@@ -227,10 +244,10 @@ function hitEnemy(s, e, damage, extra = {}) {
 
 export function hitPlayer(s, damage, opts = {}) {
   const p = s.player;
-  if (p.invuln > 0 || p.hp <= 0) return;
+  if (p.invuln > 0 || p.invis > 0 || p.hp <= 0) return; // invisible (colour bug): attacks pass through
   const element = opts.element ?? s.attacker?.element;
   if (p.state === 'guard') { // Shield / Reflect (attack family 0x2B): the hit is blocked; Reflect answers with a 50-damage shot
-    s.events.push({ type: 'guard' }); s.effects.push({ kind: 'guard', x: p.x, y: p.y, t: 0 });
+    s.events.push({ type: 'guard' }); s.effects.push({ kind: 'guard', x: p.x, y: p.y, t: 0 }); p.guardHitT = 12; // the guard's hit animation
     if (p.guardReflect && !p.reflected) { p.reflected = true; hitEnemy(s, rowTarget(s, p.x, p.y), 50, { fx: 'buster' }); } // sub_80C4FFE, damage 0x32
     return;
   }
@@ -251,6 +268,7 @@ export function hitPlayer(s, damage, opts = {}) {
   if (ph.freeze && !opts.paralyze) opts = { ...opts, paralyze: ph.freeze, frozen: true }; // aqua on ice: frozen solid (0x3007460)
   const before = p.hp;
   p.hp = Math.max(0, p.hp - damage);
+  if (s.hpBug && damage > 0) s.hpBug.level = Math.min(7, s.hpBug.level + 1); // HP bug drains faster after each hit (sub_8013F96)
   if (p.hp === 0 && before > 1 && s.navi?.underShirt) p.hp = 1; // UnderShirt: a hit from above 1 HP leaves 1 HP
   if (opts.paralyze) { // paralysis: no flinch and no flashing; MegaMan just freezes (DarkMech waits for this)
     p.paralyzed = opts.paralyze; p.frozen = !!opts.frozen; p.state = 'paralyzed'; p.stateT = 0; setAnim(p, 'idle'); p.holdT = 0; p.charge = 0; p.dest = null;
@@ -264,6 +282,11 @@ export function hitPlayer(s, damage, opts = {}) {
   s.events.push({ type: 'playerHit', damage });
 }
 
+// Buster bug (type 7): a charge shot rolls one of 16 slots — stat 0x14 ones, then stat 0x15 twos, the rest 0 (sub_8013D5E).
+function busterBugRoll(s) {
+  const [ones, twos] = BUGS.busterTable.value[bug(s, 7)], r = Math.floor(rng(s) * 16);
+  return r < ones ? 1 : r < ones + twos ? 2 : 0;
+}
 const setAnim = (a, anim) => { a.anim = anim; a.animT = 0; };
 const frontX = (e, y) => e.cells ? Math.min(...e.cells.filter(c => c[1] === y).map(c => c[0])) : e.x;
 // B+Left programs (sub_801216E / sub_8012586 / sub_80121BC → attack families 0x2B / 0x5A): Shield and Reflect guard for
@@ -362,6 +385,14 @@ function stepPlayer(s, input) {
   const p = s.player;
   p.animT++; p.stateT++;
   if (p.invuln > 0) p.invuln--;
+  if (p.invis > 0) p.invis--;
+  if (p.blind > 0) p.blind--;
+  if (p.guardHitT > 0) p.guardHitT--;
+  if (s.hpBug && p.hp > 1 && s.phase === 'battle') { // HP bug: 1 HP every byte_80102A4[level] frames, never below 1 (sub_8010230)
+    const N = BUGS.hpDrainFrames.value[s.hpBug.level];
+    if (N && ++s.hpBug.t >= N) { s.hpBug.t = 0; p.hp--; }
+  }
+  if (p.bubble > 0) { p.bubble--; p.prevA = !!input.a; p.holdT = 0; p.charge = 0; return; } // bubble (colour bug): can't act
   const pressedA = input.a && !p.prevA, releasedA = !input.a && p.prevA;
   p.prevA = !!input.a;
 
@@ -390,6 +421,8 @@ function stepPlayer(s, input) {
   }
   if (p.state === 'vanish') {
     if (p.stateT >= val('moveVanishTicks')) {
+      const lc = BUGS.panelChance.value[bug(s, 3)]; // panel bug: the panel MegaMan leaves may crack (sub_8013CC4)
+      if (lc && Math.floor(rng(s) * 8) <= lc - 1) crackPanel(s, p.x, p.y);
       [p.x, p.y] = p.dest; p.dest = null; p.state = 'appear'; p.stateT = 0; setAnim(p, 'appear');
       if (panelType(s, p.x, p.y) === 'ice' && p.moveDir && !s.navi?.floatShoes) p.slide = p.moveDir; // stepping onto ice: keep going (not with FlotShoe)
     }
@@ -420,6 +453,7 @@ function stepPlayer(s, input) {
     p.holdT = 0; p.charge = 0;
     if (full) {
       p.state = 'buster'; p.stateT = 0; setAnim(p, 'buster');
+      if (busterBugRoll(s) === 1) { p.busterWait = busterWait(s, p); s.events.push({ type: 'misfire' }); return; } // buster bug: misfire
       hitEnemy(s, rowTarget(s, p.x, p.y), 10 * (1 + s.navi.attack + s.busterUp), { fx: 'charge' }); // (Attack + 1) × 10 (0x8011A7E)
       p.busterWait = busterWait(s, p);
       s.events.push({ type: 'chargeShot' });
@@ -445,9 +479,11 @@ function stepPlayer(s, input) {
   }
   const d = DIRS[input.dir];
   if (d) {
-    const x = p.x + d[0], y = p.y + d[1];
-    const floor = standable(s, x, y) || (s.navi.airShoes && panelType(s, x, y) === 'broken'); // AirShoes: "Move ovr hole"
-    if (x >= 0 && x <= 5 && y >= 0 && y < 3 && sideAt(s, x, y) === 'p' && !at(s, x, y) && floor) {
+    const ok = (x, y) => x >= 0 && x <= 5 && y >= 0 && y < 3 && sideAt(s, x, y) === 'p' && !at(s, x, y)
+      && (standable(s, x, y) || (s.navi.airShoes && panelType(s, x, y) === 'broken')); // AirShoes: "Move ovr hole"
+    let x = p.x + d[0], y = p.y + d[1];
+    if (bug(s, 1)) while (ok(x + d[0], y + d[1])) { x += d[0]; y += d[1]; } // processing bug: slide to the last free panel
+    if (ok(x, y)) {
       p.dest = [x, y]; p.moveDir = d; p.state = 'vanish'; p.stateT = 0; setAnim(p, 'vanish');
     }
   }

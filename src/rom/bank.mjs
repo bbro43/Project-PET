@@ -51,7 +51,7 @@ export function buildBank(roms, registry, order = SOURCE_ORDER) {
   const blocks = {}, cache = new Map(), from = pickSources(registry, Object.keys(roms), order);
   for (const [key, id] of Object.entries(from)) {
     const sprite = registry.sprites[key];
-    blocks[key] = { ...openBlock(roms[id], sprite.sources[id], lz77), roles: sprite.sequences, layers: sprite.layers };
+    blocks[key] = { ...openBlock(roms[id], sprite.sources[id], lz77), roles: sprite.sequences, layers: sprite.layers, clearFrom: sprite.clearFrom };
   }
   return {
     field: from.$field ? buildField(roms[from.$field], registry.field.sources[from.$field]) : null,
@@ -80,7 +80,7 @@ export function buildBank(roms, registry, order = SOURCE_ORDER) {
           continue;
         }
         sequences[role] = sequenceFrames(b.data, b.block, seq + (stack && typeof stack[0] === 'number' ? stack[0] : 0)).map(rec => {
-          const f = decodeFrame(b.data, rec, { palette });
+          const f = decodeFrame(b.data, rec, { palette, clearFrom: b.clearFrom });
           return { image: toCanvas(f), originX: f.originX, originY: f.originY, ticks: f.ticks, loop: !!(f.flags & 0x40) };
         });
       }

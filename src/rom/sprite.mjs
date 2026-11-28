@@ -57,7 +57,8 @@ export function subanimFirstList(data, rec) {
   return data[rec.subanim + u32(data, rec.subanim)];
 }
 
-export function decodeFrame(data, rec, { palette = 0, oamList = subanimFirstList(data, rec) } = {}) {
+// clearFrom: palette entries from this index are left transparent (fillers the game supplies from elsewhere).
+export function decodeFrame(data, rec, { palette = 0, oamList = subanimFirstList(data, rec), clearFrom = 16 } = {}) {
   const tileBytes = u32(data, rec.tiles);
   const tiles = rec.tiles + 4;
   const colors = [];
@@ -84,7 +85,7 @@ export function decodeFrame(data, rec, { palette = 0, oamList = subanimFirstList
       for (let py = 0; py < 8; py++) for (let px = 0; px < 8; px++) {
         const byte = data[t + py * 4 + (px >> 1)];
         const v = px & 1 ? byte >> 4 : byte & 15;
-        if (!v) continue;
+        if (!v || v >= clearFrom) continue;
         let X = tx * 8 + px, Y = ty * 8 + py;
         if (hf) X = w - 1 - X;
         if (vf) Y = h - 1 - Y;

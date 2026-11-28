@@ -7,15 +7,17 @@ import { PROGRAMS, CROSSES, LAYOUTS, COMMAND_ROW, COLOR_NAMES, programOf, cellsO
 
 const STORE = 'pet.navicust.v1';
 export function loadNaviCust() {
-  try { const s = JSON.parse(localStorage.getItem(STORE)); if (Array.isArray(s?.parts)) return s; } catch {}
+  try { const s = JSON.parse(localStorage.getItem(STORE)); if (Array.isArray(s?.parts)) { s.parts = s.parts.filter(p => programOf(p.id) && !LEFT_OUT.has(programOf(p.id).name)); return s; } } catch {}
   return { parts: [] };
 }
 export const saveNaviCust = n => { try { localStorage.setItem(STORE, JSON.stringify({ parts: n.parts })); } catch {} };
 export const naviStats = n => stats(n.parts);
 
+// Programs with nothing to do here (owner decision): VS-only support (Rush, Beat, Tango) and overworld programs.
+export const LEFT_OUT = new Set(['Rush', 'Beat', 'Tango', 'Collect', 'Millions', 'Humor', 'Poem', 'SlipRunr']);
 // The list: every program in each of its colours, then the Cross parts.
 const ENTRIES = [
-  ...PROGRAMS.flatMap(p => p.variants.map(v => ({ id: p.id, variant: v.variant, color: v.color, name: p.name, plus: p.plus }))),
+  ...PROGRAMS.filter(p => !LEFT_OUT.has(p.name)).flatMap(p => p.variants.map(v => ({ id: p.id, variant: v.variant, color: v.color, name: p.name, plus: p.plus }))),
   ...CROSSES.map(c => ({ id: c.id, variant: 0, color: c.variants[0].color, name: c.short, cross: true })),
 ];
 // Bug types by the Navi stat their effect sets (byte_813CC18): 1 ProcessingBug (0x31), 2 EmotionBug (0x24),
