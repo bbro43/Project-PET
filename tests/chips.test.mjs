@@ -14,8 +14,8 @@ function hits(name, at = [1, 1]) {
   return s.enemies.filter(e => e.hp < 5000).map(e => [e.x, e.y]).sort();
 }
 
-test('the game\'s hit areas: 0x14 shapes from the ROM', () => {
-  assert.equal(REGIONS.length, 0x14);
+test('the game\'s hit areas: 0x2F shapes from the ROM', () => {
+  assert.equal(REGIONS.length, 0x2F);
   assert.deepEqual(REGIONS[4], [[0, 0], [0, -1], [0, 1]]);
 });
 
@@ -77,4 +77,15 @@ test('burners: FireBrn lights 3 panels ahead, WideBrn widens after the first; pa
 test('wave arms: a shockwave down the row; PwrWave in three rows', () => {
   assert.deepEqual(hurt(after('WaveArm1', 60)).map(([x, y]) => [x, y]), [[3, 1], [4, 1], [5, 1]]);
   assert.equal(hurt(after('PwrWave1', 60)).length, 9);
+});
+
+test('shells pierce down the row; ParaShl in all three rows', () => {
+  assert.deepEqual(hurt(after('IronShl1', 60)).map(([x, y]) => [x, y]), [[3, 1], [4, 1], [5, 1]]);
+  assert.equal(hurt(after('ParaShl', 60)).length, 9);
+});
+
+test('ElecPulse: the panel ahead and the next column, once each', () => {
+  const s = after('ElcPuls1', 70);
+  assert.deepEqual(hurt(s).map(([x, y]) => [x, y]), [[3, 0], [3, 1], [3, 2]]); // from (2,1): (2,1) and column 3
+  assert.ok(hurt(s).every(([, , d]) => d === 100));
 });

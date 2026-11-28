@@ -3393,6 +3393,10 @@
     "uncurl": {
      "seq": 5,
      "confidence": "ai-set"
+    },
+    "shell": {
+     "seq": 3,
+     "confidence": "rom-verified"
     }
    }
   },
@@ -4156,6 +4160,31 @@
    },
    "sequences": {
     "flame": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "pulsefx": {
+   "label": "ElecPulse (t3 0x8C, sub_80D6A44): sprite 0x10/0x40, animation 0, palette dword_80D6B24[level] = 1, 2, 0, 3",
+   "sources": {
+    "bn6f": {
+     "offset": "385648",
+     "compression": "none",
+     "bytes": 3756,
+     "sha256": "53a81ea96ea533268b3a23f7363ca3dc86eaf0ad6aff97e0dc40fc21f6b5d73f",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "384BC0",
+     "compression": "none",
+     "bytes": 3756,
+     "sha256": "53a81ea96ea533268b3a23f7363ca3dc86eaf0ad6aff97e0dc40fc21f6b5d73f",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "pulse": {
      "seq": 0,
      "confidence": "rom-verified"
     }

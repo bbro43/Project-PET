@@ -472,7 +472,7 @@ const BEHAVIOUR = {
       case 'release':
         if ((e.stateT - 16) % P.gap.value === 0 && e.stateT >= 16 && e.left > 0) {
           e.left--; setAnim(e, 'shoot');
-          s.hazards.push({ kind: 'bolt', x: e.x - 1, fx: e.x - 1, y: e.y, dx: -pv(P.speed, v) / 40, damage: pv(P.damage, v), sprite: 'starfish', seq: 'bubble', owner: e.id, bubble: true }); // traps MegaMan (BUBBLE.sources, unverified)
+          s.hazards.push({ kind: 'bolt', x: e.x - 1, fx: e.x - 1, y: e.y, dx: -pv(P.speed, v) / 40, damage: pv(P.damage, v), sprite: 'starfish', seq: 'bubble', owner: e.id });
         }
         if (e.left === 0 && e.stateT >= 16 + P.gap.value * P.count.value) { e.think = P.after.value; go(e, 'idle', 'idle'); }
         return;

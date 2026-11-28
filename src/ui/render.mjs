@@ -196,6 +196,14 @@ export function render(g, s, bank) {
 
   // ChargeMan's train cars (drawn facing left like ChargeMan)
   const car = bank?.get('traincar');
+  for (const h of s.hazards) if (h.kind === 'pulse') { // ElecPulse (sprite 0x10/0x40)
+    const [ax, ay] = anchor(h.x, h.y);
+    sprite(g, bank, 'pulsefx', 'pulse', s.tick - h.start, ax, ay - 16, (g, x, y) => { g.strokeStyle = '#e080ff'; g.lineWidth = 2; g.beginPath(); g.ellipse(x, y, 8, 14, 0, 0, 7); g.stroke(); }, h.pal, true);
+  }
+  for (const h of s.hazards) if (h.kind === 'shell') { // IronShl: the Armadillo ball rolling (t3 0x34)
+    const [ax, ay] = anchor(h.fx, h.y);
+    sprite(g, bank, 'armadillo', 'shell', s.tick - h.start, ax, ay, (g, x, y) => { g.fillStyle = '#b89030'; g.beginPath(); g.arc(x, y - 12, 12, 0, 7); g.fill(); }, h.pal, true);
+  }
   for (const h of s.hazards) if (h.kind === 'flame') { // burner flame (t3 0x4, sprite 0x0C/0x0E)
     const [ax, ay] = anchor(h.x, h.y);
     sprite(g, bank, 'burnerfx', 'flame', s.tick - h.born, ax, ay - 12, (g, x, y) => { g.fillStyle = 'rgba(255,140,40,.8)'; g.beginPath(); g.ellipse(x, y, 14, 9, 0, 0, 7); g.fill(); });

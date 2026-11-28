@@ -54,7 +54,7 @@ export const EMOTION = {
 // Bubbled (N1GP wiki, Status effects): stuck until it wears off or an attack lands; Elec does double; mashing shortens it.
 export const BUBBLE = {
   frames: v(150, 'recalled', 'N1GP wiki; the timer (CollisionData 0x2C, clears OBJECT_FLAGS_BUBBLED 0x80000000) is rom-verified, its start value is not traced'),
-  sources: v('StarFish bubbles', 'unverified', 'its bubble object sets hit modifier 3 (0x80CBBDE); that 3 means Bubble is not traced'),
+  sources: v('none yet', 'rom-verified', 'StarFish was linked in 0.56.0 because its bubble sets hit modifier 3; 0.61.0: 3 is the ordinary hit used by swords, burners and shells, so the link was dropped'),
 };
 
 export const BUGS = {
@@ -74,14 +74,54 @@ export const BUGS = {
 // Chips: names, codes, damage, element, class and MB come from the ROM (data/bn6-chips.mjs).
 // CHIP_BEHAVIOUR says what each chip does in battle; chips not listed here can be picked but do nothing yet.
 // Families share a behaviour; the number in a Recov name is its heal.
-// The game's hit areas (PanelOffsetListsPointerTable 0x8019B78, read from the ROM): (dx, dy) from the panel in front of
+// The game's hit areas (PanelOffsetListsPointerTable 0x8019B78, all 0x2F lists, read from the ROM): (dx, dy) from the panel in front of
 // the attacker. Chip actions pass the area number as the collision region's Param1 (CollisionData Region).
-export const REGIONS = [[], [[0, 0]], [[0, 0], [1, 0]], [[1, 0]], [[0, 0], [0, -1], [0, 1]], [[0, -1], [0, 1]], [[0, 0], [1, 0], [2, 0]],
-  [[0, 0], [1, 0], [2, 0], [3, 0]], [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]], [[0, 0], [0, -1], [0, 1], [1, 0], [-1, 0]],
-  [[0, -1], [0, 1], [1, 0], [-1, 0]], [[0, 0], [1, -1], [-1, 1], [1, 1], [-1, -1]], [[1, -1], [-1, 1], [1, 1], [-1, -1]],
-  [[0, 0], [1, -1], [1, 1]], [[1, -1], [1, 1]], [[0, 0], [0, -1], [0, 1], [1, 0], [-1, 0], [1, -1], [-1, 1], [1, 1], [-1, -1]],
-  [[0, -1], [0, 1], [1, 0], [-1, 0], [1, -1], [-1, 1], [1, 1], [-1, -1]], [[0, 0], [0, -1], [0, 1], [1, 0], [1, -1], [1, 1]],
-  [[0, 0], [1, -1], [-1, 1]], [[0, 0], [-1, -1], [1, 1]]];
+export const REGIONS = [[], [[0,0]],
+   [[0,0], [1,0]],
+   [[1,0]],
+   [[0,0], [0,-1], [0,1]],
+   [[0,-1], [0,1]],
+   [[0,0], [1,0], [2,0]],
+   [[0,0], [1,0], [2,0], [3,0]],
+   [[0,0], [1,0], [2,0], [3,0], [4,0], [5,0]],
+   [[0,0], [0,-1], [0,1], [1,0], [-1,0]],
+   [[0,-1], [0,1], [1,0], [-1,0]],
+   [[0,0], [1,-1], [-1,1], [1,1], [-1,-1]],
+   [[1,-1], [-1,1], [1,1], [-1,-1]],
+   [[0,0], [1,-1], [1,1]],
+   [[1,-1], [1,1]],
+   [[0,0], [0,-1], [0,1], [1,0], [-1,0], [1,-1], [-1,1], [1,1], [-1,-1]],
+   [[0,-1], [0,1], [1,0], [-1,0], [1,-1], [-1,1], [1,1], [-1,-1]],
+   [[0,0], [0,-1], [0,1], [1,0], [1,-1], [1,1]],
+   [[0,0], [1,-1], [-1,1]],
+   [[0,0], [-1,-1], [1,1]],
+   [[0,0], [0,-1], [0,1], [1,0]],
+   [[0,0], [1,-1], [1,1], [1,0]],
+   [[0,0], [1,-1]],
+   [[0,0], [1,1]],
+   [[0,0], [0,-1]],
+   [[0,0], [0,1]],
+   [[0,0], [1,-1], [1,0], [1,1], [2,-1], [2,0], [2,1]],
+   [[0,0], [1,-1], [1,0], [1,1], [2,-1], [2,0], [2,1], [3,-1], [3,0], [3,1]],
+   [[0,0], [1,-1], [1,0], [1,1], [2,-1], [2,0], [2,1], [3,-1], [3,0], [3,1], [4,-1], [4,0], [4,1]],
+   [[0,0], [1,0], [-1,0]],
+   [[1,0], [-1,0]],
+   [[0,0], [-1,-1], [-1,1]],
+   [[0,0], [1,0], [2,0], [3,0], [4,0]],
+   [[0,0], [0,-1], [0,1], [1,0], [1,-1], [1,1], [2,0], [2,-1], [2,1], [3,0], [3,-1], [3,1]],
+   [[-1,-1], [0,-1], [1,-1], [0,0], [-1,1], [0,1], [1,1]],
+   [[0,-1], [1,-1], [2,-1], [3,-1], [4,-1], [5,-1], [0,0], [1,0], [2,0], [3,0], [4,0], [5,0], [0,1], [1,1], [2,1], [3,1], [4,1], [5,1]],
+   [[0,-1], [1,-1], [2,-1], [-1,0], [0,0], [1,0], [-2,1], [-1,1], [0,1]],
+   [[-2,-1], [-1,-1], [0,-1], [-1,0], [0,0], [1,0], [0,1], [1,1], [2,1]],
+   [[-2,-2], [-1,-2], [0,-2], [1,-2], [2,-2], [-2,-1], [-1,-1], [0,-1], [1,-1], [2,-1], [-2,0], [-1,0], [0,0], [1,0], [2,0], [-2,1], [-1,1], [0,1], [1,1], [2,1], [-2,2], [-1,2], [0,2], [1,2], [2,2]],
+   [[0,-1], [1,-1], [2,-1], [3,-1], [4,-1], [5,-1], [5,0], [0,1], [1,1], [2,1], [3,1], [4,1], [5,1]],
+   [[0,0], [1,0], [2,0], [2,-1], [2,1]],
+   [[0,-1], [1,-1], [2,-1], [1,0], [0,1], [1,1], [2,1]],
+   [[0,-1], [0,1], [0,0], [1,0], [2,0], [3,0], [4,0], [5,0]],
+   [[0,0], [-1,0], [-2,0]],
+   [[5,-2], [4,-2], [3,-2], [2,-2], [1,-2], [0,-2], [-1,-2], [-2,-2], [-3,-2], [-4,-2], [-5,-2], [5,2], [4,2], [3,2], [2,2], [1,2], [0,2], [-1,2], [-2,2], [-3,2], [-4,2], [-5,2], [5,-1], [4,-1], [3,-1], [2,-1], [-2,-1], [-3,-1], [-4,-1], [-5,-1], [5,1], [4,1], [3,1], [2,1], [-2,1], [-3,1], [-4,1], [-5,1], [5,0], [4,0], [3,0], [2,0], [-2,0], [-3,0], [-4,0], [-5,0]],
+   [[0,0], [0,-2], [0,-1], [0,1], [0,2]],
+   [[0,-2], [0,-1], [0,1], [0,2]]];
 // Swords (chip family 0x13, sub_80EB776): byte_80EBA18[subfamily] byte 0 is the hit area; the swing hits at frame 12 (Unk_10 0x0C).
 // Slash sprite: the game's sword effect, the sequence closest to the area (the per-element blades byte_80EBAD8 are not split out yet).
 const SWORD_AREA = [1, 4, 2, 4, 2, 0x11, 0x11, 0x11, 2, 6, 0xB, 0x11, 4, 4, 4, 4];
@@ -137,6 +177,20 @@ export const CHIP_BEHAVIOUR = {
   PwrWave1: { kind: 'wavearm', rows: [-1, 0, 1], step: 6, anim: 'idle', lock: 16, confidence: 'rom-verified' },
   PwrWave2: { kind: 'wavearm', rows: [-1, 0, 1], step: 6, anim: 'idle', lock: 16, confidence: 'rom-verified' },
   PwrWave3: { kind: 'wavearm', rows: [-1, 0, 1], step: 6, anim: 'idle', lock: 16, confidence: 'rom-verified' },
+  // Shells (family 0x2C, sub_80ED278 → t3 0x34): the Armadillo ball (sprite 4/0x1B, animation 3, palette params[0]) rolls from
+  // the panel ahead to the far edge at byte_80CA7A0[params[0]] = 6 / 7 / 8 px a frame, hitting everything it passes, and stops
+  // at a hole. ParaShl (params[2] = 1) rolls three, one per row, from column 1 at 8 px.
+  IronShl1: { kind: 'shell', speed: 6, pal: 0, anim: 'idle', lock: 16, confidence: 'rom-verified', note: 'attack 0x0F frames' },
+  IronShl2: { kind: 'shell', speed: 7, pal: 1, anim: 'idle', lock: 16, confidence: 'rom-verified' },
+  IronShl3: { kind: 'shell', speed: 8, pal: 2, anim: 'idle', lock: 16, confidence: 'rom-verified' },
+  ParaShl: { kind: 'shell', speed: 8, pal: 0, rows: [0, 1, 2], fromX: 1, anim: 'idle', lock: 16, confidence: 'rom-verified' },
+  // ElecPulses (family 0x42, sub_80EE57C → t3 0x8C): held out for params[2] = 60 frames over area 0x15 (the panel ahead and the
+  // column after it). params[0] = hit modifier, params[1] = status (0x10 paralysis for ElcPuls1; 0x12 for DestPuls, not in the app);
+  // ElcPuls2's 0x51 pulls the target in (its description: "Pul enemy in").
+  ElcPuls1: { kind: 'pulse', region: 0x15, hold: 60, pal: 1, status: 'paralyze', anim: 'idle', lock: 66, confidence: 'rom-verified', note: 'hits once per enemy (recalled)' },
+  ElcPuls2: { kind: 'pulse', region: 0x15, hold: 60, pal: 2, pull: true, anim: 'idle', lock: 66, confidence: 'rom-verified', note: 'pull = 1 panel toward MegaMan (recalled)' },
+  ElcPuls3: { kind: 'pulse', region: 0x15, hold: 60, pal: 0, anim: 'idle', lock: 66, confidence: 'rom-verified' },
+  DestPuls: { kind: 'pulse', region: 0x15, hold: 60, pal: 3, anim: 'idle', lock: 66, confidence: 'rom-verified', note: 'status 0x12 (a bug on the target) not in the app' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

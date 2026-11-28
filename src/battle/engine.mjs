@@ -384,6 +384,11 @@ function useChip(s, chip) {
     const x = p.x + 1, y = p.y + dy;
     if (y >= 0 && y < 3 && x <= 5) s.hazards.push({ kind: 'wave', fromPlayer: true, owner: 'player', x, y, dir: 1, step: def.step, next: s.tick + def.step, damage, start: s.tick, hit: [], anim: 'medium' }); // byte_80C6B00 kinds 12–15: animation 1
   }
+  else if (def.kind === 'shell') for (const y of def.rows || [p.y]) {
+    const x = def.fromX ?? p.x + 1;
+    if (x <= 5 && standable(s, x, y)) s.hazards.push({ kind: 'shell', owner: 'player', fx: x, x, y, speed: def.speed / 40, pal: def.pal, damage, element, start: s.tick, hit: [] });
+  }
+  else if (def.kind === 'pulse') s.hazards.push({ kind: 'pulse', owner: 'player', x: p.x + 1, y: p.y, start: s.tick, hold: def.hold, region: def.region, pal: def.pal, pull: def.pull, paralyze: def.status === 'paralyze' ? val('chipParalyzeTicks') : paralyze, damage, element, hit: [] });
   else if (def.kind === 'burner') s.hazards.push({ kind: 'flame', owner: 'player', x: p.x + 1, y: p.y, born: s.tick, life: def.life, spread: def.spread, wide: def.wide, crack: def.crack, damage, element, hit: [] });
   else if (def.kind === 'busterup') { s.busterUp++; s.events.push({ type: 'busterUp', level: 1 + s.busterUp }); }
   else if (def.kind === 'crack') for (const [dx, dy] of REGIONS[def.region || 1]) { // the panels of the area are lifted and sent down their rows
@@ -850,6 +855,22 @@ function stepHazards(s) {
       }
       if (age >= h.life) { if (h.crack) crackPanel(s, h.x, h.y); return false; }
       return true;
+    }
+    if (h.kind === 'shell') { // rolling shell (t3 0x34): hits each enemy it passes, stops at a hole or the far edge
+      if (h.x > 5 || !standable(s, h.x, h.y)) return false;
+      const e = at(s, h.x, h.y);
+      if (e && !h.hit.includes(e.id)) { h.hit.push(e.id); hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
+      h.fx += h.speed; h.x = Math.round(h.fx);
+      return true;
+    }
+    if (h.kind === 'pulse') { // ElecPulse (t3 0x8C): its area hits each enemy once while it is held out
+      for (const [dx, dy] of REGIONS[h.region]) {
+        const e = at(s, h.x + dx, h.y + dy);
+        if (!e || h.hit.includes(e.id)) continue;
+        h.hit.push(e.id); hitEnemy(s, e, h.damage, { element: h.element, paralyze: h.paralyze, chip: true });
+        if (h.pull && e.hp > 0 && !e.cells) { const nx = e.x - 1; if (nx >= 3 && !at(s, nx, e.y) && standable(s, nx, e.y)) e.x = nx; }
+      }
+      return s.tick - h.start < h.hold;
     }
     if (h.kind === 'multihit') {
       if (s.tick < h.next) return true;
