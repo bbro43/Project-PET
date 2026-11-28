@@ -4,7 +4,7 @@
 // Panel geometry and sprite anchors are approximations pending an on-screen trace.
 import { frameAt } from '../rom/bank.mjs';
 import { val } from '../../data/rules.mjs';
-import { chipBehaviour } from '../battle/engine.mjs';
+import { chipBehaviour, CHIP_DATA } from '../battle/engine.mjs';
 
 export const PANEL_W = 40, PANEL_H = 24, FIELD_Y = 72;
 const anchor = (x, y) => [x * PANEL_W + PANEL_W / 2, FIELD_Y + y * PANEL_H + 18];
@@ -429,6 +429,16 @@ export function render(g, s, bank) {
     } });
   }
   draw.sort((a, b) => a.y - b.y).forEach(d => d.fn());
+  // Queued chips above MegaMan (0x801C082): the next chip's icon, once per queued chip, each copy 2 px up and back.
+  if (s.queue.length && s.phase === 'battle' && !s.timestop && p.hp > 0) {
+    const [ax, ay] = anchor(p.drawX ?? p.x, p.drawY ?? p.y);
+    const icon = bank?.chips?.icon(CHIP_DATA[s.queue[0].name]?.id);
+    for (let k = s.queue.length - 1; k >= 0; k--) {
+      const x = Math.round(ax) - 1 - 2 * k, y = Math.round(ay) - 57 - 2 * k;
+      if (icon) g.drawImage(icon, x, y);
+      else { g.fillStyle = '#c8c8c8'; g.fillRect(x, y, 16, 16); g.fillStyle = '#585868'; g.fillRect(x + 1, y + 1, 14, 14); }
+    }
+  }
 
   // ElecMan charge sparkle at his hand
   const aura = bank?.get('elecaura');
