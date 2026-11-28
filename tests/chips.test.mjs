@@ -460,3 +460,15 @@ test('Lance hits the back column on all three rows; FullCust fills the custom ga
   assert.deepEqual(hurt(after('Lance', 20)), [[5, 0, 150], [5, 1, 150], [5, 2, 150]]);
   const s = after('FullCust', 2, s => { s.gauge = 0; }); assert.equal(s.gauge, 512);
 });
+
+test('SandWrm: a worm from the panel behind each enemy with a free panel there', () => {
+  const s = after('SandWrm1', 30, s => { s.enemies = s.enemies.filter(e => (e.x === 3 && e.y !== 2) || (e.x === 5 && e.y === 2) || (e.x === 4 && e.y === 0)); });
+  assert.deepEqual(hurt(s), [[3, 1, 130], [4, 0, 130]]); // (3,0) has an enemy behind it; (5,2) is in the back column
+});
+
+test('GolmHit: the hand on the middle of the second enemy column; chip damage there, 100 round it, nothing on an empty panel', () => {
+  let s = after('GolmHit1', 30);
+  assert.deepEqual(hurt(s), [[3, 0, 100], [3, 1, 100], [3, 2, 100], [4, 0, 100], [4, 1, 140], [4, 2, 100], [5, 0, 100], [5, 1, 100], [5, 2, 100]]);
+  s = after('GolmHit1', 30, s => { s.enemies = s.enemies.filter(e => !(e.x === 4 && e.y === 1)); });
+  assert.deepEqual(hurt(s), []);
+});

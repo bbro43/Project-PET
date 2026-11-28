@@ -525,6 +525,22 @@ export const CHIP_BEHAVIOUR = {
   // a fist t3 0x5B (sprite 0x14/0x1A) on each enemy row, but the column it puts them in stops moving after two empty columns,
   // so the fists never land more than 3 columns ahead. The fist flashes the panel 10 frames, hits once (0x4050101), then
   // shows its animation 0x25 frames (sub_80CFD80 / sub_80CFDB0).
+  // SandWrm (sub 12, sandwormAttack_80DEDE0): for each of the first 4 enemies, if the panel behind it is standable and empty
+  // (0x10000 set, 0x05800000 clear), a worm (t3 0xCB, the SnakeArm sprite 0x04/0x1A, palette = params[0]) leaps from there
+  // one panel forward onto the enemy over 0x10 frames, 0x16 px high (byte_80DEA50, byte_80DEE58), animations 1–4 by quarter;
+  // it hits the panel it enters (region 1, 0xA / 5), then is gone; its holes stay 20 frames (byte_80DEA70). An enemy in the
+  // back column, or with something behind it, is not attacked.
+  SandWrm1: { kind: 'sandworm', anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  SandWrm2: { kind: 'sandworm', anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  SandWrm3: { kind: 'sandworm', anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  // GolmHit (sub 21, sub_80DB4B4 → t3 0xAE): a hand (sprite 0x0C/0x62) drops on the enemies' middle panel of their second
+  // column (ROM 5, 2) from 0x100 px up and behind, 16 px a frame for 16 frames. Only if that panel holds something
+  // (0xF800010): it hits it (chip damage), hits the 8 panels round it for 100 (regions 0x405FF0A / 0x405FF0C = panel lists
+  // 0xA and 0xC, damage (r6 & 0xFFFFF000) + 0x64), cracks the 3×3 (list 0xF), shakes 0x2D frames (sub_80DB3B4, sub_80DB4CE).
+  // Then it stays 0x1E frames, blinking.
+  GolmHit1: { kind: 'golemhit', anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'the 100 for the 8 round panels is read from the region\'s damage word' },
+  GolmHit2: { kind: 'golemhit', anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'the 100 for the 8 round panels is read from the region\'s damage word' },
+  GolmHit3: { kind: 'golemhit', anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'the 100 for the 8 round panels is read from the region\'s damage word' },
   // Lance (sub 4, sub_80D2596 → t3 0x6F ×3): in the enemies' back column (ROM column 6), all three rows; each lance starts
   // 0x40 px further back, comes in 8 px a frame for 8 frames, hits its panel on frame 6 (0x4040401), then stays 0x14
   // frames, flickering (sub_80D2514 / sub_80D255A). Sprite 0x0C/0x44 turned to face MegaMan.

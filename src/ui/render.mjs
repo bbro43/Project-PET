@@ -130,7 +130,7 @@ function armParts(p) {
 export function render(g, s, bank) {
   g.imageSmoothingEnabled = false;
   if (s.player.blind > 0) s = { ...s, hazards: s.hazards.filter(h => h.owner === 'player') }; // Blind: enemies' obstacles and shots are hidden too
-  const shake = s.effects.find(f => f.kind === 'shake' && f.t < 20);
+  const shake = s.effects.find(f => f.kind === 'shake' && f.t < (f.life || 20));
   g.setTransform(1, 0, 0, 1, 0, shake ? ((shake.t >> 1) & 1 ? 2 : -2) : 0);
   const bg = g.createLinearGradient(0, 0, 0, FIELD_Y);
   bg.addColorStop(0, '#062048'); bg.addColorStop(1, '#0f4a7a');
@@ -238,6 +238,8 @@ export function render(g, s, bank) {
     sprite(g, bank, 'sensorlaser', 's' + [1, 0, 2][h.aim], s.tick - h.start, ax, ay - [0x10, 0x16, 0x14][h.aim], /* dword_80D9408 / byte_80D9410 */ (g, x, y) => { g.fillStyle = 'rgba(255,80,80,.8)'; g.fillRect(x - 20, y - 2, 40, 4); }, 0, false);
   }
   for (const h of s.hazards) if (h.kind === 'snowball') { const [ax, ay] = anchor(h.fx / 40, h.y); sprite(g, bank, 'snowballfx', h.size ? 's1' : 's0', s.tick, ax, ay - 8, (g, x, y) => { g.fillStyle = '#e8f4ff'; g.beginPath(); g.arc(x, y - 8, 8 + 3 * Math.min(h.size, 2), 0, 7); g.fill(); }, 0, false); } // BlzrdBal (sprite 0x10/0x47)
+  for (const h of s.hazards) if (h.kind === 'sandworm') { const k = s.tick - h.start + 1; for (const hx of k < 20 ? [h.bx] : []) { const [bx, by] = anchor(hx, h.y); sprite(g, bank, 'snakearm', 'hole', s.tick, bx, by, () => {}, h.pal, true); } if (k > 0x10) { const [bx, by] = anchor(h.bx - 1, h.y); sprite(g, bank, 'snakearm', 'hole', s.tick, bx, by, () => {}, h.pal, true); continue; } const [ax, ay] = anchor(h.fx, h.y); sprite(g, bank, 'snakearm', 'leap' + Math.min(4, 1 + (k >> 2)), k, ax, ay - Math.sin(Math.PI * k / 0x10) * 0x16, (g, x, y) => { g.fillStyle = '#c0a060'; g.fillRect(x - 8, y - 16, 16, 16); }, h.pal, true); } // SandWrm: SnakeArm sprite, holes 20 frames
+  for (const h of s.hazards) if (h.kind === 'golemhand') { const k = h.land - s.tick; if (k < 0 && (s.tick - h.land) & 4) continue; const d = Math.max(0, k) * 16; const [ax, ay] = anchor(h.x, h.y); sprite(g, bank, 'golemhandfx', 'fall', s.tick - h.start, ax - d, ay - d, (g, x, y) => { g.fillStyle = '#a08060'; g.fillRect(x - 12, y - 24, 24, 24); }, 0, false); } // GolmHit: 0x100 px up and behind, 16 px a frame
   for (const h of s.hazards) if (h.kind === 'lance') { const k = s.tick - h.start; if (k >= 8 && k + 1 < h.until - h.start && (h.until - s.tick) & 4) continue; const [ax, ay] = anchor(h.x, h.y); sprite(g, bank, 'lancefx', 'thrust', k, ax + 0x40 - 8 * Math.min(k + 1, 8), ay, (g, x, y) => { g.fillStyle = '#60c040'; g.fillRect(x - 20, y - 14, 30, 4); }, 0, true); } // Lance (sprite 0x0C/0x44): 0x40 px back, 8 px a frame, flickers at the end
   for (const h of s.hazards) if (h.kind === 'firefist') { if (s.tick < h.hit) { if ((h.hit - s.tick) & 4) { g.fillStyle = 'rgba(255,240,80,.6)'; g.fillRect(h.x * PANEL_W + 3, FIELD_Y + h.y * PANEL_H + 3, PANEL_W - 6, PANEL_H - 9); } continue; } const [ax, ay] = anchor(h.x, h.y); sprite(g, bank, 'firehitfx', 'hit', s.tick - h.hit, ax, ay, (g, x, y) => { g.fillStyle = '#ff7030'; g.fillRect(x - 8, y - 20, 16, 16); }, 0, false); } // FireHit: panel flashes (timer bit 2), then the fist (sprite 0x14/0x1A)
   for (const h of s.hazards) if (h.kind === 'boomer') { const [ax, ay] = anchor(h.fx, h.fy); sprite(g, bank, 'boomerfx', 'fly', s.tick, ax, ay - 10, (g, x, y) => { g.fillStyle = '#80d040'; g.beginPath(); g.arc(x, y - 6, 7, 0, 7); g.fill(); }, 0, false); } // Boomer (sprite 0x10/0x07)

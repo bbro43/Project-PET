@@ -511,6 +511,11 @@ function useChip(s, chip) {
   else if (def.kind === 'firehit') { // sub_80CFE08: the first column ahead holding an enemy, a fist on each enemy there
     for (let x = p.x + 1, n = 0; x <= 5; x++, n++) { const col = [0, 1, 2].map(y => at(s, x, y)).filter(e => e && e.owner !== 'player'); if (!col.length) continue; for (const e of col) s.hazards.push({ kind: 'firefist', owner: 'player', x: p.x + 1 + Math.min(n, 2), y: e.y, hit: s.tick + 10, until: s.tick + 10 + 0x26, damage, element }); break; } // the drop column stops after two empty ones
   }
+  else if (def.kind === 'sandworm') for (const e of s.enemies.filter(e => e.owner !== 'player' && e.hp > 0 && e.kind !== 'coil').slice(0, 4)) { // sandwormAttack_80DEDE0
+    const bx = e.x + 1; if (bx > 5 || !standable(s, bx, e.y) || at(s, bx, e.y)) continue;
+    s.hazards.push({ kind: 'sandworm', owner: 'player', bx, y: e.y, fx: bx, start: s.tick, last: bx, pal: data.params?.[0] || 0, damage, element });
+  }
+  else if (def.kind === 'golemhit') s.hazards.push({ kind: 'golemhand', owner: 'player', x: 4, y: 1, start: s.tick, land: s.tick + 16, until: s.tick + 16 + 0x1E, damage, element }); // sub_80DB4B4: ROM panel (5, 2)
   else if (def.kind === 'lance') for (let y = 0; y < 3; y++) s.hazards.push({ kind: 'lance', owner: 'player', x: 5, y, start: s.tick, hit: s.tick + 6, until: s.tick + 8 + 0x14, damage, element }); // sub_80D2596: the back column, rows 1–3
   else if (def.kind === 'fullcust') s.gauge = val('customGaugeTicks'); // sub_800AF34: SetCustGauge 0x4000
   else if (def.kind === 'boomer') s.hazards.push({ kind: 'boomer', owner: 'player', fx: 0, fy: 2, leg: 0, vx: def.speed[0] / 40, vy: def.speed[1] / 24, last: null, damage, element }); // from the bottom row's back corner
@@ -745,7 +750,7 @@ function startGrab(s, def, damage, element) {
 }
 function stepTimestop(s, input = {}) {
   const ts = s.timestop, t = ++ts.t, fall = GRAB.beamFall.value;
-  if (ts.special?.cursor) { stepCursor(s, ts, t, input); s.effects = s.effects.filter(f => ++f.t < 24); if (t >= ts.end) s.timestop = null; return; }
+  if (ts.special?.cursor) { stepCursor(s, ts, t, input); s.effects = s.effects.filter(f => ++f.t < Math.max(24, f.life || 0)); if (t >= ts.end) s.timestop = null; return; }
   if (ts.special) { // a special chip: its step runs inside the freeze (panel chips: blink, then set at the end of `hold`)
     const sp = ts.special;
     if (sp.def.kind === 'panels') { if (t === ts.start + sp.def.hold) applySpecial(s, sp); }
@@ -793,7 +798,7 @@ function stepTimestop(s, input = {}) {
     else if (sp.def.kind === 'mine') { if (t === ts.start + sp.def.hold && sp.order.length) { const [x, y] = sp.order[59 % sp.order.length]; s.hazards.push({ kind: 'chipmine', owner: 'player', x, y, damage: sp.damage, element: sp.element }); } }
     else if (sp.def.kind === 'geddon') { const k = (t - ts.start) / 8 - 1; if (Number.isInteger(k) && k >= 0 && sp.order[k]) { const [x, y] = sp.order[k]; breakPanel(s, x, y); s.effects.push({ kind: 'puff', x, y, t: 0 }); } }
     else if (t === ts.start) applySpecial(s, sp);
-    s.effects = s.effects.filter(f => ++f.t < 24);
+    s.effects = s.effects.filter(f => ++f.t < Math.max(24, f.life || 0));
     if (t >= ts.end) s.timestop = null;
     return;
   }
@@ -806,7 +811,7 @@ function stepTimestop(s, input = {}) {
     if (!e && !mm && c.side === 'e' && sideAt(s, b.x - 1, b.y) === 'p') { c.side = 'p'; c.stolenT = GRAB.returnTicks.value; s.events.push({ type: 'grab', x: b.x, y: b.y }); }
   }
   if (t >= ts.start) for (const b of ts.beams) b.z = Math.max(0, 1 - (t - ts.start) / fall);
-  s.effects = s.effects.filter(f => ++f.t < 24);
+  s.effects = s.effects.filter(f => ++f.t < Math.max(24, f.life || 0));
   if (t >= ts.start + fall + GRAB.hold.value + GRAB.dim.value) s.timestop = null;
 }
 // NumbrBl's ball (t3 0x91): shows, waits, then rolls 3 px a frame and bursts on the first thing it touches.
@@ -1471,6 +1476,20 @@ function stepHazards(s) {
       if (x !== h.x) { h.x = x; if (x > 5 || !standable(s, x, h.y)) return false; const e = at(s, x, h.y); if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
       return true;
     }
+    if (h.kind === 'sandworm') { // t3 0xCB: one panel forward over 0x10 frames, a hit on entering a new panel
+      const k = s.tick - h.start + 1; h.fx = h.bx - Math.min(1, k / 0x10);
+      const x = Math.round(h.fx); if (x !== h.last) { h.last = x; const e = at(s, x, h.y); if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
+      return k < 0x10 + 20;
+    }
+    if (h.kind === 'golemhand') { // t3 0xAE: lands after 16 frames; only something on the panel sets it off
+      if (s.tick === h.land && at(s, h.x, h.y)) {
+        const e = at(s, h.x, h.y); if (e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true });
+        for (const [dx, dy] of [[0, -1], [0, 1], [1, 0], [-1, 0], [1, -1], [-1, 1], [1, 1], [-1, -1]]) { const o = at(s, h.x + dx, h.y + dy); if (o && o.owner !== 'player') hitEnemy(s, o, 100, { chip: true }); } // lists 0xA + 0xC
+        for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) { crackPanel(s, h.x + dx, h.y + dy); s.effects.push({ kind: 'bombblast', x: h.x + dx, y: h.y + dy, t: 0 }); }
+        s.effects.push({ kind: 'shake', t: 0, life: 0x2D });
+      }
+      return s.tick < h.until;
+    }
     if (h.kind === 'lance') { // t3 0x6F: hits on frame 6, then stays 0x14 frames
       if (s.tick === h.hit) { const e = at(s, h.x, h.y); if (e && e.owner !== 'player') hitEnemy(s, e, h.damage, { element: h.element, chip: true }); }
       return s.tick < h.until;
@@ -1591,7 +1610,7 @@ export function step(s, input = {}) {
     s.phaseT++;
     // MegaMan's attack plays to its end after the last enemy is deleted (no new input; hazards are already cleared).
     if (s.phase === 'win' && s.player.hp > 0 && s.player.state !== 'idle') stepPlayer(s, {});
-    stepDying(s); s.effects = s.effects.filter(f => ++f.t < 24); return s;
+    stepDying(s); s.effects = s.effects.filter(f => ++f.t < Math.max(24, f.life || 0)); return s;
   }
   s.phaseT++;
   if (s.phase === 'custom') return s;
@@ -1619,7 +1638,7 @@ export function step(s, input = {}) {
     hurtEnemy: (e, d) => { e.hp = Math.max(0, e.hp - d); if (e.hp === 0) { if (e.kind !== 'coil') s.deleted++; s.events.push({ type: 'delete', target: e.id }); s.effects.push({ kind: 'delete', x: e.x, y: e.y, t: 0 }); if (s.turns[e.family] === e.id) delete s.turns[e.family]; } },
   });
   stepDying(s);
-  s.effects = s.effects.filter(f => ++f.t < 24);
+  s.effects = s.effects.filter(f => ++f.t < Math.max(24, f.life || 0));
   if (s.player.hp <= 0) { s.phase = 'lose'; s.phaseT = 0; s.events.push({ type: 'lose' }); endBattleEffects(s); }
   else if (s.enemies.every(e => e.hp <= 0 || e.kind === 'coil')) {
     if (s.navi?.autoHeal) autoHeal(s);
