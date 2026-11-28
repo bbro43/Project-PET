@@ -467,6 +467,20 @@ export const CHIP_BEHAVIOUR = {
   // name, 0x3C): it strikes every panel the other side occupies (byte_80D4EB4: 0x85 / 0x84) with the chip's damage, the
   // screen shakes 0x3C, then it crumbles. Hit by MegaMan it strikes the enemies; hit by an enemy it strikes MegaMan.
   Guardian: { kind: 'place', obj: 'Guardian', sprite: 'guardianfx', seq: 'idle', pal: 0, hp: 1, life: 6000, ahead: true, freeze: true, hold: 30, guardian: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // BugFix (sub 26 → t4 0x3B, sub_80E4954): sub_80E49C4 zeroes MegaMan's bug stats (navi stats 0x31, 0x13, 0x14, 0x16, 0x54,
+  // 0x24, 0x19, 0x18, …) and the HP drain; a copy of him (t1 0x5D, sub_80C4958) flashes white, faster and faster, for 0x78
+  // frames, then 0x1E; the freeze ends with it.
+  BugFix: { kind: 'bugfix', freeze: true, hold: 0x78 + 0x1E, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // Otenko (sub 18 → t4 0x5F, sub_80E7668, hold 0x3C): on the panel ahead (byte_80E76C4: needs 0x10, not 0x0F880080) t3 0xAD
+  // (sub_80DB108: sprite 0x0C/0x00, HP 100, Timer 0x708). 5 frames on, animation 1, then every 5 frames (sub_80DB1E0): if
+  // MegaMan's next chip can take a bonus (ChipData flags bit 1), +1 to its damage; at most 0x32 for the same chip.
+  Otenko: { kind: 'place', obj: 'Otenko', sprite: 'otenkofx', seq: 'idle', pal: 0, hp: 100, life: 1800, ahead: true, freeze: true, hold: 60, otenko: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
+  // CircGun (sub 19 → t4 0x5E, sub_80E75AC → t3 0x89, sub_80D65FC): inside the freeze a cursor (sprite 0x10/0x45) starts on
+  // the back enemy column, top row (dword_80E75FC), and runs down / up the column, then along the row while the next column
+  // has enemy panels, bouncing at the edges; a step every params[0] + 1 = 3 frames (1 after a bounce). The chip button, or
+  // 0x168 frames, arms it: the next params[1] = 4 panels it leaves each get a marker (t3 0x8A) that hits 0x14 + 4 × params[0]
+  // = 28 frames later (0x0A050001, solid panels only). Then 0x1E.
+  CircGun: { kind: 'cursor', cursor: 'circgun', every: 3, freeze: true, anim: 'idle', lock: 20, confidence: 'rom-verified' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
   Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },

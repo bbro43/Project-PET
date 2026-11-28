@@ -280,12 +280,18 @@ function stepPlacedBomb(o, api) {
   }
   if (o.raid) stepAirRaid(s, o);
   if (o.sensor) stepSensor(s, o);
+  if (o.otenko && o.stateT >= 5) { // Otenko (t3 0xAD): +1 to the next chip's damage every 5 frames, 0x32 at most per chip
+    o.anim = 'shine';
+    const c = s.queue[0];
+    if (c !== o.boosting) { o.boosting = c; o.boosted = 0; }
+    if (c && (o.stateT - 5) % 5 === 0 && ((CHIP_DATA[c.name]?.flags || 0) & 2) && o.boosted < 0x32) { c.bonus = (c.bonus || 0) + 1; o.boosted++; }
+  }
   if (o.anubis) { // Anubis (t3 0x55): drops 8 px a frame, then every 6 frames hits the whole enemy area (region 0x82)
     if (o.z > 0) { o.z = Math.max(0, o.z - 8); if (o.z === 0) s.effects.push({ kind: 'shake', t: 0 }); return; }
     if (o.stateT % 6 === 0) for (const e of s.enemies.filter(e => e.hp > 0 && e.owner !== 'player' && e.kind !== 'coil')) if (sideAt(s, e.x, e.y) === 'e') hitEnemy(s, e, o.damage, { element: o.element, chip: true, quiet: true });
   }
   if (--o.life > 0) return;
-  if (o.family === 'BlackBomb' || o.family === 'Cube' || o.family === 'MusicBox' || o.family === 'WindBox' || o.family === 'AirRaid' || o.family === 'Sensor' || o.family === 'Guardian' || o.family === 'Anubis') { o.hp = 0; s.effects.push({ kind: 'puff', x: o.x, y: o.y, t: 0 }); } // left alone: it just goes away
+  if (o.family === 'BlackBomb' || o.family === 'Cube' || o.family === 'MusicBox' || o.family === 'WindBox' || o.family === 'AirRaid' || o.family === 'Sensor' || o.family === 'Guardian' || o.family === 'Anubis' || o.family === 'Otenko') { o.hp = 0; s.effects.push({ kind: 'puff', x: o.x, y: o.y, t: 0 }); } // left alone: it just goes away
   else placedBombBurst(s, o);
 }
 // AirRaid's plane (t3 0x75): rises 0x1E frames, then a bomb every 0xA frames.
@@ -637,7 +643,7 @@ function startSpecial(s, name, def, damage, element) {
   let cursor = null;
   if (def.kind === 'cursor') { // Magnum: from the front enemy column (sub_800D5F0)
     let fx = 5; while (fx > 0 && [0, 1, 2].some(y => sideAt(s, fx - 1, y) === 'e')) fx--;
-    cursor = def.cursor === 'square' ? { x: 4, y: 0, phase: 0, front: 0 } : { x: fx, y: 1, phase: 0, front: fx };
+    cursor = def.cursor === 'square' ? { x: 4, y: 0, phase: 0, front: 0 } : def.cursor === 'circgun' ? { x: 5, y: 0, vx: -1, vy: 1, phase: 0, wait: 2, shots: [], left: null, life: 0x168 } : { x: fx, y: 1, phase: 0, front: fx };
     hold = 1e6; // ends when it fires
   }
   s.timestop = { name, t: 0, start, special: { def, damage, element, cells, order, cursor }, end: start + hold + GRAB.dim.value, beams: [], cells: [] };
@@ -648,11 +654,12 @@ function applySpecial(s, sp) {
   else if (def.kind === 'invis') { p.invis = def.ticks; }
   else if (def.kind === 'panels') for (const [x, y] of sp.cells) setPanel(s, x, y, def.type);
   else if (def.kind === 'gauge') s.gaugeMod = { rate: def.rate, t: def.ticks };
+  else if (def.kind === 'bugfix') { s.bugs = {}; s.hpBug = null; } // sub_80E49C4
   else if (def.kind === 'trap') s.trap = { kind: def.trap, damage: sp.damage, name: s.timestop?.name };
   else if (def.kind === 'place' && (def.ahead || def.inRow)) {
     let x = p.x + 1;
     if (def.inRow) while (x <= 5 && !(standable(s, x, p.y) && sideAt(s, x, p.y) === 'e' && !at(s, x, p.y))) x++; // sub_80E3264: the first free enemy panel ahead
-    if (x <= 5 && standable(s, x, p.y) && !at(s, x, p.y)) s.enemies.push({ id: s.nextId++, kind: 'coil', family: def.obj, name: def.obj, owner: 'player', sprite: def.sprite, palette: def.pal || 0, flip: true, x, y: p.y, drawX: x, drawY: p.y, hp: def.hp, maxHp: def.hp, noHp: true, anim: def.seq, animT: 0, state: 'idle', stateT: 0, flash: 0, discharge: 0, life: def.life, damage: sp.damage, element: sp.element, music: def.music, play: def.play, rest: def.rest, wind: def.wind, raid: def.raid, sensor: def.sensor, anubis: def.anubis, z: def.anubis ? 160 : 0, cycle: 0 });
+    if (x <= 5 && standable(s, x, p.y) && !at(s, x, p.y)) s.enemies.push({ id: s.nextId++, kind: 'coil', family: def.obj, name: def.obj, owner: 'player', sprite: def.sprite, palette: def.pal || 0, flip: true, x, y: p.y, drawX: x, drawY: p.y, hp: def.hp, maxHp: def.hp, noHp: true, anim: def.seq, animT: 0, state: 'idle', stateT: 0, flash: 0, discharge: 0, life: def.life, damage: sp.damage, element: sp.element, music: def.music, play: def.play, rest: def.rest, wind: def.wind, raid: def.raid, sensor: def.sensor, anubis: def.anubis, otenko: def.otenko, z: def.anubis ? 160 : 0, cycle: 0 });
   }
   else if (def.apply) def.apply(s, sp);
 }
@@ -774,6 +781,22 @@ function stepSnakes(s, ts, sp, t) {
   sp.snakes = sp.snakes.filter(n => !n.done);
   if (sp.i >= sp.order.length && !sp.snakes.length && ts.end > ts.start + k + 0x28 + GRAB.dim.value) ts.end = ts.start + k + 0x28 + GRAB.dim.value;
 }
+// CircGun (t3 0x89): the cursor bounces round the enemy area; armed, it marks the next 4 panels it leaves (t3 0x8A).
+function stepCircGun(s, ts, sp, c, k, input) {
+  if (c.left === null && (input.b || --c.life < 0)) c.left = CHIP_DATA.CircGun?.params?.[1] ?? 4;
+  if (c.left !== 0 && --c.wait < 0) {
+    const ox = c.x, oy = c.y;
+    if (c.phase === 0) { const y = c.y + c.vy; if (y >= 0 && y <= 2) { c.y = y; c.wait = 2; } else { c.vy = -c.vy; c.phase = 1; c.wait = 0; } } // sub_80D6694
+    else { const x = c.x + c.vx; if (x >= 0 && x <= 5 && [0, 1, 2].some(y => sideAt(s, x, y) === 'e')) { c.x = x; c.wait = 2; } else { c.vx = -c.vx; c.phase = 0; c.wait = 0; } } // sub_80D66E2
+    if ((c.x !== ox || c.y !== oy) && c.left > 0) { c.shots.push({ x: ox, y: oy, at: k + 0x14 + 4 * 2 }); c.left--; }
+  }
+  for (const m of c.shots) if (k === m.at) { // sub_80D688C
+    if (standable(s, m.x, m.y)) { const e = at(s, m.x, m.y); if (e && e.owner !== 'player') hitEnemy(s, e, sp.damage, { element: sp.element, chip: true }); s.effects.push({ kind: 'blast', x: m.x, y: m.y, t: 0 }); }
+    m.done = true;
+  }
+  c.shots = c.shots.filter(m => !m.done);
+  if (c.left === 0 && !c.shots.length && !c.endAt) { c.endAt = k + 0x1E; ts.end = ts.start + c.endAt + GRAB.dim.value; }
+}
 // Cursor chips (BurnSqr t1 0x13, Magnum t1 0x14): the cursor steps on its own until the chip button or 0x12C frames.
 export function cursorCells(c, kind) {
   if (kind === 'square') return [[c.x, c.y], [c.x + 1, c.y], [c.x + 1, c.y + 1], [c.x, c.y + 1]];
@@ -782,6 +805,7 @@ export function cursorCells(c, kind) {
 function stepCursor(s, ts, t, input) {
   const sp = ts.special, c = sp.cursor, def = sp.def, k = t - ts.start;
   if (k < 0) return;
+  if (def.cursor === 'circgun') return stepCircGun(s, ts, sp, c, k, input);
   if (c.fireAt === undefined) {
     if (k > 0 && k % def.every === 0) {
       if (def.cursor === 'square') { // ho_80BB170: y = row 2; x 5 → 1; y = row 1; x 1 → 5 (game)

@@ -5027,6 +5027,60 @@
      "confidence": "rom-verified"
     }
    }
+  },
+  "otenkofx": {
+   "label": "Otenko (t3 0xAD sub_80DB108 → sub_8011504(0x01000C00)): sprite 0x0C/0x00",
+   "sources": {
+    "bn6f": {
+     "offset": "2EFE48",
+     "compression": "none",
+     "bytes": 15224,
+     "sha256": "1f4e558a970b0981c198cf0707a79194ead3613516fb009d649c73c48caa9491",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "2EF3C0",
+     "compression": "none",
+     "bytes": 15224,
+     "sha256": "1f4e558a970b0981c198cf0707a79194ead3613516fb009d649c73c48caa9491",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "idle": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "shine": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "circgunfx": {
+   "label": "CircGun cursor and shot marker (t3 0x89 / 0x8A): sprite 0x10/0x45, animation 1",
+   "sources": {
+    "bn6f": {
+     "offset": "38A9A8",
+     "compression": "none",
+     "bytes": 1976,
+     "sha256": "50666dc360221f67d8405e932e25539ecff7702d8e8cc6df38f68f6fc1e9fc6a",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "389F20",
+     "compression": "none",
+     "bytes": 1976,
+     "sha256": "50666dc360221f67d8405e932e25539ecff7702d8e8cc6df38f68f6fc1e9fc6a",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "cursor": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    }
+   }
   }
  },
  "tables": {

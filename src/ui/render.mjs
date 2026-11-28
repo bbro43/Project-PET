@@ -786,7 +786,10 @@ export function render(g, s, bank) {
     const sp = ts.special;
     if (sp?.cells.length && ts.t >= ts.start && ts.t < ts.start + sp.def.hold && ((ts.t - ts.start) >> 2) & 1) // panel chips: the panels blink (object_setPanelTypeBlink, every 4 frames)
       for (const [x, y] of sp.cells) { const [ax, ay] = anchor(x, y); g.fillStyle = sp.def.type === 'holy' ? 'rgba(255,240,160,.55)' : 'rgba(255,255,255,.45)'; g.fillRect(ax - 20, ay - 14, 40, 24); }
-    if (sp?.cursor && ts.t >= ts.start && sp.cursor.fireAt === undefined && !((ts.t - ts.start) & 4)) // BurnSqr / Magnum cursor: highlighted panels (highlightPanelIfSomeCondition_8109660, Timer2 & 4)
+    if (sp?.def.cursor === 'circgun' && ts.t >= ts.start) { // CircGun: cursor and markers (sprite 0x10/0x45)
+      for (const q of [sp.cursor, ...sp.cursor.shots]) { const [ax, ay] = anchor(q.x, q.y); sprite(g, bank, 'circgunfx', 'cursor', ts.t, ax, ay - 8, (g, x, y) => { g.strokeStyle = '#ff5050'; g.lineWidth = 2; g.strokeRect(x - 12, y - 10, 24, 18); }, 0, false); }
+    }
+    else     if (sp?.cursor && ts.t >= ts.start && sp.cursor.fireAt === undefined && !((ts.t - ts.start) & 4)) // BurnSqr / Magnum cursor: highlighted panels (highlightPanelIfSomeCondition_8109660, Timer2 & 4)
       for (const [x, y] of cursorCells(sp.cursor, sp.def.cursor)) if (x >= 0 && x <= 5 && y >= 0 && y <= 2) { g.fillStyle = 'rgba(255,240,80,.85)'; g.fillRect(x * PANEL_W + 3, FIELD_Y + y * PANEL_H + 3, PANEL_W - 6, PANEL_H - 9); }
     if (sp?.def.kind === 'meteors' && sp.order.length) for (let k = 0; k < 30; k++) { // meteors (sprite 0x0C/0x31): 0x1E up high, then 0x10 frames down from behind
       const f = ts.t - ts.start - 2 - 10 * k - 30; if (f < 0 || f >= 16) continue;

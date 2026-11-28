@@ -373,3 +373,15 @@ test('Guardian: hit by MegaMan it strikes every enemy; hit by an enemy it strike
   assert.ok(s.timestop); while (s.timestop) step(s, {});
   assert.equal(hurt(s).length, 9); assert.ok(hurt(s).every(h => h[2] >= 200)); assert.equal(g.hp, 0);
 });
+
+test('BugFix clears the bugs; Otenko feeds the next chip; CircGun marks 4 panels after the button', () => {
+  let s = after('BugFix', 0, s => { s.bugs = { 9: 2 }; s.hpBug = { level: 2, t: 0 }; }); while (s.timestop) step(s, {});
+  assert.deepEqual(s.bugs, {}); assert.equal(s.hpBug, null);
+  s = after('Otenko', 0); s.queue.push({ id: 2, name: 'Cannon', code: 'A', bonus: 0 }); while (s.timestop) step(s, {});
+  for (let i = 0; i < 400; i++) step(s, {});
+  assert.equal(s.queue[0].bonus, 50);
+  s = after('CircGun', 0); const c = s.timestop.special.cursor;
+  for (let i = 0; i < 4; i++) step(s, {});
+  step(s, { b: true }); while (s.timestop) step(s, {});
+  assert.equal(hurt(s).length, 4); assert.ok(hurt(s).every(h => h[2] === 150));
+});
