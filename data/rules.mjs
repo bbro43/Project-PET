@@ -597,7 +597,36 @@ export const CHIP_BEHAVIOUR = {
   BoomrArmSyncTrgr: { kind: 'chargeshot', freeze: true, hold: 0x3C, shot: { name: 'Boomer', damage: 100, element: 'wood' }, anim: 'idle', lock: 20, confidence: 'rom-verified', note: 'the chip is BoomrArm; the ROM name string runs into the next one' },
   MiniBomb: { kind: 'throw', range: 3, flight: 40, release: 9, region: 1, anim: 'throw', lock: 22, confidence: 'rom-verified', note: 'params[0] = 0 → area 1; 40 frames in the air (t3 0x8 Timer 0x28); lock recalled' },
   CrakShot: { kind: 'crack', region: 1, anim: 'crack', lock: 24, speed: 0.25, confidence: 'recalled', note: 'lifts the panel in front (it breaks) and sends it down the row' },
-  Recov:    { kind: 'heal', anim: 'idle', lock: 10, confidence: 'recalled' },
+  // Family 0x20 (sub_80EC844): heal byte_80EC870[subfamily] = 10, 30, 50, 80, 120, 150, 200, 300, DrkRecov 1000 (sub_800E2FC),
+  // then the attack ends at once.
+  // DrilArm (family 0x2E, sub_80ED374): 10 frames, then animation 0xA with the drill (t1 0x5 entry 0x20) and a hit box t3 0x71
+  // on the panel in front of MegaMan plus a second one in front of that (sub_80D2AB4, sub_80D2BC0: they follow him); each
+  // hits every 0xC frames for Param2 = 24 frames (3 hits); a hit shakes 0xC frames. MegaMan holds Param2 + 10, then 10 to put it away.
+  DrilArm: { kind: 'drill', lead: 10, every: 12, anim: 'idle', lock: 10 + 34 + 10, confidence: 'rom-verified' },
+  // WindRack (family 0x3F, sub_80EE1AC): slash pose (animation 5) with the fan (t1 0x5 entry 0x2A); 9 frames in it hits the
+  // column in front (0x1205FF04: panel list 4 = that panel and the ones above and below) and sends an invisible gust (t3 0x49,
+  // Param1 0x80: no enemy-side limit) down each row from that column, pushing enemies back; 0x16 + 6 frames in all.
+  WindRack: { kind: 'windrack', hit: 9, anim: 'windrack', lock: 0x16 + 6, confidence: 'rom-verified' },
+  // Family 0x49 (sub_80EEB68 / sub_80EEC08): sword swing (animation 5, sword blade); 9 frames in, for each of the first four
+  // enemies: MchnSwrd (sub 0) if it is paralysed (CollisionData +0x1C), ElemSwrd (sub 1) if its panel has 0x1C00 (grass,
+  // ice, lava: table 0x3007924), AssnSwrd (sub 2) either; a sword hit (0x705FF04: its panel and the ones above and below).
+  MchnSwrd: { kind: 'elemsword', when: 'paralyzed', anim: 'slash', lock: 0x16 + 6, confidence: 'rom-verified', note: 'the app keeps paralysis, bubble and freeze in one timer, so bubbled or frozen enemies count too' },
+  ElemSwrd: { kind: 'elemsword', when: 'panel', anim: 'slash', lock: 0x16 + 6, confidence: 'rom-verified' },
+  AssnSwrd: { kind: 'elemsword', when: 'either', anim: 'slash', lock: 0x16 + 6, confidence: 'rom-verified' },
+  // Family 0x55 (sub_80EF9A2): sword swing; 9 frames in, a wave t3 0x58 (sprite 0x0C/0x14) from the panel in front, 8 px a
+  // frame, region 4 (its column, rows ±1); Param2 0 (SonicBom) ends at the first hit, 1 (SprSonic) goes through.
+  SonicBom: { kind: 'sonic', pierce: false, anim: 'slash', lock: 0x16 + 6, confidence: 'rom-verified' },
+  SprSonic: { kind: 'sonic', pierce: true, anim: 'slash', lock: 0x16 + 6, confidence: 'rom-verified' },
+  // VarSwrd / NeoVari (families 0x53 / 0x54, sub_80EF6FC / sub_80EF87C): for 0x30 frames while the chip button is held, the
+  // D-pad + button presses are matched against command lists (sub_8012792: each step must equal the held keys exactly;
+  // keys GBA: A 1, B 2, Right 0x10, Left 0x20, Up 0x40, Down 0x80); the first command finished picks the attack, at the
+  // chip's own power. Letting go of the button or running out of time gives Sword.
+  VarSwrd: { kind: 'vari', commands: [[[0x81, 0x91, 0x11], 'LongSwrd'], [[0x21, 0xA1, 0x81, 0x91, 0x11], 'FtrSword'], [[0x41, 0x11, 0x81], 'WideSwrd'], [[0x81, 0x21, 0x41, 0x11, 0x81], 'LifeSrd'], [[0x21, 0x03, 0x11, 0x03], 'SonicBom']], anim: 'idle', lock: 1e9, confidence: 'rom-verified', note: 'command lists byte_80EF698…, chips from the halfwords at 0x80EF7D8 (0x49, 0x172, 0x48, 0x153, 0x173; the disassembly shows them as code)' },
+  NeoVari: { kind: 'vari', commands: [[[0x81, 0x11, 0x41], 'CrosSwrd'], [[0x21, 0x11, 0x21, 0x03], 'SprSonic'], [[0x41, 0x03, 0x81, 0x03, 0x41, 0x03], 'DblDream']], anim: 'idle', lock: 1e9, confidence: 'rom-verified', note: 'lists byte_80EF83C / 84C / 860, chips byte_80EF958 (0x176, 0x177, 0x178)' },
+  Recov:    { kind: 'heal', anim: 'idle', lock: 1, confidence: 'rom-verified' },
+  DrkRecov: { kind: 'heal', heal: 1000, anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'byte_80EC870[8] = 0x3E8' },
+  // DarkThnd: Thunder's family with params [1, 12, 16]: 12 legs (Param2).
+  DarkThnd: { kind: 'thunder', leg: 60, anim: 'buster', lock: 20, confidence: 'rom-verified' },
   BusterUp: { kind: 'busterup', anim: 'idle', lock: 1, confidence: 'recalled', note: 'the 20-frame chip lockout (ChipData +0x14) follows; the action itself is not decoded' },
   AreaGrab: { kind: 'grab', column: true, anim: 'idle', lock: 1, confidence: 'rom-verified', note: 't4 0x3 0x80E0754: time freeze, a beam (t3 0xF 0x80C6414) on each panel of the first column ahead that is not all MegaMan\'s (0x800D58C)' },
   PanlGrab: { kind: 'grab', column: false, anim: 'idle', lock: 1, confidence: 'rom-verified', note: 'same chip action with param 0: one beam on the edge panel of MegaMan\'s row (object_getEdgePanelMatchingRow)' },

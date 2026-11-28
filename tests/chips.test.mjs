@@ -497,3 +497,38 @@ test('ColForce: soldiers on MegaMan\'s free panels, front column first, each fir
   const s = after('ColForce', 200, s => { s.enemies = s.enemies.filter(e => e.x === 3); });
   assert.deepEqual(hurt(s), [[3, 0, 9 * 30], [3, 1, 6 * 30], [3, 2, 9 * 30]]); // columns 2, 1, 0; none on MegaMan's own panel (1, 1)
 });
+
+test('DrilArm: the two panels ahead, 3 hits 12 frames apart; Recov heals by the ROM table; DarkThnd runs 12 legs', () => {
+  const s = after('DrilArm', 60); assert.deepEqual(hurt(after('DrilArm', 60, s => { s.player.x = 1; })), [[3, 1, 210]]);
+  const r = after('Recov300', 2, s => { s.player.hp = 1; s.player.maxHp = 1000; }); assert.equal(r.player.hp, 301);
+  const d = after('DarkThnd', 0); assert.equal(d.hazards.find(h => h.kind === 'thunder').legs, 12);
+});
+
+test('WindRack: hits the column in front, then gusts push every enemy in each row back', () => {
+  const s = after('WindRack', 40, s => { s.enemies = s.enemies.filter(e => e.x === 3 && e.y !== 2); s.enemies[0].x = 2; });
+  assert.deepEqual(s.enemies.map(e => [e.x, e.y, 5000 - e.hp]).sort(), [[5, 0, 140], [5, 1, 0]]);
+});
+
+test('ElemSwrd strikes enemies on grass, ice or lava (and the panels above and below); MchnSwrd strikes paralysed ones', () => {
+  const s = after('ElemSwrd', 20, s => { s.enemies = s.enemies.filter(e => e.x === 5); for (const e of s.enemies) e.paralyzed = 0; s.panels[0][5].type = 'ice'; });
+  assert.deepEqual(hurt(s), [[5, 0, 220], [5, 1, 220]]);
+  const m = after('MchnSwrd', 20, s => { s.enemies = s.enemies.filter(e => e.x === 4); for (const e of s.enemies) e.paralyzed = 0; s.enemies[2].paralyzed = 99; });
+  assert.deepEqual(hurt(m), [[4, 1, 200], [4, 2, 200]]);
+});
+
+test('VarSwrd: Down, Down-Right, Right with the chip button held gives LongSwrd at 160; letting go gives Sword', () => {
+  const run = keys => {
+    const s = createBattle({ seed: 4, enemies: [] }); confirmCustom(s);
+    s.enemies = [3, 4].map(x => ({ id: 100 + x, family: 'Mettaur', x, y: 1, hp: 5000, maxHp: 5000, state: 'idle', stateT: 0, think: 1e9, paralyzed: 1e9, anim: 'idle', animT: 0, element: 'none' }));
+    s.player.x = 2; s.player.y = 1; s.player.invuln = 1e9; s.queue = [{ id: 1, name: 'VarSwrd', code: 'A' }];
+    step(s, { b: true }); for (const k of keys) step(s, k); for (let i = 0; i < 40; i++) step(s, {});
+    return hurt(s);
+  };
+  assert.deepEqual(run([{ b: true, down: true }, { b: true, down: true, right: true }, { b: true, right: true }]), [[3, 1, 160], [4, 1, 160]]);
+  assert.deepEqual(run([{}]), [[3, 1, 160]]);
+});
+
+test('SonicBom stops at the first hit; SprSonic goes through', () => {
+  assert.deepEqual(hurt(after('SonicBom', 40)), [[3, 0, 80], [3, 1, 80], [3, 2, 80]]);
+  assert.equal(hurt(after('SprSonic', 60)).length, 9);
+});

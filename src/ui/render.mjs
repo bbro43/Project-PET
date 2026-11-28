@@ -118,6 +118,8 @@ const ARMS = {
   airshot: [{ key: 'airshotarm', seq: 'arm', dx: 18, dz: 24 }],
   throw: [{ key: 'throwball', seq: 'hand', until: 9 }],
   slash: [{ key: 'swordarm', seq: 'arm' }],
+  drill: [{ key: 'drillarm', seq: 'arm', dx: 40, dz: 26 }],
+  windrack: [{ key: 'windrackarm', seq: 'arm' }], // t1 0x5 entry 0x2A // t1 0x5 entry 0x20, arm position 0x13
 };
 const CANNON_PAL = { Cannon: 0, HiCannon: 1, 'M-Cannon': 2, GigaCan1: 0, GigaCan2: 1, GigaCan3: 2, TankCan1: 0, TankCan2: 1, TankCan3: 2 }; // byte_80EBD2C
 function armParts(p) {
@@ -252,7 +254,7 @@ export function render(g, s, bank) {
     const [ax, ay] = anchor(h.fx / 40, h.y);
     sprite(g, bank, 'numballfx', h.t <= 0xE ? 'appear' : 'roll', h.t, ax, ay - 8, (g, x, y) => { g.fillStyle = '#f0f0f0'; g.beginPath(); g.arc(x, y - 6, 7, 0, 7); g.fill(); }, 0, false);
   }
-  for (const h of s.hazards) if (h.kind === 'windgust') { // Wind / Fan gust (sprite 0x0C/0x2E, palette 0 / 2)
+  for (const h of s.hazards) if (h.kind === 'windgust' && !h.hidden) { // Wind / Fan gust (sprite 0x0C/0x2E, palette 0 / 2)
     const [ax, ay] = anchor(h.fx, h.y);
     sprite(g, bank, 'windgustfx', 'gust', s.tick, ax, ay - 12, (g, x, y) => { g.strokeStyle = 'rgba(220,240,255,.8)'; g.lineWidth = 2; for (let i = 0; i < 3; i++) { g.beginPath(); g.moveTo(x - 10, y - 6 * i); g.lineTo(x + 10, y - 6 * i); g.stroke(); } }, h.dir > 0 ? 0 : 2, h.dir < 0);
   }

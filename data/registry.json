@@ -86,6 +86,14 @@
      "seq": 13,
      "confidence": "rom-verified",
      "note": "Vulcan shot 0x80EBF6E sets animation 0xD"
+    },
+    "drill": {
+     "seq": 10,
+     "confidence": "rom-verified"
+    },
+    "windrack": {
+     "seq": 5,
+     "confidence": "rom-verified"
     }
    }
   },
@@ -5400,6 +5408,60 @@
    },
    "sequences": {
     "burn": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "drillarm": {
+   "label": "DrilArm drill (t1 0x5 entry 0x20, arm position 0x13), sprite 0x0C/0x58",
+   "sources": {
+    "bn6f": {
+     "offset": "348E80",
+     "compression": "none",
+     "bytes": 2380,
+     "sha256": "dbac9b7f20fa3c695d365f77305fa14dd2c90d021795fd3e52077e87b5b49f74",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "3483F8",
+     "compression": "none",
+     "bytes": 2380,
+     "sha256": "dbac9b7f20fa3c695d365f77305fa14dd2c90d021795fd3e52077e87b5b49f74",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "arm": {
+     "seq": 0,
+     "confidence": "rom-verified"
+    },
+    "retract": {
+     "seq": 1,
+     "confidence": "rom-verified"
+    }
+   }
+  },
+  "windrackarm": {
+   "label": "WindRack fan (t1 0x5 entry 0x2A, arm position 0), sprite 0x0C/0x27",
+   "sources": {
+    "bn6f": {
+     "offset": "32154C",
+     "compression": "none",
+     "bytes": 5076,
+     "sha256": "40c79cf1834b8eda90f4a5b7841ba104740c447dfa1de28267e580dbba21e260",
+     "confidence": "rom-verified"
+    },
+    "bn6g": {
+     "offset": "320AC4",
+     "compression": "none",
+     "bytes": 5076,
+     "sha256": "40c79cf1834b8eda90f4a5b7841ba104740c447dfa1de28267e580dbba21e260",
+     "confidence": "rom-verified"
+    }
+   },
+   "sequences": {
+    "arm": {
      "seq": 0,
      "confidence": "rom-verified"
     }
